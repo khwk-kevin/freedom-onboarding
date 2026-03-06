@@ -71,8 +71,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Create merchant record in Supabase
     const supabase = createServiceClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: merchant, error } = await (supabase as any)
+    const { data: merchant, error } = await supabase
       .from('merchants')
       .insert({
         email,
@@ -99,8 +98,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error
 
     // 4. Log signup event
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from('events').insert({
+    await supabase.from('events').insert({
       merchant_id: merchant.id,
       event_type: 'signup_complete',
       event_data: { refCode, cognito_sub: cognitoSub },

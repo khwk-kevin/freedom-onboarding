@@ -15,8 +15,7 @@ export async function POST(req: NextRequest) {
     const forwarded = req.headers.get('x-forwarded-for')
     const ip = forwarded?.split(',')[0]
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from('events').insert({
+    await supabase.from('events').insert({
       merchant_id: merchantId || null,
       event_type: eventType,
       event_data: eventData || {},

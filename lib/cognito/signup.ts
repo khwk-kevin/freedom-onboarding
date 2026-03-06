@@ -76,6 +76,7 @@ export async function authenticateCognito(
 
 // ─── Step 3: Token refresh ───
 export async function refreshCognitoTokens(
+  email: string,
   storedRefreshToken: string
 ): Promise<{
   accessToken: string
@@ -83,7 +84,7 @@ export async function refreshCognitoTokens(
 }> {
   return new Promise((resolve, reject) => {
     const pool = new CognitoUserPool(COGNITO_CONFIG)
-    const user = new CognitoUser({ Username: 'refresh', Pool: pool })
+    const user = new CognitoUser({ Username: email, Pool: pool })
     const token = new CognitoRefreshToken({ RefreshToken: storedRefreshToken })
 
     user.refreshSession(token, (err: Error | null, session: any) => {

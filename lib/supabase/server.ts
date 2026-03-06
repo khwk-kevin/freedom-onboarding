@@ -1,9 +1,8 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import type { Database } from './types'
 
 // Server-side client with service role — bypasses RLS, server-only
 export function createServiceClient() {
-  return createSupabaseClient<Database>(
+  return createSupabaseClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
@@ -17,7 +16,7 @@ export function createServiceClient() {
 
 // Anon client for server components (respects RLS)
 export function createServerAnonClient() {
-  return createSupabaseClient<Database>(
+  return createSupabaseClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_ANON_KEY!
   )
