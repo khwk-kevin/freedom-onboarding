@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { extractUTMParams, mergeWithStoredUTM } from '@/lib/utils/utm'
+import { track } from '@/lib/tracking/unified'
 
 interface SignupFormProps {
   redirectTo?: string
@@ -35,6 +36,7 @@ export default function SignupForm({ redirectTo = '/onboarding' }: SignupFormPro
     if (password !== confirmPassword) { setError('Passwords do not match'); return }
 
     setLoading(true)
+    track.signupStart('email')
 
     try {
       // Collect UTM params from current URL + session storage
@@ -54,11 +56,13 @@ export default function SignupForm({ redirectTo = '/onboarding' }: SignupFormPro
       const data = await res.json()
 
       if (!res.ok) {
+        track.signupError(data.error || 'Signup failed')
         setError(data.error || 'Signup failed')
         return
       }
 
-      // Success — redirect to onboarding
+      // Success — track and redirect to onboarding
+      track.signupComplete(data.cognitoSub || '', data.merchantId || '', 'direct')
       router.push(redirectTo)
     } catch {
       setError('Network error. Please try again.')

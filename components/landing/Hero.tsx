@@ -13,13 +13,13 @@ export default function Hero() {
         </div>
 
         {/* Headline */}
-        <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
           Build Your Business{' '}
           <span className="text-brand-green-dark">Community</span>
         </h1>
 
         {/* Subheadline */}
-        <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
+        <p className="text-lg sm:text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
           Acquire customers, build loyalty, and monetize — all in one platform.
           Token rewards. AI-powered setup.{' '}
           <strong className="text-gray-900">Live in 15 minutes.</strong>

@@ -30,9 +30,9 @@ export default function CTAButton({
 
   const variants = {
     primary:
-      'bg-brand-green hover:bg-brand-green-hover text-gray-900 font-bold shadow-lg hover:shadow-xl transition-all',
+      'bg-brand-green hover:bg-brand-green-hover text-gray-900 font-bold shadow-lg hover:shadow-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green focus-visible:ring-offset-2',
     outline:
-      'border-2 border-brand-green text-brand-green-dark hover:bg-brand-green/10 font-semibold transition-all',
+      'border-2 border-brand-green text-brand-green-dark hover:bg-brand-green/10 font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green focus-visible:ring-offset-2',
   }
 
   const base = `inline-flex items-center justify-center rounded-xl ${sizes[size]} ${variants[variant]} ${className}`

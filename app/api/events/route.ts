@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/utils/rate-limit'
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 60 event pings per minute per IP
+  const ip = getClientIp(req)
+  const rl = rateLimit(`${ip}:events`, { limit: 60, windowMs: 60_000 })
+  if (!rl.success) return rateLimitResponse(rl)
+
   try {
     const { merchantId, eventType, eventData } = await req.json()
 
@@ -13,7 +19,7 @@ export async function POST(req: NextRequest) {
 
     const ua = req.headers.get('user-agent') || undefined
     const forwarded = req.headers.get('x-forwarded-for')
-    const ip = forwarded?.split(',')[0]
+    const clientIp = forwarded?.split(',')[0]
 
     await supabase.from('events').insert({
       merchant_id: merchantId || null,

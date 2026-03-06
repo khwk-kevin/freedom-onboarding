@@ -26,7 +26,7 @@ export default function ValueProps() {
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
           Everything you need to grow
         </h2>
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           {valueProps.map((vp) => (
             <div
               key={vp.headline}
