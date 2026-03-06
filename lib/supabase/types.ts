@@ -61,8 +61,54 @@ export type Database = {
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Database['public']['Tables']['merchants']['Row'], 'id' | 'created_at' | 'updated_at'> & {
+        Insert: {
           id?: string
+          email: string
+          cognito_user_id?: string | null
+          cognito_email?: string | null
+          fdv_user_id?: number | null
+          ref_code?: string | null
+          phone?: string | null
+          line_id?: string | null
+          business_name?: string | null
+          business_type?: 'food' | 'creator' | 'ngo' | 'events' | 'education' | 'retail' | 'fitness' | 'beauty' | 'hospitality' | 'other' | null
+          business_description?: string | null
+          business_size?: 'solo' | '2-5' | '6-20' | '21-50' | '50+' | null
+          location?: string | null
+          website_url?: string | null
+          social_urls?: Json
+          logo_url?: string | null
+          banner_url?: string | null
+          primary_color?: string
+          secondary_color?: string | null
+          onboarding_status?: 'signup' | 'context' | 'branding' | 'products' | 'rewards' | 'golive' | 'completed' | 'abandoned'
+          onboarding_started_at?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_data?: Json
+          onboarding_last_phase_at?: string | null
+          utm_source?: string | null
+          utm_medium?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_term?: string | null
+          utm_vertical?: string | null
+          referrer_url?: string | null
+          landing_page?: string | null
+          gclid?: string | null
+          fbclid?: string | null
+          assigned_to?: string | null
+          status?: 'lead' | 'onboarding' | 'onboarded' | 'active' | 'dormant' | 'churned' | 'lost'
+          health_score?: number | null
+          health_score_updated_at?: string | null
+          last_activity_at?: string | null
+          last_contact_at?: string | null
+          next_follow_up_at?: string | null
+          notes?: Json
+          tags?: string[]
+          lifetime_revenue?: number
+          lifetime_transactions?: number
+          monthly_revenue?: number
+          monthly_transactions?: number
           created_at?: string
           updated_at?: string
         }

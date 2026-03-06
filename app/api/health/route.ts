@@ -10,7 +10,8 @@ export async function GET() {
     const supabase = createServiceClient()
 
     // Ping Supabase — simple query to verify connectivity
-    const { error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
       .from('merchants')
       .select('id')
       .limit(1)
