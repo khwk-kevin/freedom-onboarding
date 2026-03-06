@@ -1,0 +1,53 @@
+{
+  "colors": [
+    "rgb(255, 255, 255)",
+    "oklch(0.278 0.033 256.848)",
+    "rgba(0, 0, 0, 0)",
+    "oklab(0.999994 0.0000455678 0.0000200868 / 0.9)",
+    "oklab(0.999994 0.0000455677 0.0000200868 / 0.8)",
+    "rgb(16, 244, 139)",
+    "rgb(26, 29, 37)",
+    "rgb(103, 105, 124)",
+    "rgb(0, 0, 0)",
+    "rgb(166, 167, 181)",
+    "rgb(244, 244, 252)",
+    "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)"
+  ],
+  "fonts": [
+    "\"Encode Sans Expanded\", sans-serif",
+    "\"Encode Sans Expanded\"",
+    "\"Times New Roman\""
+  ],
+  "bgs": [
+    "rgb(255, 255, 255)",
+    "rgba(0, 0, 0, 0)",
+    "rgb(5, 3, 20)",
+    "rgb(11, 16, 54)",
+    "rgb(18, 72, 190)",
+    "oklab(0.999994 0.0000455678 0.0000200868 / 0.1)",
+    "rgb(14, 50, 133)",
+    "rgba(255, 255, 255, 0.05)",
+    "rgb(22, 27, 133)",
+    "rgb(0, 0, 0)",
+    "rgba(0, 0, 0, 0.35)",
+    "rgb(18, 69, 200)",
+    "rgb(16, 244, 139)",
+    "oklch(0.637 0.237 25.331)",
+    "oklab(0.178568 0.0214137 -0.05823 / 0.9)",
+    "oklab(0.999994 0.0000455678 0.0000200868 / 0.2)",
+    "oklch(0.765 0.177 163.223)"
+  ],
+  "gradients": [
+    "linear-gradient(0deg, rgb(2, 2, 16) 0%, rgba(2, 2, 16, 0) 100%)",
+    "linear-gradient(117deg, rgba(24, 75, 255, 0.2) 0%, rgba(23, 74, 255, 0.3) 100%)",
+    "linear-gradient(0deg, rgba(2, 2, 16, 0) 0%, rgb(2, 2, 16) 10%)",
+    "linear-gradient(to right bottom, oklch(0.623 0.214 259.815) 0px, oklch(0.558 0.288 302.321) 50%, oklch(0.457 0.24 277.023) 100%)",
+    "linear-gradient(-70deg, rgba(247, 66, 162, 0.25) 25%, rgba(247, 66, 162, 0.33) 33%, rgba(54, 187, 246, 0.6) 60%)",
+    "linear-gradient(117deg, rgba(0, 194, 255, 0) 0%, rgb(255, 41, 195) 100%)",
+    "linear-gradient(117deg, rgba(24, 75, 255, 0) 0%, rgb(23, 74, 255) 100%)",
+    "linear-gradient(281deg, rgba(247, 66, 162, 0.25) 25%, rgba(247, 66, 162, 0.33) 33%, rgba(54, 187, 246, 0.6) 60%)",
+    "linear-gradient(to right, rgba(5, 3, 20, 0.8) 0%, rgba(5, 3, 20, 0.8) 30%, rgba(5, 3, 20, 0.8) 40%, rgba(5, 3, 20, 0.6) 50%, rgba(5, 3, 20, 0.6) 60%, rgba(5, 3, 20, 0.6) 70%, rgba(5, 3, 20, 0.6) 80%), url(\"https://public.freedom.world/landing_page/community/discover_thailand.avif\")",
+    "linear-gradient(to right, rgb(5, 3, 20) 0%, rgb(5, 3, 20) 30%, rgba(5, 3, 20, 0.8) 40%, rgba(5, 3, 20, 0.6) 50%, rgba(5, 3, 20, 0.3) 60%, rgba(5, 3, 20, 0.1) 70%, rgba(5, 3, 20, 0) 80%), url(\"https://public.freedom.world/landing_page/community/discover_thailand.avif\")",
+    "linear-gradient(281deg, rgba(247, 66, 162, 0.25) 14.21%, rgba(247, 66, 162, 0.33) 49.46%, rgba(55, 200, 245, 0.8) 95.44%)"
+  ]
+}

@@ -1,14 +1,24 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Encode_Sans_Expanded, Noto_Sans_Thai } from 'next/font/google'
 import './globals.css'
 import { PHProvider, PostHogPageview } from '@/lib/posthog/provider'
 import { GTMProvider } from '@/lib/gtm/provider'
 
-const inter = Inter({ subsets: ['latin'] })
+const encodeSans = Encode_Sans_Expanded({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-heading',
+})
+
+const notoThai = Noto_Sans_Thai({
+  subsets: ['thai'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-thai',
+})
 
 export const metadata: Metadata = {
-  title: 'Freedom World — Grow Your Community',
-  description: 'Join Freedom World and start earning from your community.',
+  title: 'Freedom World — ธุรกิจของคุณ โลกของคุณ สร้างได้เลย',
+  description: 'สร้างชุมชนที่เชื่อมต่อลูกค้าในระบบการตลาดแบบเกมมิฟิเคชั่น เติบโตไปพร้อมกับ Freedom World',
 }
 
 export default function RootLayout({
@@ -17,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-white text-gray-900`}>
+    <html lang="th">
+      <body className={`${encodeSans.variable} ${notoThai.variable} font-thai bg-fw-bg text-fw-text-primary antialiased`}>
         <PHProvider>
           <GTMProvider />
           <PostHogPageview />
