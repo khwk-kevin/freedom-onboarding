@@ -1,0 +1,36 @@
+{
+  "name": "freedom-onboarding",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "@neondatabase/serverless": "^1.0.2",
+    "@supabase/supabase-js": "^2.98.0",
+    "amazon-cognito-identity-js": "^6.3.16",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.35.0",
+    "lucide-react": "^0.577.0",
+    "next": "14.2.35",
+    "posthog-js": "^1.359.1",
+    "qrcode": "^1.5.4",
+    "react": "^18",
+    "react-dom": "^18",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "postcss": "^8",
+    "supabase": "^2.76.17",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
