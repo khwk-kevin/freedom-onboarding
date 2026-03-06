@@ -1,14 +1,23 @@
+import Hero from '@/components/landing/Hero'
+import ValueProps from '@/components/landing/ValueProps'
+import SocialProof from '@/components/landing/SocialProof'
+import HowItWorks from '@/components/landing/HowItWorks'
+import {
+  OrganizationSchema,
+  SoftwareApplicationSchema,
+} from '@/components/shared/SchemaMarkup'
+
 export default function CommunityFeaturesPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Freedom World
-        </h1>
-        <p className="text-xl text-gray-600">
-          Merchant onboarding — coming soon.
-        </p>
-      </div>
-    </main>
+    <>
+      <OrganizationSchema />
+      <SoftwareApplicationSchema />
+      <main>
+        <Hero />
+        <ValueProps />
+        <SocialProof />
+        <HowItWorks />
+      </main>
+    </>
   )
 }

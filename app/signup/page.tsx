@@ -27,7 +27,7 @@ export default function SignupPage() {
           Already have an account?{' '}
           <a
             href={`${process.env.NEXT_PUBLIC_APP_URL || ''}/onboarding`}
-            className="text-indigo-600 hover:underline font-medium"
+            className="text-brand-green-dark hover:underline font-medium"
           >
             Continue onboarding
           </a>

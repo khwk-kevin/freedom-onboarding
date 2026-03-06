@@ -86,7 +86,7 @@ export default function SignupForm({ redirectTo = '/onboarding' }: SignupFormPro
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-dark focus:border-transparent"
           placeholder="you@example.com"
           disabled={loading}
         />
@@ -103,7 +103,7 @@ export default function SignupForm({ redirectTo = '/onboarding' }: SignupFormPro
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-dark focus:border-transparent"
           placeholder="Min 8 chars with uppercase, number, symbol"
           disabled={loading}
         />
@@ -120,7 +120,7 @@ export default function SignupForm({ redirectTo = '/onboarding' }: SignupFormPro
           autoComplete="new-password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-dark focus:border-transparent"
           placeholder="Repeat password"
           disabled={loading}
         />
@@ -129,16 +129,16 @@ export default function SignupForm({ redirectTo = '/onboarding' }: SignupFormPro
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors"
+        className="w-full bg-brand-green-dark hover:bg-green-700 disabled:bg-brand-green/70 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors"
       >
         {loading ? 'Creating account…' : 'Create free account'}
       </button>
 
       <p className="text-xs text-gray-500 text-center">
         By signing up you agree to our{' '}
-        <a href="#" className="text-indigo-600 hover:underline">Terms</a>
+        <a href="#" className="text-brand-green-dark hover:underline">Terms</a>
         {' '}and{' '}
-        <a href="#" className="text-indigo-600 hover:underline">Privacy Policy</a>.
+        <a href="#" className="text-brand-green-dark hover:underline">Privacy Policy</a>.
       </p>
     </form>
   )
