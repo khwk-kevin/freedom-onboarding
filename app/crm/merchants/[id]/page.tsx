@@ -348,6 +348,13 @@ export default function MerchantDetailPage() {
   const [savingNote, setSavingNote] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [researching, setResearching] = useState(false);
+  const [phData, setPhData] = useState<{
+    noData: boolean;
+    noDataReason?: string;
+    stats: { totalPageViews: number; totalSessions: number; totalEvents: number; firstSeen: string | null; lastSeen: string | null; sessionRecordingCount: number };
+    timeline: Array<{ uuid: string; event: string; timestamp: string; url: string | null; sessionId: string | null }>;
+    sessionRecordings: Array<{ id: string; startTime: string; durationSec: number; viewed: boolean; url: string }>;
+  } | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -363,6 +370,14 @@ export default function MerchantDetailPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    fetch(`/api/merchants/posthog?merchantId=${id}`)
+      .then((r) => r.json())
+      .then((data) => { if (!data.error) setPhData(data); })
+      .catch(() => {});
   }, [id]);
 
   const patch = async (fields: Record<string, unknown>) => {
@@ -1134,6 +1149,67 @@ export default function MerchantDetailPage() {
             </div>
           </div>
         </div>
+
+      {/* ─── PostHog Activity ─────────────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 mt-4">
+        <h3 className="text-[15px] font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Activity size={16} className="text-purple-500" />
+          PostHog Activity
+        </h3>
+        {!phData ? (
+          <p className="text-[12px] text-gray-400">Loading PostHog data…</p>
+        ) : phData.noData ? (
+          <p className="text-[12px] text-gray-400">{phData.noDataReason ?? 'No PostHog data available for this merchant.'}</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-4">
+              {[
+                { label: 'Page Views', value: phData.stats.totalPageViews },
+                { label: 'Sessions', value: phData.stats.totalSessions },
+                { label: 'Events', value: phData.stats.totalEvents },
+                { label: 'Recordings', value: phData.stats.sessionRecordingCount },
+                { label: 'First Seen', value: phData.stats.firstSeen ? new Date(phData.stats.firstSeen).toLocaleDateString() : '—' },
+                { label: 'Last Seen', value: phData.stats.lastSeen ? new Date(phData.stats.lastSeen).toLocaleDateString() : '—' },
+              ].map((s) => (
+                <div key={s.label} className="bg-[#f5f6f8] rounded-lg p-2.5">
+                  <p className="text-[11px] text-gray-400">{s.label}</p>
+                  <p className="text-[14px] font-semibold text-gray-800">{s.value}</p>
+                </div>
+              ))}
+            </div>
+            {phData.sessionRecordings.length > 0 && (
+              <div className="mb-4">
+                <p className="text-[12px] font-medium text-gray-600 mb-2">Session Recordings</p>
+                <div className="space-y-1">
+                  {phData.sessionRecordings.slice(0, 5).map((r) => (
+                    <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-3 text-[12px] text-purple-600 hover:text-purple-800 hover:underline">
+                      <span className="text-gray-400">{new Date(r.startTime).toLocaleString()}</span>
+                      <span>{Math.round(r.durationSec)}s</span>
+                      {r.viewed && <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">viewed</span>}
+                      <span className="text-[10px] text-purple-400">▶ Watch</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            {phData.timeline.length > 0 && (
+              <div>
+                <p className="text-[12px] font-medium text-gray-600 mb-2">Event Timeline</p>
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {phData.timeline.map((e) => (
+                    <div key={e.uuid} className="flex items-center gap-3 text-[11px]">
+                      <span className="text-gray-400 shrink-0">{new Date(e.timestamp).toLocaleString()}</span>
+                      <span className="font-mono text-gray-700 bg-gray-50 px-1.5 py-0.5 rounded">{e.event}</span>
+                      {e.url && <span className="text-gray-400 truncate max-w-xs">{e.url}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       </div>
     </div>

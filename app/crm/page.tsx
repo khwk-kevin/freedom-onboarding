@@ -56,10 +56,18 @@ function StatBlock({ label, value, sub, icon, color }: { label: string; value: s
   );
 }
 
+interface PHSummary {
+  today: Record<string, number>;
+  week: Record<string, number>;
+  sessionRecordingCount: number;
+  generatedAt: string;
+}
+
 export default function CRMDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [revenue, setRevenue] = useState<RevenueStats | null>(null);
   const [extra, setExtra] = useState<ExtraStats | null>(null);
+  const [phSummary, setPhSummary] = useState<PHSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -73,6 +81,12 @@ export default function CRMDashboardPage() {
       if (extraData) setExtra(extraData);
       setLoading(false);
     }).catch(() => setLoading(false));
+
+    // PostHog summary (non-blocking)
+    fetch('/api/crm/posthog-summary')
+      .then((r) => r.json())
+      .then((d) => { if (!d.error) setPhSummary(d); })
+      .catch(() => {});
   }, []);
 
   const funnel = stats?.funnel;
@@ -402,6 +416,51 @@ export default function CRMDashboardPage() {
               </Link>
             </div>
           )}
+        {/* ─── Live Analytics (PostHog) ─────────────────────────────── */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity size={16} className="text-purple-500" />
+            <h2 className="text-[15px] font-semibold text-gray-900">Live Analytics</h2>
+            {phSummary && (
+              <span className="ml-auto text-[10px] text-gray-400">
+                Updated {new Date(phSummary.generatedAt).toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+          {!phSummary ? (
+            <p className="text-[12px] text-gray-400">Loading PostHog data…</p>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'Page Views Today', today: phSummary.today['$pageview'] ?? 0, week: phSummary.week['$pageview'] ?? 0 },
+                  { label: 'CTA Clicks Today', today: phSummary.today['cta_click'] ?? 0, week: phSummary.week['cta_click'] ?? 0 },
+                  { label: 'Signups Today', today: phSummary.today['signup_start'] ?? 0, week: phSummary.week['signup_start'] ?? 0 },
+                  { label: 'Recordings (7d)', today: phSummary.sessionRecordingCount, week: null },
+                ].map((item) => (
+                  <div key={item.label} className="bg-[#f5f6f8] rounded-lg p-3">
+                    <p className="text-[11px] text-gray-400 mb-1">{item.label}</p>
+                    <p className="text-[18px] font-bold text-gray-800">{item.today}</p>
+                    {item.week !== null && (
+                      <p className="text-[10px] text-gray-400">{item.week} this week</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {Object.values(phSummary.today).every((v) => v === 0) && (
+                <p className="text-[11px] text-gray-400 italic">No events tracked yet today — PostHog will populate once traffic arrives.</p>
+              )}
+              <a
+                href="https://eu.posthog.com/project/136745"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-[#f5f6f8] hover:bg-gray-200 text-[12px] font-medium text-gray-600 transition-colors"
+              >
+                Open PostHog Dashboard <ArrowRight size={13} />
+              </a>
+            </div>
+          )}
+        </div>
         </>
       )}
     </div>
