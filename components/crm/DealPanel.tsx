@@ -1,9 +1,10 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   X, Phone, Mail, MapPin, Tag, Clock, MessageSquare,
   PhoneCall, AtSign, Calendar, ChevronDown, Send, Hash,
-  TrendingUp, DollarSign, User, Building2, ExternalLink, Check
+  TrendingUp, DollarSign, User, Building2, ExternalLink, Check,
+  Edit3, Save
 } from 'lucide-react';
 
 export interface DealPanelMerchant {
@@ -34,31 +35,31 @@ interface Activity {
   timestamp: string;
 }
 
-const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  lead: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Lead' },
-  onboarding: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Onboarding' },
-  onboarded: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Onboarded' },
-  active: { bg: 'bg-green-100', text: 'text-green-700', label: 'Active' },
-  dormant: { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Dormant' },
-  churned: { bg: 'bg-red-100', text: 'text-red-700', label: 'Churned' },
-  lost: { bg: 'bg-red-50', text: 'text-red-600', label: 'Lost' },
+const STATUS_COLORS: Record<string, { bg: string; text: string; label: string; dot: string }> = {
+  lead:        { bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Lead',        dot: 'bg-blue-500'   },
+  onboarding:  { bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Onboarding',  dot: 'bg-amber-500'  },
+  onboarded:   { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Onboarded',   dot: 'bg-purple-500' },
+  active:      { bg: 'bg-green-100',  text: 'text-green-700',  label: 'Active',      dot: 'bg-green-500'  },
+  dormant:     { bg: 'bg-gray-100',   text: 'text-gray-600',   label: 'Dormant',     dot: 'bg-gray-400'   },
+  churned:     { bg: 'bg-red-100',    text: 'text-red-700',    label: 'Churned',     dot: 'bg-red-500'    },
+  lost:        { bg: 'bg-red-50',     text: 'text-red-600',    label: 'Lost',        dot: 'bg-red-400'    },
 };
 
 const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
-  note: <MessageSquare size={13} />,
-  call: <PhoneCall size={13} />,
-  email: <Mail size={13} />,
-  meeting: <Calendar size={13} />,
-  line: <AtSign size={13} />,
+  note:          <MessageSquare size={13} />,
+  call:          <PhoneCall size={13} />,
+  email:         <Mail size={13} />,
+  meeting:       <Calendar size={13} />,
+  line:          <AtSign size={13} />,
   status_change: <Hash size={13} />,
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  note: 'bg-gray-100 text-gray-600',
-  call: 'bg-green-100 text-green-700',
-  email: 'bg-blue-100 text-blue-700',
-  meeting: 'bg-purple-100 text-purple-700',
-  line: 'bg-teal-100 text-teal-700',
+  note:          'bg-gray-100 text-gray-600',
+  call:          'bg-green-100 text-green-700',
+  email:         'bg-blue-100 text-blue-700',
+  meeting:       'bg-purple-100 text-purple-700',
+  line:          'bg-teal-100 text-teal-700',
   status_change: 'bg-amber-100 text-amber-700',
 };
 
@@ -80,13 +81,79 @@ function timeAgo(ts: string): string {
   return `${days}d ago`;
 }
 
+// Inline editable text field
+function InlineField({
+  value,
+  placeholder,
+  onSave,
+  icon,
+  prefix,
+  type = 'text',
+  className = '',
+}: {
+  value: string | null | undefined;
+  placeholder: string;
+  onSave: (v: string) => void;
+  icon?: React.ReactNode;
+  prefix?: string;
+  type?: string;
+  className?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value || '');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setDraft(value || ''); }, [value]);
+  useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
+
+  const commit = () => {
+    setEditing(false);
+    if (draft !== (value || '')) onSave(draft);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1 w-full">
+        {icon && <span className="text-gray-400 shrink-0">{icon}</span>}
+        <input
+          ref={inputRef}
+          type={type}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') { setEditing(false); setDraft(value || ''); }
+          }}
+          className={`flex-1 text-[12px] border border-blue-400 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white ${className}`}
+          placeholder={placeholder}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="flex items-center gap-2 text-[12px] text-gray-700 hover:text-blue-600 transition-colors group w-full text-left"
+    >
+      {icon && <span className="text-gray-400 shrink-0 group-hover:text-blue-400">{icon}</span>}
+      <span className={`truncate ${!value ? 'text-gray-400 italic' : ''}`}>
+        {prefix}{value || placeholder}
+      </span>
+      <Edit3 size={9} className="text-gray-300 group-hover:text-blue-400 ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+    </button>
+  );
+}
+
 interface DealPanelProps {
   merchant: DealPanelMerchant | null;
   onClose: () => void;
   onStatusChange?: (merchantId: string, newStatus: string) => Promise<void>;
+  onFieldChange?: (merchantId: string, field: string, value: unknown) => void;
 }
 
-export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps) {
+export function DealPanel({ merchant, onClose, onStatusChange, onFieldChange }: DealPanelProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [actType, setActType] = useState<Activity['type']>('note');
   const [actText, setActText] = useState('');
@@ -96,13 +163,33 @@ export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps)
   const [changingStatus, setChangingStatus] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(merchant?.status || '');
   const [copied, setCopied] = useState('');
+  const [saving, setSaving] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Local editable field state
+  const [fields, setFields] = useState({
+    business_name: merchant?.business_name || '',
+    phone: merchant?.phone || '',
+    line_id: merchant?.line_id || '',
+    location: merchant?.location || '',
+    assigned_to: merchant?.assigned_to || '',
+    monthly_revenue: merchant?.monthly_revenue?.toString() || '',
+    business_type: merchant?.business_type || '',
+  });
 
   useEffect(() => {
     if (!merchant) return;
     setCurrentStatus(merchant.status);
     setTags(merchant.tags || []);
-    // Load activities from notes JSONB
+    setFields({
+      business_name: merchant.business_name || '',
+      phone: merchant.phone || '',
+      line_id: merchant.line_id || '',
+      location: merchant.location || '',
+      assigned_to: merchant.assigned_to || '',
+      monthly_revenue: merchant.monthly_revenue?.toString() || '',
+      business_type: merchant.business_type || '',
+    });
     if (merchant.notes && typeof merchant.notes === 'object' && Array.isArray((merchant.notes as { activities?: unknown[] }).activities)) {
       setActivities((merchant.notes as { activities: Activity[] }).activities);
     } else {
@@ -120,9 +207,30 @@ export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps)
 
   if (!merchant) return null;
 
-  const status = STATUS_COLORS[currentStatus] || { bg: 'bg-gray-100', text: 'text-gray-600', label: currentStatus };
+  const status = STATUS_COLORS[currentStatus] || { bg: 'bg-gray-100', text: 'text-gray-600', label: currentStatus, dot: 'bg-gray-400' };
   const daysAge = Math.floor((Date.now() - new Date(merchant.created_at).getTime()) / 86400000);
-  const initial = (merchant.business_name || merchant.email)[0]?.toUpperCase() || '?';
+  const displayName = fields.business_name || merchant.email;
+  const initial = displayName[0]?.toUpperCase() || '?';
+
+  const patchField = async (field: string, value: unknown) => {
+    setSaving(true);
+    try {
+      await fetch(`/api/merchants?id=${merchant.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+      onFieldChange?.(merchant.id, field, value);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveField = (field: keyof typeof fields) => async (v: string) => {
+    const parsed: unknown = (field === 'monthly_revenue') ? (v ? parseFloat(v) : null) : (v || null);
+    setFields((prev) => ({ ...prev, [field]: v }));
+    await patchField(field, parsed);
+  };
 
   const saveNotes = async (newActivities: Activity[], newTags: string[]) => {
     const notesData = { activities: newActivities };
@@ -167,8 +275,8 @@ export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps)
   const handleStatusChange = async (newStatus: string) => {
     setCurrentStatus(newStatus);
     setChangingStatus(false);
+    await patchField('status', newStatus);
     if (onStatusChange) await onStatusChange(merchant.id, newStatus);
-    // Also log a status change activity
     const act: Activity = {
       id: Date.now().toString(),
       type: 'status_change',
@@ -199,39 +307,48 @@ export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps)
       {/* Panel */}
       <div
         ref={panelRef}
-        className="fixed top-0 right-0 h-full w-full max-w-[680px] bg-[#f5f6f8] z-50 shadow-2xl flex flex-col overflow-hidden animate-slide-in-right"
-        style={{ animation: 'slideInRight 0.25s ease-out' }}
+        className="fixed top-0 right-0 h-full w-full max-w-[700px] bg-[#f5f6f8] z-50 shadow-2xl flex flex-col overflow-hidden"
+        style={{ animation: 'slideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1)' }}
       >
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-5 py-4 flex items-start justify-between shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-600 shrink-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1 mr-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-sm">
               {initial}
             </div>
-            <div className="min-w-0">
-              <h2 className="text-[15px] font-bold text-gray-900 truncate">
-                {merchant.business_name || merchant.email}
-              </h2>
-              <div className="flex items-center gap-2 mt-0.5">
-                {/* Status badge — clickable */}
+            <div className="min-w-0 flex-1">
+              {/* Business name — inline editable */}
+              <div className="flex items-center gap-1 group">
+                <InlineField
+                  value={fields.business_name}
+                  placeholder="Business name"
+                  onSave={saveField('business_name')}
+                  className="text-[15px] font-bold text-gray-900"
+                />
+              </div>
+              <div className="text-[11px] text-gray-400 truncate mt-0.5">{merchant.email}</div>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                {/* Status badge — clickable dropdown */}
                 <div className="relative">
                   <button
                     onClick={() => setChangingStatus((v) => !v)}
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${status.bg} ${status.text} hover:opacity-80 transition-opacity`}
                   >
+                    <span className={`w-1.5 h-1.5 rounded-full ${status.dot} inline-block`} />
                     {status.label}
                     <ChevronDown size={10} />
                   </button>
                   {changingStatus && (
-                    <div className="absolute top-6 left-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1 min-w-[140px]">
+                    <div className="absolute top-7 left-0 bg-white border border-gray-200 rounded-xl shadow-xl z-10 py-1.5 min-w-[150px] overflow-hidden">
                       {Object.entries(STATUS_COLORS).map(([k, v]) => (
                         <button
                           key={k}
                           onClick={() => handleStatusChange(k)}
-                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 flex items-center gap-2"
+                          className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 transition-colors"
                         >
-                          <span className={`w-2 h-2 rounded-full ${v.bg}`} />
+                          <span className={`w-2 h-2 rounded-full ${v.dot}`} />
                           {v.label}
+                          {k === currentStatus && <Check size={10} className="ml-auto text-blue-500" />}
                         </button>
                       ))}
                     </div>
@@ -249,21 +366,15 @@ export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps)
                 <span className="text-xs text-gray-400 flex items-center gap-1">
                   <Clock size={10} /> {daysAge}d old
                 </span>
+                {saving && <span className="text-[10px] text-blue-400 animate-pulse">Saving…</span>}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <a
-              href={`/crm/merchants/${merchant.id}`}
-              target="_blank"
-              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-              title="Open full page"
-            >
-              <ExternalLink size={15} />
-            </a>
             <button
               onClick={onClose}
-              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Close (Esc)"
             >
               <X size={16} />
             </button>
@@ -272,18 +383,18 @@ export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps)
 
         {/* Body: 2 columns */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Left: Activity */}
-          <div className="flex-1 flex flex-col overflow-hidden border-r border-gray-200">
+          {/* Left: Activity feed */}
+          <div className="flex-1 flex flex-col overflow-hidden border-r border-gray-200 min-w-0">
             {/* Activity Input */}
             <div className="bg-white p-4 border-b border-gray-200 shrink-0">
-              <div className="flex gap-2 mb-2">
+              <div className="flex gap-1.5 mb-2 flex-wrap">
                 {(['note', 'call', 'email', 'meeting', 'line'] as const).map((t) => (
                   <button
                     key={t}
                     onClick={() => setActType(t)}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
                       actType === t
-                        ? ACTIVITY_COLORS[t] + ' ring-1 ring-current ring-opacity-30'
+                        ? ACTIVITY_COLORS[t] + ' ring-1 ring-inset ring-current/30'
                         : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     }`}
                   >
@@ -298,27 +409,28 @@ export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps)
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitActivity();
                 }}
-                placeholder={`Add ${actType}...`}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 min-h-[64px]"
+                placeholder={`Log ${actType}… (⌘+Enter to save)`}
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400/50 min-h-[64px] bg-gray-50 placeholder-gray-400"
               />
               <div className="flex justify-end mt-2">
                 <button
                   onClick={submitActivity}
                   disabled={submitting || !actText.trim()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#4A90D9] hover:bg-[#3a7bc8] text-white text-xs font-medium rounded-lg disabled:opacity-40 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#4A90D9] hover:bg-[#3a7bc8] text-white text-xs font-medium rounded-lg disabled:opacity-40 transition-colors shadow-sm"
                 >
                   <Send size={12} />
-                  {submitting ? 'Saving...' : 'Save activity'}
+                  {submitting ? 'Saving…' : 'Log activity'}
                 </button>
               </div>
             </div>
 
-            {/* Activity Timeline */}
+            {/* Timeline */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {activities.length === 0 && (
-                <div className="text-center py-10 text-sm text-gray-400">
-                  <MessageSquare size={24} className="mx-auto mb-2 opacity-30" />
-                  No activities yet. Log a call, note, or email.
+                <div className="text-center py-12 text-sm text-gray-400">
+                  <MessageSquare size={28} className="mx-auto mb-2 opacity-20" />
+                  <p className="text-[13px] font-medium">No activities yet</p>
+                  <p className="text-[11px] mt-1">Log a call, note, or email above</p>
                 </div>
               )}
               {activities.map((act) => (
@@ -327,14 +439,14 @@ export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps)
                     {ACTIVITY_ICONS[act.type]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="bg-white rounded-lg border border-gray-200 px-3 py-2">
-                      <p className="text-[13px] text-gray-800 leading-relaxed">{act.content}</p>
+                    <div className="bg-white rounded-lg border border-gray-200 px-3 py-2 shadow-sm">
+                      <p className="text-[13px] text-gray-800 leading-relaxed whitespace-pre-wrap">{act.content}</p>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[11px] text-gray-400 font-medium">{act.author}</span>
+                    <div className="flex items-center gap-2 mt-1 px-1">
+                      <span className="text-[11px] text-gray-500 font-medium">{act.author}</span>
                       <span className="text-[11px] text-gray-300">·</span>
                       <span className="text-[11px] text-gray-400">{timeAgo(act.timestamp)}</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${ACTIVITY_COLORS[act.type]} font-medium capitalize`}>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${ACTIVITY_COLORS[act.type]} font-medium capitalize`}>
                         {act.type.replace('_', ' ')}
                       </span>
                     </div>
@@ -344,110 +456,127 @@ export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps)
             </div>
           </div>
 
-          {/* Right: Details */}
-          <div className="w-[220px] shrink-0 overflow-y-auto bg-[#f5f6f8] p-3 space-y-3">
-            {/* Contact */}
-            <div className="bg-white rounded-lg border border-gray-200 p-3">
-              <h4 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Contact</h4>
-              <div className="space-y-1.5">
-                <button
-                  onClick={() => copyText(merchant.email, 'email')}
-                  className="flex items-center gap-2 text-[12px] text-gray-700 hover:text-blue-600 transition-colors group w-full text-left"
-                >
-                  <Mail size={12} className="text-gray-400 shrink-0" />
-                  <span className="truncate">{merchant.email}</span>
-                  {copied === 'email' ? <Check size={10} className="text-green-500 shrink-0" /> : null}
-                </button>
-                {merchant.phone && (
-                  <button
-                    onClick={() => copyText(merchant.phone!, 'phone')}
-                    className="flex items-center gap-2 text-[12px] text-gray-700 hover:text-blue-600 transition-colors w-full text-left"
-                  >
-                    <Phone size={12} className="text-gray-400 shrink-0" />
-                    <span className="truncate">{merchant.phone}</span>
-                    {copied === 'phone' ? <Check size={10} className="text-green-500 shrink-0" /> : null}
-                  </button>
+          {/* Right: Details sidebar */}
+          <div className="w-[230px] shrink-0 overflow-y-auto bg-[#f5f6f8] p-3 space-y-3">
+
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+              <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Quick Actions</h4>
+              <div className="flex flex-col gap-0.5">
+                <a href={`mailto:${merchant.email}`} className="flex items-center gap-2 text-[12px] text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-2 py-1.5 rounded-lg transition-colors">
+                  <Mail size={12} className="shrink-0" /> Send Email
+                </a>
+                {fields.phone && (
+                  <a href={`tel:${fields.phone}`} className="flex items-center gap-2 text-[12px] text-gray-600 hover:text-green-600 hover:bg-green-50 px-2 py-1.5 rounded-lg transition-colors">
+                    <Phone size={12} className="shrink-0" /> Call
+                  </a>
                 )}
-                {merchant.line_id && (
-                  <button
-                    onClick={() => copyText(merchant.line_id!, 'line')}
-                    className="flex items-center gap-2 text-[12px] text-gray-700 hover:text-blue-600 transition-colors w-full text-left"
-                  >
-                    <AtSign size={12} className="text-gray-400 shrink-0" />
-                    <span className="truncate">LINE: {merchant.line_id}</span>
-                    {copied === 'line' ? <Check size={10} className="text-green-500 shrink-0" /> : null}
-                  </button>
-                )}
-                {merchant.location && (
-                  <div className="flex items-center gap-2 text-[12px] text-gray-500">
-                    <MapPin size={12} className="text-gray-400 shrink-0" />
-                    <span className="truncate">{merchant.location}</span>
-                  </div>
+                {fields.line_id && (
+                  <a href={`https://line.me/R/ti/p/${fields.line_id}`} target="_blank" className="flex items-center gap-2 text-[12px] text-gray-600 hover:text-teal-600 hover:bg-teal-50 px-2 py-1.5 rounded-lg transition-colors">
+                    <AtSign size={12} className="shrink-0" /> LINE Message
+                  </a>
                 )}
               </div>
             </div>
 
-            {/* Deal Info */}
-            <div className="bg-white rounded-lg border border-gray-200 p-3">
-              <h4 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Deal Info</h4>
-              <div className="space-y-1.5">
+            {/* Contact — all inline editable */}
+            <div className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+              <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Contact</h4>
+              <div className="space-y-2">
+                {/* Email (non-editable, just copy) */}
+                <button
+                  onClick={() => copyText(merchant.email, 'email')}
+                  className="flex items-center gap-2 text-[12px] text-gray-700 hover:text-blue-600 transition-colors w-full text-left group"
+                >
+                  <Mail size={12} className="text-gray-400 shrink-0 group-hover:text-blue-400" />
+                  <span className="truncate">{merchant.email}</span>
+                  {copied === 'email' ? <Check size={10} className="text-green-500 shrink-0 ml-auto" /> : null}
+                </button>
+
+                <InlineField
+                  value={fields.phone}
+                  placeholder="Add phone…"
+                  onSave={saveField('phone')}
+                  icon={<Phone size={12} />}
+                  type="tel"
+                />
+                <InlineField
+                  value={fields.line_id}
+                  placeholder="Add LINE ID…"
+                  onSave={saveField('line_id')}
+                  icon={<AtSign size={12} />}
+                />
+                <InlineField
+                  value={fields.location}
+                  placeholder="Add location…"
+                  onSave={saveField('location')}
+                  icon={<MapPin size={12} />}
+                />
+              </div>
+            </div>
+
+            {/* Deal Info — editable fields */}
+            <div className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+              <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Deal Info</h4>
+              <div className="space-y-2">
                 {merchant.utm_source && (
-                  <div className="flex items-center gap-2 text-[12px] text-gray-600">
+                  <div className="flex items-center gap-2 text-[12px] text-gray-500">
                     <TrendingUp size={12} className="text-gray-400 shrink-0" />
-                    <span>Source: {merchant.utm_source}</span>
+                    <span>{merchant.utm_source}</span>
                   </div>
                 )}
-                {merchant.business_type && (
-                  <div className="flex items-center gap-2 text-[12px] text-gray-600">
-                    <Building2 size={12} className="text-gray-400 shrink-0" />
-                    <span className="capitalize">{merchant.business_type}</span>
-                  </div>
-                )}
-                {merchant.assigned_to && (
-                  <div className="flex items-center gap-2 text-[12px] text-gray-600">
-                    <User size={12} className="text-gray-400 shrink-0" />
-                    <span>{merchant.assigned_to}</span>
-                  </div>
-                )}
+                <InlineField
+                  value={fields.business_type}
+                  placeholder="Business type…"
+                  onSave={saveField('business_type')}
+                  icon={<Building2 size={12} />}
+                />
+                <InlineField
+                  value={fields.assigned_to}
+                  placeholder="Assign to…"
+                  onSave={saveField('assigned_to')}
+                  icon={<User size={12} />}
+                />
                 <div className="flex items-center gap-2 text-[12px] text-gray-500">
                   <Clock size={12} className="text-gray-400 shrink-0" />
-                  <span>{new Date(merchant.created_at).toLocaleDateString()}</span>
+                  <span>{new Date(merchant.created_at).toLocaleDateString('th-TH')}</span>
                 </div>
               </div>
             </div>
 
             {/* Revenue */}
-            {(merchant.lifetime_revenue || merchant.monthly_revenue) && (
-              <div className="bg-white rounded-lg border border-gray-200 p-3">
-                <h4 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Revenue</h4>
-                <div className="space-y-1.5">
-                  {merchant.lifetime_revenue != null && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-gray-500">Lifetime</span>
-                      <span className="text-[12px] font-semibold text-gray-800">{formatCurrency(merchant.lifetime_revenue)}</span>
-                    </div>
-                  )}
-                  {merchant.monthly_revenue != null && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-gray-500">Monthly</span>
-                      <span className="text-[12px] font-semibold text-gray-800">{formatCurrency(merchant.monthly_revenue)}</span>
-                    </div>
-                  )}
+            <div className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+              <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Revenue</h4>
+              <div className="space-y-2">
+                {merchant.lifetime_revenue != null && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-gray-500">Lifetime</span>
+                    <span className="text-[12px] font-semibold text-gray-800">{formatCurrency(merchant.lifetime_revenue)}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <DollarSign size={12} className="text-gray-400 shrink-0" />
+                  <InlineField
+                    value={fields.monthly_revenue}
+                    placeholder="Monthly revenue…"
+                    onSave={saveField('monthly_revenue')}
+                    type="number"
+                  />
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Tags */}
-            <div className="bg-white rounded-lg border border-gray-200 p-3">
-              <h4 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+            <div className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+              <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1">
                 <Tag size={10} /> Tags
               </h4>
               <div className="flex flex-wrap gap-1 mb-2">
                 {tags.map((t) => (
-                  <span key={t} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[11px]">
+                  <span key={t} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[11px] border border-blue-100">
                     {t}
-                    <button onClick={() => removeTag(t)} className="hover:text-red-500 transition-colors">
-                      <X size={9} />
+                    <button onClick={() => removeTag(t)} className="hover:text-red-500 transition-colors ml-0.5">
+                      <X size={8} />
                     </button>
                   </span>
                 ))}
@@ -458,48 +587,13 @@ export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps)
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addTag()}
-                  placeholder="Add tag..."
-                  className="flex-1 text-[11px] border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  placeholder="Add tag…"
+                  className="flex-1 text-[11px] border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-gray-50"
                 />
-                <button onClick={addTag} className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-[11px] text-gray-600 transition-colors">+</button>
+                <button onClick={addTag} className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-[12px] text-gray-600 transition-colors">+</button>
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-white rounded-lg border border-gray-200 p-3">
-              <h4 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Quick Actions</h4>
-              <div className="flex flex-col gap-1.5">
-                <a
-                  href={`mailto:${merchant.email}`}
-                  className="flex items-center gap-2 text-[12px] text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-2 py-1.5 rounded transition-colors"
-                >
-                  <Mail size={12} /> Send Email
-                </a>
-                {merchant.phone && (
-                  <a
-                    href={`tel:${merchant.phone}`}
-                    className="flex items-center gap-2 text-[12px] text-gray-600 hover:text-green-600 hover:bg-green-50 px-2 py-1.5 rounded transition-colors"
-                  >
-                    <Phone size={12} /> Call
-                  </a>
-                )}
-                {merchant.line_id && (
-                  <a
-                    href={`https://line.me/R/ti/p/${merchant.line_id}`}
-                    target="_blank"
-                    className="flex items-center gap-2 text-[12px] text-gray-600 hover:text-teal-600 hover:bg-teal-50 px-2 py-1.5 rounded transition-colors"
-                  >
-                    <AtSign size={12} /> LINE Message
-                  </a>
-                )}
-                <a
-                  href={`/crm/merchants/${merchant.id}`}
-                  className="flex items-center gap-2 text-[12px] text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-2 py-1.5 rounded transition-colors"
-                >
-                  <ExternalLink size={12} /> Full Profile
-                </a>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -507,7 +601,7 @@ export function DealPanel({ merchant, onClose, onStatusChange }: DealPanelProps)
       <style jsx>{`
         @keyframes slideInRight {
           from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
+          to { transform: translateX(0%); opacity: 1; }
         }
       `}</style>
     </>
