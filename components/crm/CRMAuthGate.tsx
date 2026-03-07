@@ -27,7 +27,6 @@ export function CRMAuthGate({ children }: { children: ReactNode }) {
               alt="Freedom World"
               width={160}
               height={51}
-              className="brightness-0 invert"
               priority
             />
           </div>

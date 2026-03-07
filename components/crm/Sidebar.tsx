@@ -40,7 +40,6 @@ export function Sidebar() {
             alt="Freedom World"
             width={130}
             height={41}
-            className="brightness-0 invert"
             priority
           />
         </Link>
