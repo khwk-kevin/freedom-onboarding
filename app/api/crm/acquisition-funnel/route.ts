@@ -1,4 +1,3 @@
-// TODO: Add auth check — import { getServerSession } from '@/lib/supabase/auth'; const user = await getServerSession(); if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 
@@ -15,71 +14,77 @@ export async function GET(request: Request) {
     else if (period === '30d') since = new Date(now.getTime() - 30 * 86400000).toISOString();
     else if (period === '90d') since = new Date(now.getTime() - 90 * 86400000).toISOString();
 
-    let query = supabase
+    // --- 1. Real merchant data from Supabase ---
+    let merchantQuery = supabase
       .from('merchants')
       .select('id, status, onboarding_status, utm_source, lifetime_revenue, monthly_revenue, created_at');
+    if (since) merchantQuery = merchantQuery.gte('created_at', since);
+    const { data: merchants, error: mErr } = await merchantQuery;
+    if (mErr) throw mErr;
 
-    if (since) query = query.gte('created_at', since);
+    // --- 2. Real event data from Supabase events table ---
+    let eventsQuery = supabase
+      .from('events')
+      .select('event_type, created_at');
+    if (since) eventsQuery = eventsQuery.gte('created_at', since);
+    const { data: events } = await eventsQuery;
 
-    const { data: merchants, error } = await query;
-    if (error) throw error;
+    // Count real events
+    const eventCounts: Record<string, number> = {};
+    for (const e of events || []) {
+      eventCounts[e.event_type] = (eventCounts[e.event_type] || 0) + 1;
+    }
 
     const all = merchants || [];
-    const total = all.length;
 
-    // --- Funnel stage counts from DB ---
-    const signupStarted = total; // all merchants signed up
-    const signupCompleted = total; // same (they're all in DB)
-    const onboardingStarted = all.filter((m) =>
-      ['context', 'branding', 'products', 'rewards', 'go_live', 'completed', 'onboarding', 'onboarded', 'active', 'dormant'].includes(m.onboarding_status ?? m.status)
-    ).length;
-    const contextPhase = all.filter((m) =>
-      ['branding', 'products', 'rewards', 'go_live', 'completed', 'onboarded', 'active'].includes(m.onboarding_status ?? '')
-    ).length + all.filter(m => ['branding', 'products', 'rewards', 'go_live', 'completed'].includes(m.status ?? '')).length;
-    const brandingPhase = all.filter((m) =>
-      ['products', 'rewards', 'go_live', 'completed', 'onboarded', 'active'].includes(m.onboarding_status ?? '')
-    ).length;
-    const productsPhase = all.filter((m) =>
-      ['rewards', 'go_live', 'completed', 'onboarded', 'active'].includes(m.onboarding_status ?? '')
-    ).length;
-    const rewardsPhase = all.filter((m) =>
-      ['go_live', 'completed', 'onboarded', 'active'].includes(m.onboarding_status ?? '')
-    ).length;
-    const goLivePhase = all.filter((m) =>
-      ['completed', 'onboarded', 'active'].includes(m.onboarding_status ?? '') ||
-      ['onboarded', 'active'].includes(m.status ?? '')
-    ).length;
-    const onboardingComplete = all.filter((m) =>
-      m.onboarding_status === 'completed' || m.status === 'onboarded' || m.status === 'active'
-    ).length;
-    const firstProduct = all.filter((m) =>
-      m.status === 'active' || m.status === 'onboarded'
-    ).length;
-    const firstTransaction = all.filter((m) => (m.lifetime_revenue ?? 0) > 0).length;
-    const activeMerchant = all.filter((m) => m.status === 'active').length;
+    // --- 3. Build funnel with REAL data only ---
+    // Exclude pipedrive imports from funnel (they didn't come through landing page)
+    const realSignups = all.filter((m) => m.utm_source !== 'pipedrive_import' && !m.utm_source?.startsWith('pipedrive'));
+    const pipedriveImports = all.filter((m) => m.utm_source === 'pipedrive_import' || m.utm_source?.startsWith('pipedrive'));
 
-    // --- Estimated top-of-funnel (typical SaaS rates) ---
-    // signup → landing: ~3% CVR, cta: ~30% of landing clicks
-    const estimatedLandingVisits = Math.round(signupStarted / 0.03);
-    const estimatedCtaClicks = Math.round(estimatedLandingVisits * 0.30);
-    const estimatedSignupPageViews = Math.round(estimatedCtaClicks * 0.85);
+    // Landing page events (from events table — tracked by PostHog + Supabase)
+    const pageViews = eventCounts['$pageview'] || eventCounts['pageview'] || 0;
+    const ctaClicks = eventCounts['cta_click'] || 0;
+    const scrollDepth50 = eventCounts['scroll_depth'] || 0;
+    const faqExpands = eventCounts['faq_expand'] || 0;
+    const landingExits = eventCounts['landing_exit'] || 0;
+
+    // Signup events
+    const signupStarts = eventCounts['signup_start'] || 0;
+    const signupCompletes = eventCounts['signup_complete'] || realSignups.length;
+    const signupErrors = eventCounts['signup_error'] || 0;
+
+    // Onboarding events (from events table or merchant status)
+    const onboardStarts = eventCounts['onboard_start'] || 0;
+    const onboardCompletes = eventCounts['onboard_complete'] || 0;
+
+    // Merchant status counts (real signups only, excluding imports)
+    const realOnboarding = realSignups.filter((m) =>
+      ['context', 'branding', 'products', 'rewards', 'golive', 'completed'].includes(m.onboarding_status || '')
+    ).length;
+    const realCompleted = realSignups.filter((m) =>
+      m.onboarding_status === 'completed' || m.status === 'active' || m.status === 'onboarded'
+    ).length;
+    const realActive = realSignups.filter((m) => m.status === 'active').length;
+    const realWithRevenue = realSignups.filter((m) => (m.lifetime_revenue ?? 0) > 0).length;
+
+    // All merchants status counts (including imports, for reference)
+    const allActive = all.filter((m) => m.status === 'active').length;
+    const allCompleted = all.filter((m) =>
+      m.onboarding_status === 'completed' || m.status === 'active' || m.status === 'onboarded'
+    ).length;
+    const allWithRevenue = all.filter((m) => (m.lifetime_revenue ?? 0) > 0).length;
 
     const stages = [
-      { id: 'landing', label: 'Landing Visit', count: estimatedLandingVisits, estimated: true },
-      { id: 'cta_click', label: 'CTA Click', count: estimatedCtaClicks, estimated: true },
-      { id: 'signup_page', label: 'Signup Page', count: estimatedSignupPageViews, estimated: true },
-      { id: 'signup_started', label: 'Signup Started', count: signupStarted, estimated: false },
-      { id: 'signup_completed', label: 'Signup Completed', count: signupCompleted, estimated: false },
-      { id: 'onboarding_started', label: 'Onboarding Started', count: onboardingStarted, estimated: false },
-      { id: 'context', label: 'Context Phase', count: contextPhase, estimated: false },
-      { id: 'branding', label: 'Branding Phase', count: brandingPhase, estimated: false },
-      { id: 'products', label: 'Products Phase', count: productsPhase, estimated: false },
-      { id: 'rewards', label: 'Rewards Phase', count: rewardsPhase, estimated: false },
-      { id: 'go_live', label: 'Go Live Phase', count: goLivePhase, estimated: false },
-      { id: 'onboarding_complete', label: 'Onboarding Complete', count: onboardingComplete, estimated: false },
-      { id: 'first_product', label: 'First Product Listed', count: firstProduct, estimated: false },
-      { id: 'first_transaction', label: 'First Transaction', count: firstTransaction, estimated: false },
-      { id: 'active', label: 'Active Merchant', count: activeMerchant, estimated: false },
+      { id: 'page_view', label: 'Landing Page Views', count: pageViews, source: 'posthog+events', estimated: false },
+      { id: 'scroll_50', label: 'Scrolled 50%+', count: scrollDepth50, source: 'posthog+events', estimated: false },
+      { id: 'cta_click', label: 'CTA Clicked', count: ctaClicks, source: 'posthog+events', estimated: false },
+      { id: 'signup_started', label: 'Signup Started', count: signupStarts, source: 'posthog+events', estimated: false },
+      { id: 'signup_completed', label: 'Signup Completed', count: realSignups.length, source: 'supabase', estimated: false },
+      { id: 'onboarding_started', label: 'Onboarding Started', count: onboardStarts || realOnboarding, source: 'supabase', estimated: false },
+      { id: 'onboarding_complete', label: 'Onboarding Complete', count: onboardCompletes || realCompleted, source: 'supabase', estimated: false },
+      { id: 'first_transaction', label: 'First Transaction', count: realWithRevenue, source: 'supabase', estimated: false },
+      { id: 'active', label: 'Active Merchant', count: realActive, source: 'supabase', estimated: false },
     ];
 
     // Add conversion rates + drop-off
@@ -92,10 +97,11 @@ export async function GET(request: Request) {
       return { ...stage, conversionToNext, dropOffFromPrev, dropOffCount };
     });
 
-    // --- Channel attribution ---
+    // --- Channel attribution (all merchants) ---
     const channelMap: Record<string, { total: number; active: number; revenue: number }> = {};
     for (const m of all) {
       const src = m.utm_source || 'Direct / Unknown';
+      if (src === 'pipedrive_import') continue; // Skip imports from channel analysis
       if (!channelMap[src]) channelMap[src] = { total: 0, active: 0, revenue: 0 };
       channelMap[src].total++;
       if (m.status === 'active') channelMap[src].active++;
@@ -111,28 +117,44 @@ export async function GET(request: Request) {
       }))
       .sort((a, b) => b.total - a.total);
 
-    // Summary stats
-    const overallConversion = estimatedLandingVisits > 0
-      ? ((activeMerchant / estimatedLandingVisits) * 100).toFixed(2)
+    // Summary
+    const overallConversion = pageViews > 0
+      ? ((realActive / pageViews) * 100).toFixed(2)
       : '0';
 
-    // Biggest drop-off (non-estimated stages)
-    const realStages = stagesWithMeta.filter(s => !s.estimated && s.dropOffCount > 0);
+    const realStages = stagesWithMeta.filter((s) => s.dropOffCount > 0);
     const biggestDropoff = realStages.sort((a, b) => b.dropOffCount - a.dropOffCount)[0] ?? null;
-
-    const bestChannel = channels.sort((a, b) => b.conversionRate - a.conversionRate)[0] ?? null;
+    const bestChannel = [...channels].sort((a, b) => b.conversionRate - a.conversionRate)[0] ?? null;
 
     return NextResponse.json({
       period,
-      totalMerchants: total,
+      totalMerchants: all.length,
+      realSignups: realSignups.length,
+      pipedriveImports: pipedriveImports.length,
       stages: stagesWithMeta,
       channels,
+      engagement: {
+        faqExpands,
+        signupErrors,
+        landingExits,
+      },
       summary: {
         overallConversion: parseFloat(overallConversion),
         biggestDropoffStage: biggestDropoff?.label ?? null,
         biggestDropoffPct: biggestDropoff?.dropOffFromPrev ?? null,
         bestChannel: bestChannel?.source ?? null,
         bestChannelConversion: bestChannel?.conversionRate ?? null,
+        posthogConnected: (events || []).length > 0,
+        dataNote: pageViews === 0
+          ? 'No landing page events tracked yet. Visit the landing page to start generating data. PostHog is collecting data — connect the Personal API Key for historical insights.'
+          : undefined,
+      },
+      // Reference: all merchants including Pipedrive imports
+      allMerchants: {
+        total: all.length,
+        active: allActive,
+        completed: allCompleted,
+        withRevenue: allWithRevenue,
       },
     });
   } catch (err) {
