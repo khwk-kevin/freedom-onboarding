@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
   let query = supabase
     .from('merchants')
     .select(
-      'id, email, business_name, business_type, status, onboarding_status, utm_source, health_score, created_at, last_activity_at'
+      'id, email, business_name, business_type, status, onboarding_status, utm_source, health_score, created_at, last_activity_at, phone, line_id, location, assigned_to, lifetime_revenue, monthly_revenue, notes, tags'
     )
     .order('created_at', { ascending: false })
     .range(Number(offset), Number(offset) + Number(limit) - 1);

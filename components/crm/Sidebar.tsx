@@ -12,6 +12,7 @@ import {
   Bell,
   Plus,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
@@ -31,17 +32,19 @@ export function Sidebar() {
       className="hidden md:flex w-[220px] bg-[#1a1a2e] text-white flex-col h-screen sticky top-0 shrink-0"
       aria-label="BD Console navigation"
     >
-      {/* Logo — Pipedrive-style compact header */}
+      {/* Logo */}
       <div className="px-4 py-4 border-b border-white/5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-[#00ff88] rounded-lg flex items-center justify-center shrink-0">
-            <span className="text-[#1a1a2e] font-bold text-xs">FW</span>
-          </div>
-          <div className="min-w-0">
-            <p className="font-semibold text-white text-[13px] leading-tight truncate">Freedom BD</p>
-            <p className="text-gray-500 text-[11px]">Acquisition Pipeline</p>
-          </div>
-        </div>
+        <Link href="/crm" className="flex items-center gap-3">
+          <Image
+            src="/images/freedom-logo.svg"
+            alt="Freedom World"
+            width={130}
+            height={41}
+            className="brightness-0 invert"
+            priority
+          />
+        </Link>
+        <p className="text-gray-500 text-[10px] mt-1.5 uppercase tracking-widest font-medium">BD Console</p>
       </div>
 
       {/* Quick actions — Pipedrive-style */}

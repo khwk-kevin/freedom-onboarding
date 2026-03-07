@@ -14,7 +14,7 @@ function MerchantsContent() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/merchants?limit=200');
+      const res = await fetch('/api/merchants?limit=500');
       const data = await res.json();
       setMerchants(data.merchants ?? []);
     } finally {
@@ -46,7 +46,18 @@ function MerchantsContent() {
       {loading ? (
         <div className="bg-white rounded-xl border border-gray-200 h-64 animate-pulse" />
       ) : (
-        <MerchantTable merchants={merchants} initialStatus={initialStatus} />
+        <MerchantTable
+          merchants={merchants}
+          initialStatus={initialStatus}
+          onStatusChange={async (merchantId, newStatus) => {
+            setMerchants((prev) => prev.map((m) => m.id === merchantId ? { ...m, status: newStatus } : m));
+            await fetch(`/api/merchants?id=${merchantId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: newStatus }),
+            });
+          }}
+        />
       )}
     </div>
   );
