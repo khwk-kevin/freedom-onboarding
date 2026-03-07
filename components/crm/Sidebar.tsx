@@ -11,6 +11,7 @@ import {
   Plus,
   Compass,
   TrendingUp,
+  KeyRound,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
@@ -121,6 +122,13 @@ export function Sidebar() {
             </p>
           </div>
         </div>
+        <Link
+          href="/crm/change-password"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-[12px] text-gray-500 hover:text-gray-300 hover:bg-white/5 w-full transition-colors"
+        >
+          <KeyRound size={14} />
+          Change Password
+        </Link>
         <button
           onClick={handleSignOut}
           aria-label="Sign out"
