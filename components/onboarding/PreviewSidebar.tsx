@@ -5,13 +5,16 @@ import { createPortal } from 'react-dom';
 import type { CommunityData, CommunityCategory } from '@/types/onboarding';
 import { ALLOWED_CATEGORIES, DEFAULT_PRIMARY_COLORS } from '@/types/onboarding';
 import { ConfirmationPanel } from './ConfirmationPanel';
+import { getTemplateById } from '@/lib/onboarding/templates';
 
 interface PreviewSidebarProps {
-  communityData: Partial<CommunityData>;
+  communityData: Partial<CommunityData> & { businessType?: string };
   onUpdate: (data: Partial<CommunityData>) => void;
   onGenerateImage?: (type: 'logo' | 'banner') => Promise<void>;
   isGeneratingLogo?: boolean;
   isGeneratingBanner?: boolean;
+  /** Show "preview" watermark (anonymous/pre-signup) */
+  isAnonymous?: boolean;
 }
 
 function getCardColors(hex: string) {
@@ -34,7 +37,19 @@ export function PreviewSidebar({
   onGenerateImage,
   isGeneratingLogo,
   isGeneratingBanner,
+  isAnonymous = false,
 }: PreviewSidebarProps) {
+  // Merge template defaults when a business type is selected but no data yet
+  const template = communityData.businessType ? getTemplateById(communityData.businessType) : null;
+  const effectiveData: Partial<CommunityData> & { businessType?: string } = {
+    primaryColor: template?.primaryColor || '#10F48B',
+    ...communityData,
+    // Only use template sample name if user hasn't provided their own
+    name: communityData.name && communityData.name !== template?.sampleName
+      ? communityData.name
+      : (communityData.name || template?.sampleName),
+    description: communityData.description || template?.sampleDescription,
+  };
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState<string>('');
   const [logoModalOpen, setLogoModalOpen] = useState(false);
@@ -87,7 +102,7 @@ export function PreviewSidebar({
     onUpdate({ primaryColor: color });
   };
 
-  const cardColor = communityData.primaryColor || '#ffffff';
+  const cardColor = effectiveData.primaryColor || communityData.primaryColor || '#ffffff';
   const cardColors = getCardColors(cardColor);
 
   return (
@@ -100,6 +115,16 @@ export function PreviewSidebar({
         </div>
         <span className="text-xs text-gray-400">Auto-updating</span>
       </div>
+
+      {/* Anonymous watermark */}
+      {isAnonymous && (
+        <div
+          className="absolute top-2 right-2 z-20 px-2 py-1 rounded-md text-[10px] font-semibold tracking-wider select-none pointer-events-none"
+          style={{ background: 'rgba(16,244,139,0.12)', color: '#10F48B', border: '1px solid rgba(16,244,139,0.2)' }}
+        >
+          PREVIEW
+        </div>
+      )}
 
       {/* Preview Content */}
       <div className="flex-1 overflow-y-auto p-6">

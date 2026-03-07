@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { processMessage, generateGreeting } from '@/lib/onboarding/chat-engine';
+import { processMessage, generateGreeting, processMerchantMessage } from '@/lib/onboarding/chat-engine';
 import type { ChatMessage, CommunityData } from '@/types/onboarding';
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/utils/rate-limit';
 
@@ -22,6 +22,7 @@ export async function GET() {
 }
 
 // POST /api/onboarding/chat — streaming SSE chat endpoint
+// Supports anonymous mode (no merchantId required — chat-first flow)
 export async function POST(req: NextRequest) {
   // Rate limit: 20 chat messages per minute per IP
   const ip = getClientIp(req);
@@ -30,9 +31,25 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { messages, extractedData } = body as {
+    const {
+      messages,
+      extractedData,
+      anonymousSessionId,
+      merchantId,
+      isMerchantFlow,
+      merchantContext,
+    } = body as {
       messages: ChatMessage[];
       extractedData?: Partial<CommunityData>;
+      anonymousSessionId?: string;
+      merchantId?: string;
+      isMerchantFlow?: boolean;
+      merchantContext?: {
+        businessType?: string;
+        businessName?: string;
+        isAnonymous?: boolean;
+        exchangeCount?: number;
+      };
     };
 
     if (!messages || !Array.isArray(messages)) {
@@ -40,7 +57,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Limit total interactions per session to control Sonnet costs
-    // The onboarding flow is ~7 structured steps, so 40 user messages is very generous
     const MAX_USER_MESSAGES = 40;
     const userMessageCount = messages.filter((m) => m.role === 'user').length;
     if (userMessageCount > MAX_USER_MESSAGES) {
@@ -48,7 +64,7 @@ export async function POST(req: NextRequest) {
         {
           error: 'conversation_limit',
           message:
-            "You've reached the maximum number of messages for this session. Please click 'Create Community' to finish, or contact our BD team for help.",
+            "You've reached the maximum number of messages for this session. Please click 'Go Live' to finish, or contact our team for help.",
         },
         { status: 429 }
       );
@@ -59,28 +75,61 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const result = await processMessage(messages, extractedData);
+          let reply: string;
+          let updatedData: Partial<CommunityData> | Record<string, unknown> = extractedData || {};
 
-          // Stream the reply text token by token (simulate streaming for now)
-          // In production you'd use Anthropic's streaming API
-          const words = result.reply.split('');
+          if (isMerchantFlow) {
+            // New chat-first merchant flow
+            const result = await processMerchantMessage(messages, merchantContext);
+            reply = result.reply;
+
+            // Merge merchant extractions into updatedData
+            if (result.extractions.businessName) {
+              (updatedData as Record<string, unknown>).name = result.extractions.businessName;
+            }
+            if (result.extractions.products) {
+              (updatedData as Record<string, unknown>).products = result.extractions.products;
+            }
+            if (result.extractions.rewards) {
+              (updatedData as Record<string, unknown>).rewards = result.extractions.rewards;
+            }
+            if (result.extractions.step) {
+              (updatedData as Record<string, unknown>).step = result.extractions.step;
+            }
+            if (result.extractions.vibe) {
+              (updatedData as Record<string, unknown>).vibe = result.extractions.vibe;
+            }
+            // Send extractions as separate event
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: 'extractions', extractions: result.extractions })}\n\n`
+              )
+            );
+          } else {
+            // Legacy general community flow
+            const result = await processMessage(messages, extractedData);
+            reply = result.reply;
+            updatedData = result.updatedData;
+          }
+
+          // Stream the reply text
+          const chars = reply.split('');
           const chunkSize = 3;
 
-          for (let i = 0; i < words.length; i += chunkSize) {
-            const chunk = words.slice(i, i + chunkSize).join('');
+          for (let i = 0; i < chars.length; i += chunkSize) {
+            const chunk = chars.slice(i, i + chunkSize).join('');
             controller.enqueue(
               encoder.encode(
                 `data: ${JSON.stringify({ type: 'text', content: chunk })}\n\n`
               )
             );
-            // Small delay for streaming feel
             await new Promise((r) => setTimeout(r, 8));
           }
 
           // Send extracted data event
           controller.enqueue(
             encoder.encode(
-              `data: ${JSON.stringify({ type: 'data', updatedData: result.updatedData })}\n\n`
+              `data: ${JSON.stringify({ type: 'data', updatedData })}\n\n`
             )
           );
 

@@ -6,6 +6,62 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// ============================================================
+// MERCHANT ONBOARDING — "Chat First, Signup Later" Flow
+// Free phase: steps 1-3 (anonymous). Gated: steps 4-6 (signed up).
+// ============================================================
+
+export const MERCHANT_SYSTEM_PROMPT = `You are AVA — Freedom World's AI Community Builder. Your job is to build an incredible loyalty community for a local business owner in a few fun steps.
+
+## PERSONALITY
+Warm, enthusiastic, VISUAL-FIRST. Every reply should tell the user what is happening in their preview panel. Make them feel like their community is being built live in front of them.
+
+## FLOW (6 STEPS)
+
+### STEP 1 — Business Type (FREE, anonymous)
+When the user's first message contains [[BUSINESS_TYPE:type]] (sent automatically when they tap a button):
+- Acknowledge their business type with excitement (1 sentence)
+- Tell them their template is live in the preview
+- Ask: "What's the name of your [business type]? And in one word, what's the vibe — cozy, bold, classy, playful, or something else?"
+- Output [[STEP:2]] on its own line
+
+### STEP 2 — Business Name + Vibe (FREE, anonymous)
+Extract the business name and vibe from the user's reply.
+- Acknowledge the name with energy (1 sentence)
+- Tell them the preview is updating with their name and brand colors
+- Say: "Now for the magic — I'm generating your unique logo... ✨"
+- Output [[NAME:BusinessName]] on its own line
+- Output [[VIBE:Vibe]] on its own line
+- Output [[STEP:3]] on its own line
+NOTE: After this message the frontend will trigger logo generation AND show the signup wall. Do NOT ask for more info.
+
+### STEP 3 — After Logo Generated + Signup Completed (GATED)
+This step runs after the user has signed up and the logo has been generated.
+- Congratulate them on their beautiful community identity
+- Tell them the preview shows their logo
+- Ask: "What do you sell? List your main products or services (up to 5) — I'll add them to your community."
+
+### STEP 4 — Products & Services (GATED)
+Extract the products/services they list.
+- Confirm the products are added to the preview
+- Ask: "How do you want to reward your loyal customers? For example: points per purchase, free item after X visits, birthday rewards, VIP tiers — what feels right for your business?"
+- Output [[PRODUCTS:comma,separated,list]] on its own line
+
+### STEP 5 — Rewards & Loyalty (GATED)
+Extract their reward ideas.
+- Confirm rewards are configured in the preview
+- Say: "Your community is ready to launch! 🚀 Take a final look at your preview, then click **Go Live** to publish."
+- Output [[REWARDS:description]] on its own line
+- Output [[STEP:complete]] on its own line
+
+## RULES
+- Keep responses SHORT (2-4 sentences)
+- Always tell them what's updating in the preview
+- Reference their actual business name once you have it
+- Use [[TAGS]] for data extraction — they are stripped before display
+- Never ask multiple questions at once`;
+
+
 const SYSTEM_PROMPT = `You are AVA - Freedom World's AI Community Consultant. Your mission: Guide users through community creation by collecting all required information in a sequential, structured flow. Be CONCISE, SMART, and EFFICIENT.
 
 ## CRITICAL RULES
@@ -314,4 +370,96 @@ export async function moderateContent(content: string): Promise<boolean> {
   // Return false (not flagged) by default
   const prohibited = /\b(spam|scam|fraud|phishing|malware|terrorism|violence)\b/i;
   return prohibited.test(content);
+}
+
+// ============================================================
+// Merchant message processor (chat-first / anonymous flow)
+// ============================================================
+
+export interface MerchantExtractions {
+  businessName?: string;
+  vibe?: string;
+  products?: string[];
+  rewards?: string;
+  step?: string;
+}
+
+export interface MerchantChatResult {
+  reply: string;
+  extractions: MerchantExtractions;
+}
+
+export async function processMerchantMessage(
+  messages: ChatMessage[],
+  context?: {
+    businessType?: string;
+    businessName?: string;
+    isAnonymous?: boolean;
+    exchangeCount?: number;
+  }
+): Promise<MerchantChatResult> {
+  let system = MERCHANT_SYSTEM_PROMPT;
+
+  if (context?.businessName) {
+    system += `\n\n## CURRENT STATE\nBusiness name: "${context.businessName}"`;
+  }
+  if (context?.businessType) {
+    system += `\nBusiness type: ${context.businessType}`;
+  }
+
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 400,
+    system,
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+  });
+
+  const rawReply =
+    response.content[0]?.type === 'text'
+      ? response.content[0].text
+      : "I'm having a little trouble — could you repeat that? 😊";
+
+  // Extract tags
+  const nameMatch = rawReply.match(/\[\[NAME:([^\]]+)\]\]/i);
+  const vibeMatch = rawReply.match(/\[\[VIBE:([^\]]+)\]\]/i);
+  const productsMatch = rawReply.match(/\[\[PRODUCTS:([^\]]+)\]\]/i);
+  const rewardsMatch = rawReply.match(/\[\[REWARDS:([^\]]+)\]\]/i);
+  const stepMatch = rawReply.match(/\[\[STEP:([^\]]+)\]\]/i);
+
+  const extractions: MerchantExtractions = {
+    businessName: nameMatch?.[1].trim(),
+    vibe: vibeMatch?.[1].trim(),
+    products: productsMatch?.[1].trim().split(',').map((s) => s.trim()).filter(Boolean),
+    rewards: rewardsMatch?.[1].trim(),
+    step: stepMatch?.[1].trim(),
+  };
+
+  // Strip all [[TAGS]] before display
+  const reply = rawReply
+    .replace(/\[\[[A-Z_]+:[^\]]*\]\]/g, '')
+    .trim();
+
+  return { reply, extractions };
+}
+
+export async function generateMerchantGreeting(businessType?: string): Promise<string> {
+  if (!businessType) {
+    return "Hey! 👋 I'm AVA — your AI community builder. Tap your business type below to get started — I'll build your community live as we chat! ✨";
+  }
+
+  const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-20250514',
+    max_tokens: 150,
+    system: MERCHANT_SYSTEM_PROMPT,
+    messages: [
+      { role: 'user', content: `[[BUSINESS_TYPE:${businessType}]]` },
+    ],
+  });
+
+  const raw =
+    response.content[0]?.type === 'text'
+      ? response.content[0].text.replace(/\[\[[A-Z_]+:[^\]]*\]\]/g, '').trim()
+      : `Love it — a ${businessType}! 🎉 Your template is live in the preview. What's the name of your ${businessType}? And in one word, what's the vibe — cozy, bold, classy, playful?`;
+
+  return raw;
 }

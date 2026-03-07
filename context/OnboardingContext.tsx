@@ -3,132 +3,186 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import type { ChatMessage, CommunityData, ConversationPhase } from '@/types/onboarding';
 import { track } from '@/lib/tracking/unified';
+import { BUSINESS_TEMPLATES, getTemplateById } from '@/lib/onboarding/templates';
+
+// ============================================================
+// Types
+// ============================================================
+
+interface MerchantOnboardingData extends Partial<CommunityData> {
+  businessType?: string;
+  vibe?: string;
+  products?: string[];
+  rewards?: string;
+  step?: string;
+}
 
 interface OnboardingContextType {
+  // Chat state
   messages: ChatMessage[];
-  communityData: Partial<CommunityData>;
+  communityData: MerchantOnboardingData;
   isPreviewVisible: boolean;
   currentPhase: ConversationPhase;
   isLoading: boolean;
   isGeneratingLogo: boolean;
   isGeneratingBanner: boolean;
   error: string | null;
+
+  // Anonymous session
+  isAnonymous: boolean;
+  anonymousSessionId: string;
+  showSignupWall: boolean;
+  exchangeCount: number;
+
+  // Actions
   sendMessage: (content: string) => Promise<void>;
-  updateCommunityData: (data: Partial<CommunityData>) => void;
+  selectBusinessType: (typeId: string) => void;
+  updateCommunityData: (data: MerchantOnboardingData) => void;
   showPreview: () => void;
   resetSession: () => void;
   generateImage: (type: 'logo' | 'banner') => Promise<void>;
+  onSignupSuccess: (merchantId: string, email: string) => Promise<void>;
+  dismissSignupWall: () => void;
 }
+
+// ============================================================
+// Context
+// ============================================================
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
-// Helper function to detect if user requested regeneration of already-generated images
-function detectRegenerationRequest(
-  userMessage: string,
-  currentData: Partial<CommunityData>
-): { logo: boolean; banner: boolean } | null {
-  if (!currentData.logo && !currentData.banner) return null;
-
-  const isRegenRequest =
-    /regenerat|new logo|new banner|different logo|different banner|try again|redo|remake|another logo|another banner|generate.*(logo|banner)|new.*(logo|banner)/i.test(
-      userMessage
-    );
-  if (!isRegenRequest) return null;
-
-  const hasLogoRef = /logo/i.test(userMessage);
-  const hasBannerRef = /banner/i.test(userMessage);
-
-  if (!hasLogoRef && !hasBannerRef) {
-    return { logo: !!currentData.logo, banner: !!currentData.banner };
-  }
-
-  return {
-    logo: hasLogoRef && !!currentData.logo,
-    banner: hasBannerRef && !!currentData.banner,
-  };
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }
 
-// Helper function to detect if user requested image generation
-function detectImageGenerationRequest(
-  userMessage: string,
-  aiResponse: string
-): { logo: boolean; banner: boolean } | null {
-  const lowerUser = userMessage.toLowerCase();
+const ANON_SESSION_KEY = 'fw_anon_session_id';
 
-  const isImagePhase =
-    /(?:logo|banner|generate|visuals|upload)/i.test(aiResponse) ||
-    /(?:logo|banner|generate)/i.test(userMessage);
-
-  if (!isImagePhase) return null;
-
-  if (/^(?:option\s*)?2$|^2️⃣|\bupload\b|\blater\b|\bskip\b|\bmanually\b/i.test(lowerUser)) {
-    return null;
-  }
-
-  const hasLogo = /\blogo\b/i.test(lowerUser);
-  const hasBanner = /\bbanner\b/i.test(lowerUser);
-
-  if (/^(?:option\s*)?1$|^1️⃣|generate with ai|\bboth\b/i.test(lowerUser) || (hasLogo && hasBanner)) {
-    return { logo: true, banner: true };
-  }
-
-  if (hasLogo) return { logo: true, banner: false };
-  if (hasBanner) return { logo: false, banner: true };
-
-  if (/^(?:option\s*)?1$|^1️⃣|\bgenerate\b|\bai\b/i.test(lowerUser)) {
-    return { logo: true, banner: true };
-  }
-
-  return null;
-}
+// ============================================================
+// Provider
+// ============================================================
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [communityData, setCommunityData] = useState<Partial<CommunityData>>({
-    primaryColor: '#ffffff',
+  const [communityData, setCommunityData] = useState<MerchantOnboardingData>({
+    primaryColor: '#10F48B',
   });
-  const [isPreviewVisible, setIsPreviewVisible] = useState(false);
+  const [isPreviewVisible, setIsPreviewVisible] = useState(true); // visible by default in new flow
   const [currentPhase, setCurrentPhase] = useState<ConversationPhase>('context_collection');
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingLogo, setIsGeneratingLogo] = useState(false);
   const [isGeneratingBanner, setIsGeneratingBanner] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const hasTrackedStart = useRef(false);
+  // Anonymous session state
+  const [isAnonymous, setIsAnonymous] = useState(true);
+  const [anonymousSessionId, setAnonymousSessionId] = useState('');
+  const [showSignupWall, setShowSignupWall] = useState(false);
+  const [exchangeCount, setExchangeCount] = useState(0);
+  // Grace period: 1 extra free exchange after signup wall shown
+  const [graceUsed, setGraceUsed] = useState(false);
 
-  // Fetch initial greeting
+  const hasInitialized = useRef(false);
+
+  // Initialize anonymous session from localStorage
   useEffect(() => {
-    if (!hasTrackedStart.current) {
-      track.onboardStart('', undefined);
-      hasTrackedStart.current = true;
+    if (typeof window === 'undefined') return;
+    let sessionId = localStorage.getItem(ANON_SESSION_KEY);
+    if (!sessionId) {
+      sessionId = generateUUID();
+      localStorage.setItem(ANON_SESSION_KEY, sessionId);
     }
-    setIsLoading(true);
-    fetch('/api/onboarding/chat/greeting', { cache: 'no-store' })
-      .then((res) => res.json())
-      .then((data) => {
-        setMessages([
-          {
-            role: 'assistant',
-            content:
-              data.greeting ||
-              "Hey! 👋 I'm AVA, Freedom World's AI Community Consultant — here to help you build your dream community. ✨\nWhat are you thinking of building, and who's it for? 🚀",
-            timestamp: new Date(),
-          },
-        ]);
-      })
-      .catch(() => {
-        setMessages([
-          {
-            role: 'assistant',
-            content:
-              "Hey! 👋 I'm AVA, Freedom World's AI Community Consultant — here to help you build your dream community. ✨\nWhat are you thinking of building, and who's it for? 🚀",
-            timestamp: new Date(),
-          },
-        ]);
-      })
-      .finally(() => setIsLoading(false));
+    setAnonymousSessionId(sessionId);
   }, []);
 
+  // Show initial greeting message (business type picker prompt)
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
+    track.onboardStart('', undefined);
+
+    setMessages([
+      {
+        role: 'assistant',
+        content: "Hey! 👋 I'm AVA — your AI community builder. Tap your business type below to get started — I'll build your community live as we chat! ✨",
+        timestamp: new Date(),
+        // Special flag to render business type buttons
+        metadata: { showBusinessTypePicker: true },
+      } as ChatMessage & { metadata: Record<string, unknown> },
+    ]);
+  }, []);
+
+  // ── Select business type (tapping a button card) ─────────────────
+  const selectBusinessType = useCallback(
+    async (typeId: string) => {
+      const template = getTemplateById(typeId);
+      if (!template) return;
+
+      // Instantly update preview with template
+      setCommunityData((prev) => ({
+        ...prev,
+        businessType: typeId,
+        primaryColor: template.primaryColor,
+        name: template.sampleName,
+      }));
+      setIsPreviewVisible(true);
+
+      // Add user message
+      const userMsg: ChatMessage = {
+        role: 'user',
+        content: template.name,
+        timestamp: new Date(),
+      };
+
+      const updatedMessages = [
+        ...messages,
+        userMsg,
+      ];
+      setMessages(updatedMessages);
+      setIsLoading(true);
+
+      try {
+        // Send to chat API with business type context
+        const res = await fetch('/api/onboarding/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              { role: 'user', content: `[[BUSINESS_TYPE:${template.name}]]` },
+            ],
+            isMerchantFlow: true,
+            anonymousSessionId,
+            merchantContext: {
+              businessType: typeId,
+              isAnonymous: true,
+              exchangeCount: 0,
+            },
+          }),
+        });
+
+        const reply = await streamResponse(res);
+
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: reply, timestamp: new Date() },
+        ]);
+
+        setExchangeCount(1);
+      } catch (err: unknown) {
+        const e = err as Error;
+        setError(e.message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [messages, anonymousSessionId]
+  );
+
+  // ── Send message ────────────────────────────────────────────────
   const sendMessage = useCallback(
     async (content: string) => {
       try {
@@ -144,180 +198,160 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         const updatedMessages = [...messages, userMessage];
         setMessages(updatedMessages);
 
-        // Call chat API
+        const newExchangeCount = exchangeCount + 1;
+        setExchangeCount(newExchangeCount);
+
+        // Check if signup wall should appear (after exchange 3, still anonymous)
+        // Grace period: if wall was dismissed without signing up, allow 1 more exchange
+        const shouldBlock = isAnonymous && newExchangeCount >= 3 && !graceUsed;
+
         const res = await fetch('/api/onboarding/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: updatedMessages,
-            extractedData: communityData,
+            isMerchantFlow: true,
+            anonymousSessionId,
+            merchantContext: {
+              businessType: communityData.businessType,
+              businessName: communityData.name,
+              isAnonymous,
+              exchangeCount: newExchangeCount,
+            },
           }),
         });
 
-        if (!res.ok) throw new Error('Failed to send message');
-
-        // Handle SSE streaming
-        const reader = res.body?.getReader();
-        const decoder = new TextDecoder();
-        let replyText = '';
-        let extractedUpdate: Partial<CommunityData> | null = null;
-
-        if (reader) {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
-
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const raw = line.slice(6);
-                if (raw === '[DONE]') continue;
-                try {
-                  const parsed = JSON.parse(raw);
-                  if (parsed.type === 'text') {
-                    replyText += parsed.content;
-                  } else if (parsed.type === 'data') {
-                    extractedUpdate = parsed.updatedData;
-                  }
-                } catch {
-                  // ignore parse errors
-                }
-              }
-            }
-          }
-        }
+        const replyText = await streamResponse(res);
 
         const assistantMessage: ChatMessage = {
           role: 'assistant',
-          content: replyText || 'I apologize, I encountered an issue. Could you please repeat that?',
+          content: replyText || "I'm having a little trouble — could you repeat that? 😊",
           timestamp: new Date(),
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
 
-        if (extractedUpdate) {
-          setCommunityData((prev) => {
-            const next = { ...prev, ...extractedUpdate };
-            if (extractedUpdate!.name && !isPreviewVisible) {
-              setIsPreviewVisible(true);
-            }
-            // Track onboarding steps based on extracted data
-            if (extractedUpdate!.communityClass) track.onboardStep('', 'class_selection', { class: extractedUpdate!.communityClass });
-            if (extractedUpdate!.name) track.onboardStep('', 'name_selection', { name: extractedUpdate!.name });
-            if (extractedUpdate!.description) track.onboardStep('', 'description_selection', {});
-            if (extractedUpdate!.category) track.onboardStep('', 'inference_confirmation', { category: extractedUpdate!.category });
-            return next;
-          });
-        }
-
-        // Detect image generation requests
-        const imageGenerationRequested = detectImageGenerationRequest(content, replyText);
-        if (imageGenerationRequested && (imageGenerationRequested.logo || imageGenerationRequested.banner)) {
-          let statusMessage = '';
-          if (imageGenerationRequested.logo && imageGenerationRequested.banner) {
-            statusMessage = '✨ Generating your logo and banner...';
-          } else if (imageGenerationRequested.logo) {
-            statusMessage = '✨ Generating your logo...';
-          } else if (imageGenerationRequested.banner) {
-            statusMessage = '✨ Generating your banner...';
-          }
-
-          if (statusMessage) {
-            setMessages((prev) => [
-              ...prev,
-              { role: 'assistant', content: statusMessage, timestamp: new Date() },
-            ]);
-          }
-
+        // Auto-trigger logo generation after step 2 (name + vibe collected)
+        if (newExchangeCount === 2 && communityData.businessType && !communityData.logo) {
           setTimeout(async () => {
             try {
-              if (imageGenerationRequested.logo && imageGenerationRequested.banner) {
-                await Promise.all([generateImage('logo'), generateImage('banner')]);
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    role: 'assistant',
-                    content: 'Your logo and banner are ready! 🎨 You can now create your community.',
-                    timestamp: new Date(),
-                  },
-                ]);
-              } else if (imageGenerationRequested.logo) {
-                await generateImage('logo');
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    role: 'assistant',
-                    content: 'Your logo is ready! 🎨 You can now create your community.',
-                    timestamp: new Date(),
-                  },
-                ]);
-              } else if (imageGenerationRequested.banner) {
-                await generateImage('banner');
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    role: 'assistant',
-                    content: 'Your banner is ready! 🎨 You can now create your community.',
-                    timestamp: new Date(),
-                  },
-                ]);
-              }
-            } catch (err: any) {
-              setError(err.message || 'Image generation failed');
+              setIsGeneratingLogo(true);
+              await generateImageInternal('logo', communityData);
+            } catch {
+              // Logo generation failure is non-fatal
+            } finally {
+              setIsGeneratingLogo(false);
             }
-          }, 500);
+          }, 800);
         }
 
-        // Check regeneration requests
-        const regenRequest = detectRegenerationRequest(content, communityData);
-        if (regenRequest && (regenRequest.logo || regenRequest.banner)) {
-          setTimeout(async () => {
-            try {
-              if (regenRequest.logo && regenRequest.banner) {
-                await Promise.all([generateImage('logo'), generateImage('banner')]);
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    role: 'assistant',
-                    content: 'Your new logo and banner are ready! 🎨',
-                    timestamp: new Date(),
-                  },
-                ]);
-              } else if (regenRequest.logo) {
-                await generateImage('logo');
-                setMessages((prev) => [
-                  ...prev,
-                  { role: 'assistant', content: 'Your new logo is ready! 🎨', timestamp: new Date() },
-                ]);
-              } else if (regenRequest.banner) {
-                await generateImage('banner');
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    role: 'assistant',
-                    content: 'Your new banner is ready! 🎨',
-                    timestamp: new Date(),
-                  },
-                ]);
-              }
-            } catch (err: any) {
-              setError(err.message || 'Image generation failed');
-            }
-          }, 500);
+        // Show signup wall after logo generation (exchange 3) or after exchange 3
+        if (shouldBlock) {
+          setTimeout(() => setShowSignupWall(true), 1500);
         }
-      } catch (err: any) {
-        setError(err.message || 'Failed to send message');
+      } catch (err: unknown) {
+        const e = err as Error;
+        setError(e.message || 'Failed to send message');
         console.error('Send message error:', err);
       } finally {
         setIsLoading(false);
       }
     },
-    [messages, communityData, isPreviewVisible]
+    [messages, communityData, isAnonymous, exchangeCount, anonymousSessionId, graceUsed]
   );
 
-  const updateCommunityData = useCallback((data: Partial<CommunityData>) => {
+  // ── Signup success ──────────────────────────────────────────────
+  const onSignupSuccess = useCallback(
+    async (merchantId: string, email: string) => {
+      setIsAnonymous(false);
+      setShowSignupWall(false);
+
+      // Link anonymous session to merchant
+      try {
+        await fetch('/api/onboarding/link-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            anonymousSessionId,
+            merchantId,
+            communityData: {
+              ...communityData,
+              email,
+            },
+          }),
+        });
+      } catch (err) {
+        console.error('Failed to link session:', err);
+      }
+
+      // Clear the anonymous session ID so a fresh one is generated next time
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(ANON_SESSION_KEY);
+      }
+
+      // Continue conversation with a "just signed up" message
+      const continueMsg: ChatMessage = {
+        role: 'user',
+        content: '[[SIGNED_UP]]',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, continueMsg]);
+    },
+    [anonymousSessionId, communityData]
+  );
+
+  // ── Dismiss signup wall (grace period) ─────────────────────────
+  const dismissSignupWall = useCallback(() => {
+    setShowSignupWall(false);
+    setGraceUsed(true);
+  }, []);
+
+  // ── Internal image generation helper ───────────────────────────
+  const generateImageInternal = async (
+    type: 'logo' | 'banner',
+    data: MerchantOnboardingData
+  ) => {
+    const res = await fetch('/api/onboarding/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, communityData: data }),
+    });
+
+    const result = await res.json();
+
+    if (result.success && result.imageUrl) {
+      setCommunityData((prev) => ({ ...prev, [type]: result.imageUrl }));
+
+      // Show signup wall after logo is generated (if still anonymous)
+      if (type === 'logo' && isAnonymous) {
+        setTimeout(() => setShowSignupWall(true), 800);
+      }
+    } else {
+      throw new Error(result.error || `Failed to generate ${type}`);
+    }
+  };
+
+  // ── Public generateImage ────────────────────────────────────────
+  const generateImage = useCallback(
+    async (type: 'logo' | 'banner') => {
+      try {
+        if (type === 'logo') setIsGeneratingLogo(true);
+        else setIsGeneratingBanner(true);
+        setError(null);
+        await generateImageInternal(type, communityData);
+      } catch (err: unknown) {
+        const e = err as Error;
+        setError(e.message || `Failed to generate ${type}`);
+        console.error(`Generate ${type} error:`, err);
+      } finally {
+        if (type === 'logo') setIsGeneratingLogo(false);
+        else setIsGeneratingBanner(false);
+      }
+    },
+    [communityData, isAnonymous]
+  );
+
+  const updateCommunityData = useCallback((data: MerchantOnboardingData) => {
     setCommunityData((prev) => ({ ...prev, ...data }));
   }, []);
 
@@ -325,53 +359,19 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     setIsPreviewVisible(true);
   }, []);
 
-  const generateImage = useCallback(
-    async (type: 'logo' | 'banner') => {
-      try {
-        if (type === 'logo') setIsGeneratingLogo(true);
-        else setIsGeneratingBanner(true);
-        setError(null);
-
-        const res = await fetch('/api/onboarding/generate-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type, communityData }),
-        });
-
-        const result = await res.json();
-
-        if (result.success && result.imageUrl) {
-          setCommunityData((prev) => ({ ...prev, [type]: result.imageUrl }));
-        } else {
-          setError(result.error || `Failed to generate ${type}`);
-        }
-      } catch (err: any) {
-        setError(err.message || `Failed to generate ${type}`);
-        console.error(`Generate ${type} error:`, err);
-      } finally {
-        if (type === 'logo') setIsGeneratingLogo(false);
-        else setIsGeneratingBanner(false);
-      }
-    },
-    [communityData]
-  );
-
   const resetSession = useCallback(() => {
-    setMessages([
-      {
-        role: 'assistant',
-        content:
-          "Welcome! I'm excited to help you build your new community on Freedom World. Let's start with the basics.",
-        timestamp: new Date(),
-      },
-    ]);
-    setCommunityData({ primaryColor: '#ffffff' });
-    setIsPreviewVisible(false);
+    setMessages([]);
+    setCommunityData({ primaryColor: '#10F48B' });
+    setIsPreviewVisible(true);
     setCurrentPhase('context_collection');
     setError(null);
+    setExchangeCount(0);
+    setShowSignupWall(false);
+    setGraceUsed(false);
+    hasInitialized.current = false;
   }, []);
 
-  const value = {
+  const value: OnboardingContextType = {
     messages,
     communityData,
     isPreviewVisible,
@@ -380,11 +380,18 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     isGeneratingLogo,
     isGeneratingBanner,
     error,
+    isAnonymous,
+    anonymousSessionId,
+    showSignupWall,
+    exchangeCount,
     sendMessage,
+    selectBusinessType,
     updateCommunityData,
     showPreview,
     resetSession,
     generateImage,
+    onSignupSuccess,
+    dismissSignupWall,
   };
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
@@ -396,4 +403,38 @@ export function useOnboarding() {
     throw new Error('useOnboarding must be used within OnboardingProvider');
   }
   return context;
+}
+
+// ── SSE stream helper ──────────────────────────────────────────────
+async function streamResponse(res: Response): Promise<string> {
+  const reader = res.body?.getReader();
+  const decoder = new TextDecoder();
+  let text = '';
+
+  if (!reader) return text;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    const lines = chunk.split('\n');
+
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const raw = line.slice(6);
+        if (raw === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.type === 'text') {
+            text += parsed.content;
+          }
+        } catch {
+          // ignore parse errors
+        }
+      }
+    }
+  }
+
+  return text;
 }
