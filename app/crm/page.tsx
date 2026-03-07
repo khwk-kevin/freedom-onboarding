@@ -360,6 +360,48 @@ export default function CRMDashboardPage() {
               )}
             </div>
           )}
+
+          {/* Funnel Summary Widget */}
+          {stats && (
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[14px] font-semibold text-gray-900 flex items-center gap-2">
+                  <TrendingUp size={15} className="text-[#4CAF50]" />
+                  Acquisition Funnel Summary
+                </h2>
+                <Link href="/crm/acquisition-funnel" className="text-[12px] text-[#4A90D9] hover:underline flex items-center gap-1">
+                  Full report <ArrowRight size={12} />
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+                  <p className="text-[11px] text-gray-500 mb-1">Overall CVR</p>
+                  <p className="text-[18px] font-bold text-gray-900">
+                    {stats.funnel.active > 0
+                      ? `${((stats.funnel.active / Math.max((stats.funnel.leads + stats.funnel.onboarding + stats.funnel.onboarded + stats.funnel.active + stats.funnel.dormant), 1)) * 100).toFixed(1)}%`
+                      : '—'}
+                  </p>
+                  <p className="text-[10px] text-gray-400">Signed up → Active</p>
+                </div>
+                <div className="text-center p-3 bg-red-50 rounded-lg border border-red-100">
+                  <p className="text-[11px] text-gray-500 mb-1">In Onboarding</p>
+                  <p className="text-[18px] font-bold text-amber-600">{stats.funnel.onboarding}</p>
+                  <p className="text-[10px] text-gray-400">Need attention</p>
+                </div>
+                <div className="text-center p-3 bg-green-50 rounded-lg border border-green-100">
+                  <p className="text-[11px] text-gray-500 mb-1">Active</p>
+                  <p className="text-[18px] font-bold text-green-600">{stats.funnel.active}</p>
+                  <p className="text-[10px] text-gray-400">Revenue-generating</p>
+                </div>
+              </div>
+              <Link
+                href="/crm/acquisition-funnel"
+                className="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-[#f5f6f8] hover:bg-gray-200 text-[12px] font-medium text-gray-600 transition-colors"
+              >
+                View full funnel analytics <ArrowRight size={13} />
+              </Link>
+            </div>
+          )}
         </>
       )}
     </div>

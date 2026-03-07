@@ -10,6 +10,7 @@ import {
   LogOut,
   Plus,
   Compass,
+  TrendingUp,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,6 +22,7 @@ const navItems = [
   { href: '/crm/handoffs', label: 'Handoffs', icon: AlertCircle, exact: false },
   { href: '/crm/analytics', label: 'Analytics', icon: BarChart3, exact: false },
   { href: '/crm/community-tracker', label: 'Community Tracker', icon: Compass, exact: false },
+  { href: '/crm/acquisition-funnel', label: 'Acquisition Funnel', icon: TrendingUp, exact: false },
 ];
 
 export function Sidebar() {
