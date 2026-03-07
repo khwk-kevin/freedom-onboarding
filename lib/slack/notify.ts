@@ -8,7 +8,7 @@
 const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN
 const SLACK_BD_CHANNEL = process.env.SLACK_BD_CHANNEL_ID || 'C041LC6QTL4'
 const CRM_BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL || 'https://freedom-onboarding.vercel.app'
+  process.env.NEXT_PUBLIC_APP_URL || 'https://onboarding.freedom.world'
 
 interface SlackBlock {
   type: string

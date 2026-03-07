@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const error = searchParams.get('error')
   const state = searchParams.get('state')
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://freedom-onboarding-iota.vercel.app'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://onboarding.freedom.world'
   const redirectUri = `${appUrl}/api/auth/callback`
 
   if (error) {

@@ -4,7 +4,7 @@ import FAQ from '@/components/landing/FAQ'
 import BottomCTA from '@/components/landing/BottomCTA'
 import { FAQSchema, BreadcrumbSchema } from '@/components/shared/SchemaMarkup'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://freedom-onboarding.vercel.app'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://onboarding.freedom.world'
 
 export const metadata: Metadata = {
   title: 'Freedom World for Creators — Own Your Audience & Monetize Directly',
