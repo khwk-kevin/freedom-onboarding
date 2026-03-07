@@ -100,6 +100,16 @@ export async function PATCH(req: NextRequest) {
     'tags',
     'next_follow_up_at',
     'last_contact_at',
+    'business_name',
+    'business_type',
+    'business_description',
+    'phone',
+    'line_id',
+    'location',
+    'website_url',
+    'monthly_revenue',
+    'lifetime_revenue',
+    'onboarding_status',
   ] as const;
 
   type AllowedKey = typeof allowed[number];

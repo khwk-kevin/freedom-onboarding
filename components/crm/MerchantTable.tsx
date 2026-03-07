@@ -1,10 +1,10 @@
 'use client';
 import { useState, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Search, ChevronDown, ChevronUp, Download, X, Eye, Pencil, Users,
   CheckSquare, Square, Filter
 } from 'lucide-react';
-import { DealPanel, DealPanelMerchant } from './DealPanel';
 
 export interface MerchantRow {
   id: string;
@@ -135,6 +135,7 @@ interface MerchantTableProps {
 }
 
 export function MerchantTable({ merchants, initialStatus, onStatusChange }: MerchantTableProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(initialStatus || '');
   const [search, setSearch] = useState('');
   const [ownerFilter, setOwnerFilter] = useState('');
@@ -145,7 +146,6 @@ export function MerchantTable({ merchants, initialStatus, onStatusChange }: Merc
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [selectedMerchant, setSelectedMerchant] = useState<MerchantRow | null>(null);
   const [bulkOwner, setBulkOwner] = useState('');
 
   // Compute status counts
@@ -528,7 +528,7 @@ export function MerchantTable({ merchants, initialStatus, onStatusChange }: Merc
                 return (
                   <tr
                     key={m.id}
-                    onClick={() => setSelectedMerchant(m)}
+                    onClick={() => router.push(`/crm/merchants/${m.id}`)}
                     className={`border-b border-gray-50 hover:bg-blue-50/20 transition-colors cursor-pointer ${
                       selected.has(m.id) ? 'bg-blue-50/40' : ''
                     }`}
@@ -636,7 +636,7 @@ export function MerchantTable({ merchants, initialStatus, onStatusChange }: Merc
                     <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1.5">
                         <button
-                          onClick={() => setSelectedMerchant(m)}
+                          onClick={() => router.push(`/crm/merchants/${m.id}`)}
                           className="p-1.5 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
                           title="View"
                         >
@@ -732,14 +732,6 @@ export function MerchantTable({ merchants, initialStatus, onStatusChange }: Merc
         )}
       </div>
 
-      {/* === DEAL PANEL === */}
-      {selectedMerchant && (
-        <DealPanel
-          merchant={selectedMerchant as DealPanelMerchant}
-          onClose={() => setSelectedMerchant(null)}
-          onStatusChange={onStatusChange}
-        />
-      )}
     </div>
   );
 }
