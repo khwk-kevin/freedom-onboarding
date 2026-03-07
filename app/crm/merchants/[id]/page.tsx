@@ -36,11 +36,19 @@ interface EnrichmentData {
   source: string;
   query?: string;
   website: string | null;
-  social: { facebook: string | null; instagram: string | null; line_oa: string | null; twitter: string | null };
+  social: { facebook: string | null; instagram: string | null; line_oa: string | null; twitter: string | null; tiktok?: string | null; youtube?: string | null };
   google_maps: string | null;
   industry: string | null;
+  description: string | null;
   employee_estimate: string | null;
+  location_details: string | null;
+  key_products: string[];
+  competitive_landscape: string | null;
+  pain_points: string[];
+  monetization_opportunities: string[];
+  bd_talking_points: string[];
   recent_news: string[];
+  raw_findings?: string[];
 }
 
 interface NoteEntry {
@@ -738,51 +746,136 @@ export default function MerchantDetailPage() {
             </button>
           </div>
 
-          {enrichmentData ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <label className="text-[11px] text-gray-400 font-semibold block mb-1 uppercase tracking-wide">Website</label>
-                <p className="text-[13px] text-gray-700">{enrichmentData.website ?? <span className="text-gray-300 italic">Not found</span>}</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <label className="text-[11px] text-gray-400 font-semibold block mb-1 uppercase tracking-wide">Social Media</label>
-                <div className="space-y-1 text-[12px] text-gray-500">
-                  <div>FB: {enrichmentData.social?.facebook ?? <span className="text-gray-300">—</span>}</div>
-                  <div>IG: {enrichmentData.social?.instagram ?? <span className="text-gray-300">—</span>}</div>
-                  <div>LINE OA: {enrichmentData.social?.line_oa ?? <span className="text-gray-300">—</span>}</div>
+          {enrichmentData && enrichmentData.source !== 'manual' ? (
+            <div className="space-y-4">
+              {/* Row 1: Overview */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="text-[11px] text-gray-400 font-semibold block mb-1.5 uppercase tracking-wide">Industry</label>
+                  <p className="text-[14px] font-medium text-gray-800">{enrichmentData.industry || <span className="text-gray-300 italic">Unknown</span>}</p>
+                  {enrichmentData.employee_estimate && (
+                    <p className="text-[11px] text-gray-400 mt-1">~{enrichmentData.employee_estimate} employees</p>
+                  )}
+                  {enrichmentData.location_details && (
+                    <p className="text-[11px] text-gray-400 mt-0.5">📍 {enrichmentData.location_details}</p>
+                  )}
+                </div>
+                <div className="lg:col-span-2 bg-gray-50 rounded-lg p-4">
+                  <label className="text-[11px] text-gray-400 font-semibold block mb-1.5 uppercase tracking-wide">Business Description</label>
+                  <p className="text-[13px] text-gray-700 leading-relaxed">{enrichmentData.description || <span className="text-gray-300 italic">No description available</span>}</p>
                 </div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <label className="text-[11px] text-gray-400 font-semibold block mb-1 uppercase tracking-wide">Google Maps</label>
-                <p className="text-[13px] text-gray-500">{enrichmentData.google_maps ?? <span className="text-gray-300 italic">Not found</span>}</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <label className="text-[11px] text-gray-400 font-semibold block mb-1 uppercase tracking-wide">Industry</label>
-                <p className="text-[13px] text-gray-700">{enrichmentData.industry ?? <span className="text-gray-300 italic">Unknown</span>}</p>
-                {enrichmentData.employee_estimate && (
-                  <p className="text-[11px] text-gray-400 mt-1">{enrichmentData.employee_estimate} employees est.</p>
+
+              {/* Row 2: Links */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <label className="text-[11px] text-gray-400 font-semibold block mb-1 uppercase tracking-wide">🌐 Website</label>
+                  {enrichmentData.website ? (
+                    <a href={enrichmentData.website} target="_blank" rel="noreferrer" className="text-[12px] text-[#4A90D9] hover:underline truncate block">{enrichmentData.website.replace(/^https?:\/\/(www\.)?/, '')}</a>
+                  ) : <p className="text-[12px] text-gray-300 italic">Not found</p>}
+                </div>
+                {(['facebook', 'instagram', 'line_oa', 'twitter', 'tiktok'] as const).map((platform) => {
+                  const url = enrichmentData.social?.[platform];
+                  if (!url) return null;
+                  const icons: Record<string, string> = { facebook: '📘', instagram: '📸', line_oa: '💬', twitter: '🐦', tiktok: '🎵' };
+                  return (
+                    <div key={platform} className="bg-gray-50 rounded-lg p-3">
+                      <label className="text-[11px] text-gray-400 font-semibold block mb-1 uppercase tracking-wide">{icons[platform]} {platform.replace('_', ' ')}</label>
+                      <a href={url} target="_blank" rel="noreferrer" className="text-[12px] text-[#4A90D9] hover:underline truncate block">{url.replace(/^https?:\/\/(www\.)?/, '')}</a>
+                    </div>
+                  );
+                })}
+                {enrichmentData.google_maps && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <label className="text-[11px] text-gray-400 font-semibold block mb-1 uppercase tracking-wide">📍 Google Maps</label>
+                    <a href={enrichmentData.google_maps} target="_blank" rel="noreferrer" className="text-[12px] text-[#4A90D9] hover:underline">View on Maps</a>
+                  </div>
                 )}
               </div>
-              <div className="col-span-2 lg:col-span-4 bg-gray-50 rounded-lg p-3">
-                <label className="text-[11px] text-gray-400 font-semibold block mb-1 uppercase tracking-wide">Recent News</label>
-                {enrichmentData.recent_news?.length > 0 ? (
-                  <ul className="space-y-1">
+
+              {/* Row 3: BD Intelligence */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Pain Points */}
+                {enrichmentData.pain_points?.length > 0 && (
+                  <div className="bg-red-50 border border-red-100 rounded-lg p-4">
+                    <label className="text-[11px] text-red-400 font-semibold block mb-2 uppercase tracking-wide">🎯 Pain Points to Address</label>
+                    <ul className="space-y-1.5">
+                      {enrichmentData.pain_points.map((p, i) => (
+                        <li key={i} className="text-[13px] text-gray-700 flex items-start gap-2">
+                          <span className="text-red-400 mt-0.5 shrink-0">•</span> {p}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Monetization Opportunities */}
+                {enrichmentData.monetization_opportunities?.length > 0 && (
+                  <div className="bg-green-50 border border-green-100 rounded-lg p-4">
+                    <label className="text-[11px] text-green-600 font-semibold block mb-2 uppercase tracking-wide">💰 Monetization Opportunities</label>
+                    <ul className="space-y-1.5">
+                      {enrichmentData.monetization_opportunities.map((m, i) => (
+                        <li key={i} className="text-[13px] text-gray-700 flex items-start gap-2">
+                          <span className="text-green-500 mt-0.5 shrink-0">•</span> {m}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* Row 4: Talking Points */}
+              {enrichmentData.bd_talking_points?.length > 0 && (
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                  <label className="text-[11px] text-blue-500 font-semibold block mb-2 uppercase tracking-wide">🗣️ BD Talking Points</label>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                    {enrichmentData.bd_talking_points.map((t, i) => (
+                      <div key={i} className="flex items-start gap-2 bg-white/60 rounded-lg p-2.5">
+                        <span className="text-blue-400 font-bold text-[12px] shrink-0">{i + 1}.</span>
+                        <p className="text-[13px] text-gray-700">{t}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Row 5: Key Products & Competition */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {enrichmentData.key_products?.length > 0 && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="text-[11px] text-gray-400 font-semibold block mb-2 uppercase tracking-wide">📦 Key Products/Services</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {enrichmentData.key_products.map((p, i) => (
+                        <span key={i} className="text-[12px] bg-white border border-gray-200 text-gray-700 px-2.5 py-1 rounded-full">{p}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {enrichmentData.competitive_landscape && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="text-[11px] text-gray-400 font-semibold block mb-2 uppercase tracking-wide">⚔️ Competitive Landscape</label>
+                    <p className="text-[13px] text-gray-700 leading-relaxed">{enrichmentData.competitive_landscape}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Row 6: News */}
+              {enrichmentData.recent_news?.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="text-[11px] text-gray-400 font-semibold block mb-2 uppercase tracking-wide">📰 Recent News</label>
+                  <ul className="space-y-1.5">
                     {enrichmentData.recent_news.map((item, i) => <li key={i} className="text-[13px] text-gray-700">• {item}</li>)}
                   </ul>
-                ) : (
-                  <p className="text-[13px] text-gray-300 italic">No news found</p>
-                )}
-                <p className="text-[10px] text-gray-300 mt-2">Last enriched: {new Date(enrichmentData.enriched_at).toLocaleString()}</p>
-              </div>
+                </div>
+              )}
+
+              <p className="text-[10px] text-gray-300">Researched {new Date(enrichmentData.enriched_at).toLocaleString()} via {enrichmentData.source}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {['Website', 'Social Media', 'Google Maps', 'Industry'].map((label) => (
-                <div key={label} className="bg-gray-50 rounded-lg p-3 border border-dashed border-gray-200">
-                  <label className="text-[11px] text-gray-400 font-semibold block mb-2 uppercase tracking-wide">{label}</label>
-                  <p className="text-[12px] text-gray-300 italic">Click Research to populate</p>
-                </div>
-              ))}
+            <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
+              <Search size={32} className="mx-auto text-gray-300 mb-3" />
+              <p className="text-[14px] font-medium text-gray-500 mb-1">No research data yet</p>
+              <p className="text-[12px] text-gray-400">Click &quot;Research this merchant&quot; to auto-generate business intelligence, pain points, and BD talking points using AI</p>
             </div>
           )}
         </div>
