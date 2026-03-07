@@ -1,3 +1,4 @@
+// TODO: Add auth check — import { getServerSession } from '@/lib/supabase/auth'; const user = await getServerSession(); if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 

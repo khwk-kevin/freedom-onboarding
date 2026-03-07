@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   KanbanSquare,
@@ -13,7 +13,8 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import Image from 'next/image';
-import { useAuth } from '@/hooks/useAuth';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 const navItems = [
   { href: '/crm', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -27,7 +28,26 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userInitial, setUserInitial] = useState('BD');
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.email) {
+        setUserEmail(user.email);
+        setUserInitial(user.email[0].toUpperCase());
+      }
+    });
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/crm/login');
+    router.refresh();
+  };
 
   return (
     <aside
@@ -89,18 +109,20 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom — Pipedrive-style user section */}
+      {/* Bottom — user section */}
       <div className="px-3 py-3 border-t border-white/5 space-y-1">
         <div className="flex items-center gap-2.5 px-3 py-2">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white">
-            BD
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#00ff88] to-blue-500 flex items-center justify-center text-[10px] font-bold text-black shrink-0">
+            {userInitial}
           </div>
           <div className="min-w-0">
-            <p className="text-[12px] text-gray-300 truncate">BD Team</p>
+            <p className="text-[12px] text-gray-300 truncate" title={userEmail ?? ''}>
+              {userEmail ?? 'BD Team'}
+            </p>
           </div>
         </div>
         <button
-          onClick={logout}
+          onClick={handleSignOut}
           aria-label="Sign out"
           className="flex items-center gap-2.5 px-3 py-2 rounded-md text-[12px] text-gray-500 hover:text-gray-300 hover:bg-white/5 w-full transition-colors"
         >

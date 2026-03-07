@@ -1,3 +1,4 @@
+// TODO: Add auth check — import { getServerSession } from '@/lib/supabase/auth'; const user = await getServerSession(); if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 import { NextRequest, NextResponse } from 'next/server';
 import { getMerchantRevenue, getMerchantLTV } from '@/lib/neon/queries';
 
