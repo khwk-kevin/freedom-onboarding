@@ -106,13 +106,11 @@ export default function CRMDashboardPage() {
           label="Active Merchants"
           value={stats?.funnel.active ?? 0}
           icon={<TrendingUp size={20} />}
-          description="Total all-time"
         />
         <StatsCard
           label="Open Handoffs"
           value={stats?.openHandoffs ?? 0}
           icon={<AlertCircle size={20} />}
-          description="Needs attention"
         />
       </div>
 
@@ -123,15 +121,11 @@ export default function CRMDashboardPage() {
             label="Total Lifetime Revenue"
             value={`฿${(revenue.total_lifetime_revenue || 0).toLocaleString()}`}
             icon={<DollarSign size={20} />}
-            description="All active merchants"
-            iconBg="bg-green-50"
           />
           <StatsCard
             label="Monthly Revenue (30d)"
             value={`฿${(revenue.total_monthly_revenue || 0).toLocaleString()}`}
             icon={<TrendingUp size={20} />}
-            description="Last 30 days"
-            iconBg="bg-blue-50"
           />
         </div>
       )}

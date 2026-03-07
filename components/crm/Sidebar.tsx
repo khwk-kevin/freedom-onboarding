@@ -8,6 +8,9 @@ import {
   AlertCircle,
   BarChart3,
   LogOut,
+  Search,
+  Bell,
+  Plus,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -25,24 +28,32 @@ export function Sidebar() {
 
   return (
     <aside
-      className="hidden md:flex w-64 bg-gray-900 text-white flex-col h-screen sticky top-0 shrink-0"
+      className="hidden md:flex w-[220px] bg-[#1a1a2e] text-white flex-col h-screen sticky top-0 shrink-0"
       aria-label="BD Console navigation"
     >
-      {/* Logo */}
-      <div className="p-6 border-b border-gray-800">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-brand-green rounded-lg flex items-center justify-center shrink-0" aria-hidden="true">
-            <span className="text-black font-bold text-sm">FW</span>
+      {/* Logo — Pipedrive-style compact header */}
+      <div className="px-4 py-4 border-b border-white/5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-[#00ff88] rounded-lg flex items-center justify-center shrink-0">
+            <span className="text-[#1a1a2e] font-bold text-xs">FW</span>
           </div>
-          <div>
-            <p className="font-semibold text-white text-sm leading-tight">Freedom World</p>
-            <p className="text-gray-400 text-xs">BD Console</p>
+          <div className="min-w-0">
+            <p className="font-semibold text-white text-[13px] leading-tight truncate">Freedom BD</p>
+            <p className="text-gray-500 text-[11px]">Acquisition Pipeline</p>
           </div>
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto" aria-label="Main navigation">
+      {/* Quick actions — Pipedrive-style */}
+      <div className="px-3 py-3 border-b border-white/5">
+        <button className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-[#00ff88] hover:bg-[#00e87a] text-[#1a1a2e] text-xs font-semibold transition-colors">
+          <Plus size={14} />
+          Add Merchant
+        </button>
+      </div>
+
+      {/* Nav — Pipedrive sidebar style */}
+      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto" aria-label="Main navigation">
         {navItems.map((item) => {
           const isActive = item.exact
             ? pathname === item.href
@@ -56,27 +67,40 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               aria-current={active ? 'page' : undefined}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green focus-visible:ring-offset-1 focus-visible:ring-offset-gray-900 ${
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-colors ${
                 active
-                  ? 'bg-brand-green text-black'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-white/10 text-white'
+                  : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
               }`}
             >
-              <Icon size={18} aria-hidden="true" />
+              <Icon size={16} aria-hidden="true" className={active ? 'text-[#00ff88]' : ''} />
               {item.label}
+              {item.label === 'Handoffs' && (
+                <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  3
+                </span>
+              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* Sign out */}
-      <div className="p-4 border-t border-gray-800">
+      {/* Bottom — Pipedrive-style user section */}
+      <div className="px-3 py-3 border-t border-white/5 space-y-1">
+        <div className="flex items-center gap-2.5 px-3 py-2">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white">
+            BD
+          </div>
+          <div className="min-w-0">
+            <p className="text-[12px] text-gray-300 truncate">BD Team</p>
+          </div>
+        </div>
         <button
           onClick={logout}
-          aria-label="Sign out of BD Console"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:text-white hover:bg-gray-800 w-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green focus-visible:ring-offset-1 focus-visible:ring-offset-gray-900"
+          aria-label="Sign out"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-[12px] text-gray-500 hover:text-gray-300 hover:bg-white/5 w-full transition-colors"
         >
-          <LogOut size={18} aria-hidden="true" />
+          <LogOut size={14} />
           Sign Out
         </button>
       </div>
