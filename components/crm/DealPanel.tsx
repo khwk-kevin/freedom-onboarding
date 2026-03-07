@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useState, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import {
   X, Phone, Mail, MapPin, Tag, Clock, MessageSquare,
   PhoneCall, AtSign, Calendar, ChevronDown, Send, Hash,
   TrendingUp, DollarSign, User, Building2, ExternalLink, Check,
-  Edit3, Save
+  Edit3, Save, Maximize2
 } from 'lucide-react';
 
 export interface DealPanelMerchant {
@@ -370,7 +371,14 @@ export function DealPanel({ merchant, onClose, onStatusChange, onFieldChange }: 
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
+            <Link
+              href={`/crm/merchants/${merchant.id}`}
+              className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Open full profile"
+            >
+              <Maximize2 size={15} />
+            </Link>
             <button
               onClick={onClose}
               className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
