@@ -5,8 +5,32 @@ import {
   X, Phone, Mail, MapPin, Tag, Clock, MessageSquare,
   PhoneCall, AtSign, Calendar, ChevronDown, Send, Hash,
   TrendingUp, DollarSign, User, Building2, ExternalLink, Check,
-  Edit3, Save, Maximize2
+  Edit3, Maximize2
 } from 'lucide-react';
+
+interface PipedriveData {
+  contact_person?: string;
+  pipedrive_label?: string;
+  pipedrive_stage?: string;
+  pipedrive_owner?: string;
+  lost_reason?: string | null;
+  activities_done?: number;
+  activities_total?: number;
+}
+
+function extractPD(notes: unknown): PipedriveData | null {
+  if (!Array.isArray(notes)) return null;
+  const pd = (notes as Array<Record<string, unknown>>).find((n) => n && n.type === 'pipedrive_import');
+  return pd ? (pd as unknown as PipedriveData) : null;
+}
+
+const PD_LABEL_COLORS: Record<string, string> = {
+  'Micro Enterprise': 'bg-blue-100 text-blue-700',
+  'SME': 'bg-purple-100 text-purple-700',
+  'Corporate': 'bg-amber-100 text-amber-700',
+};
+
+const ONBOARDING_STAGES = ['signup', 'context', 'branding', 'products', 'rewards', 'golive', 'completed'];
 
 export interface DealPanelMerchant {
   id: string;
@@ -466,6 +490,48 @@ export function DealPanel({ merchant, onClose, onStatusChange, onFieldChange }: 
 
           {/* Right: Details sidebar */}
           <div className="w-[230px] shrink-0 overflow-y-auto bg-[#f5f6f8] p-3 space-y-3">
+
+            {/* Pipedrive + Onboarding */}
+            {(() => {
+              const pd = extractPD(merchant.notes);
+              const stageIdx = ONBOARDING_STAGES.indexOf(merchant.onboarding_status);
+              const progressPct = stageIdx >= 0 ? Math.round((stageIdx / (ONBOARDING_STAGES.length - 1)) * 100) : 0;
+              return (
+                <div className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+                  <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Pipeline</h4>
+                  {pd?.contact_person && (
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <User size={11} className="text-gray-400 shrink-0" />
+                      <span className="text-[12px] text-gray-700 truncate">{pd.contact_person}</span>
+                    </div>
+                  )}
+                  {pd?.pipedrive_label && (
+                    <div className="mb-2">
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${PD_LABEL_COLORS[pd.pipedrive_label] ?? 'bg-gray-100 text-gray-600'}`}>
+                        {pd.pipedrive_label}
+                      </span>
+                    </div>
+                  )}
+                  {pd?.pipedrive_owner && (
+                    <div className="text-[11px] text-gray-400 mb-2">Owner: <span className="text-gray-600">{pd.pipedrive_owner}</span></div>
+                  )}
+                  {/* Onboarding progress bar */}
+                  <div className="mt-2 pt-2 border-t border-gray-100">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] text-gray-400">Onboarding</span>
+                      <span className="text-[10px] font-semibold text-gray-600">{merchant.onboarding_status}</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${progressPct}%`, backgroundColor: progressPct >= 100 ? '#4CAF50' : '#4A90D9' }}
+                      />
+                    </div>
+                    <div className="text-[10px] text-gray-400 mt-1 text-right">{progressPct}% complete</div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Quick Actions */}
             <div className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm">

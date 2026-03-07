@@ -8,9 +8,8 @@ import {
   AlertCircle,
   BarChart3,
   LogOut,
-  Search,
-  Bell,
   Plus,
+  Compass,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,6 +20,7 @@ const navItems = [
   { href: '/crm/merchants', label: 'Merchants', icon: Users, exact: false },
   { href: '/crm/handoffs', label: 'Handoffs', icon: AlertCircle, exact: false },
   { href: '/crm/analytics', label: 'Analytics', icon: BarChart3, exact: false },
+  { href: '/crm/community-tracker', label: 'Community Tracker', icon: Compass, exact: false },
 ];
 
 export function Sidebar() {

@@ -16,7 +16,44 @@ import {
   CheckCircle,
   AlertCircle,
   DollarSign,
+  User,
+  Briefcase,
+  GitBranch,
+  Activity,
+  XCircle,
 } from 'lucide-react';
+
+interface PipedriveImport {
+  type: string;
+  source?: string;
+  contact_person?: string;
+  pipedrive_label?: string;
+  pipedrive_stage?: string;
+  pipedrive_owner?: string;
+  pipedrive_status?: string;
+  pipedrive_creator?: string;
+  pipedrive_deal_id?: string | number;
+  pipedrive_org_id?: string | number;
+  activities_done?: number;
+  activities_total?: number;
+  last_activity_date?: string | null;
+  lost_reason?: string | null;
+  archived?: boolean;
+}
+
+function extractPipedriveData(notes: unknown): PipedriveImport | null {
+  if (!Array.isArray(notes)) return null;
+  const found = (notes as Array<Record<string, unknown>>).find(
+    (n) => n && n.type === 'pipedrive_import'
+  );
+  return found ? (found as unknown as PipedriveImport) : null;
+}
+
+const LABEL_COLORS: Record<string, string> = {
+  'Micro Enterprise': 'bg-blue-100 text-blue-700',
+  'SME': 'bg-purple-100 text-purple-700',
+  'Corporate': 'bg-amber-100 text-amber-700',
+};
 
 interface Merchant {
   id: string;
@@ -32,7 +69,7 @@ interface Merchant {
   health_score: number | null;
   assigned_to: string | null;
   tags: string[];
-  notes: { date: string; author: string; text: string }[];
+  notes: Array<Record<string, unknown>>;
   logo_url: string | null;
   primary_color: string | null;
   created_at: string;
@@ -145,6 +182,8 @@ export default function MerchantDetailPage() {
     );
   }
 
+  const pipedriveData = extractPipedriveData(merchant.notes ?? []);
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -239,6 +278,88 @@ export default function MerchantDetailPage() {
               )}
             </div>
           </div>
+
+          {/* Pipedrive History */}
+          {pipedriveData && (
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <GitBranch size={14} className="text-[#4A90D9]" />
+                Pipedrive History
+              </h3>
+
+              {/* Contact person */}
+              {pipedriveData.contact_person && (
+                <div className="flex items-center gap-2 mb-2">
+                  <User size={13} className="text-gray-400 shrink-0" />
+                  <div>
+                    <span className="text-[11px] text-gray-400 block">Contact Person</span>
+                    <span className="text-sm font-medium text-gray-800">{pipedriveData.contact_person}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Label badge */}
+              {pipedriveData.pipedrive_label && (
+                <div className="mb-3">
+                  <span className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full ${LABEL_COLORS[pipedriveData.pipedrive_label] ?? 'bg-gray-100 text-gray-600'}`}>
+                    {pipedriveData.pipedrive_label}
+                  </span>
+                </div>
+              )}
+
+              {/* Stage */}
+              {pipedriveData.pipedrive_stage && (
+                <div className="flex items-center gap-2 mb-2 text-sm">
+                  <Briefcase size={13} className="text-gray-400 shrink-0" />
+                  <div>
+                    <span className="text-[11px] text-gray-400 block">Pipedrive Stage</span>
+                    <span className="text-sm text-gray-700">{pipedriveData.pipedrive_stage}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Owner */}
+              {pipedriveData.pipedrive_owner && (
+                <div className="flex items-center gap-2 mb-2 text-sm text-gray-600">
+                  <User size={13} className="text-gray-400 shrink-0" />
+                  <span className="text-[11px] text-gray-400">Owner: </span>
+                  <span className="text-sm text-gray-700">{pipedriveData.pipedrive_owner}</span>
+                </div>
+              )}
+
+              {/* Lost reason - prominent */}
+              {pipedriveData.lost_reason && (
+                <div className="mt-2 bg-red-50 border border-red-100 rounded-lg p-2.5 flex items-start gap-2">
+                  <XCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-[11px] font-semibold text-red-600 block">Lost Reason</span>
+                    <span className="text-xs text-red-700">{pipedriveData.lost_reason}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Activities */}
+              {(pipedriveData.activities_total ?? 0) > 0 && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                  <Activity size={13} className="text-gray-400 shrink-0" />
+                  <span className="text-xs text-gray-500">Activities: </span>
+                  <span className="text-xs font-semibold text-gray-700">
+                    {pipedriveData.activities_done ?? 0} / {pipedriveData.activities_total}
+                  </span>
+                </div>
+              )}
+
+              {/* Deal ID */}
+              {pipedriveData.pipedrive_deal_id && (
+                <div className="mt-2 text-[11px] text-gray-400">
+                  Deal #{pipedriveData.pipedrive_deal_id}
+                  {pipedriveData.last_activity_date && (
+                    <span className="ml-2">· Last activity: {new Date(pipedriveData.last_activity_date).toLocaleDateString()}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Revenue */}
           <div className="bg-white rounded-xl border border-gray-200 p-5" id="revenue-section">
@@ -432,15 +553,15 @@ export default function MerchantDetailPage() {
             </div>
 
             {/* Existing notes */}
-            {merchant.notes && merchant.notes.length > 0 ? (
+            {merchant.notes && merchant.notes.filter((n) => n.type !== 'pipedrive_import' && n.text).length > 0 ? (
               <div className="space-y-3">
-                {[...merchant.notes].reverse().map((note, i) => (
+                {[...merchant.notes].filter((n) => n.type !== 'pipedrive_import' && n.text).reverse().map((note, i) => (
                   <div key={i} className="border-l-2 border-brand-green pl-3">
                     <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                      <span className="font-medium">{note.author}</span>
-                      <span>{new Date(note.date).toLocaleDateString()}</span>
+                      <span className="font-medium">{String(note.author ?? 'Team')}</span>
+                      <span>{note.date ? new Date(String(note.date)).toLocaleDateString() : ''}</span>
                     </div>
-                    <p className="text-sm text-gray-700">{note.text}</p>
+                    <p className="text-sm text-gray-700">{String(note.text ?? '')}</p>
                   </div>
                 ))}
               </div>
