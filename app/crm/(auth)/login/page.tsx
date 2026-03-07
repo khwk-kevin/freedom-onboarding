@@ -42,9 +42,7 @@ export default function CRMLoginPage() {
             priority
           />
         </div>
-        <p className="text-center text-gray-400 text-sm mb-8">BD Console</p>
-
-        <h1 className="text-white text-xl font-bold mb-6 text-center">Sign in to BD Console</h1>
+        <h1 className="text-white text-xl font-bold mb-6 mt-4 text-center">Sign In</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

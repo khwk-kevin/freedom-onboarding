@@ -3,7 +3,7 @@ import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/crm/Sidebar';
 import { MobileCRMNav } from '@/components/crm/MobileCRMNav';
 
-const AUTH_PATHS = ['/crm/login', '/crm/forgot-password'];
+const AUTH_PATHS = ['/crm/login', '/crm/forgot-password', '/crm/reset-password'];
 
 export default function CRMLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
