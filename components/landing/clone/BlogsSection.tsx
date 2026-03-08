@@ -40,7 +40,7 @@ function BlogCard({ blog }: { blog: BlogCard }) {
       className="md:w-auto md:flex-1 min-w-[300px] w-full md:min-w-0 z-30 h-auto rounded-[32px] relative"
       style={{
         background: 'linear-gradient(281deg, #F742A240 25%, #F742A254 33%, #36BBF699 60%)',
-        padding: 1,
+        padding: "1.5px",
       }}
     >
       <a
@@ -69,7 +69,7 @@ function BlogCard({ blog }: { blog: BlogCard }) {
             </h3>
             <Image alt="Read more" src="/svgs/up-right-arrow.svg" width={41} height={41} className="w-6 h-6 lg:w-10 lg:h-10" />
           </div>
-          <p className="text-[#A6A7B5] w-full text-left whitespace-normal text-sm">{blog.subTitle}</p>
+          <p className="text-[#A6A7B5] w-full text-left whitespace-normal text-[12px] leading-[18px] md:text-[14px] md:leading-[21px] tracking-[-0.24px]">{blog.subTitle}</p>
         </div>
       </a>
     </div>

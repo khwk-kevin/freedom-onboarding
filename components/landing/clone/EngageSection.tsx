@@ -27,7 +27,7 @@ export default function EngageSection() {
         style={{
           overflow: 'visible',
           background: 'linear-gradient(-70deg,#F742A240 25%, #F742A254 33%, #36BBF699 60%)',
-          padding: 1,
+          padding: "1.5px",
         }}
       >
         <div
@@ -38,12 +38,12 @@ export default function EngageSection() {
           <div className="flex-1 flex flex-col gap-7 w-full md:w-1/2 max-w-[390px] z-10 md:order-1">
             <div>
               <h3
-                className="w-fit uppercase md:text-start text-center font-black text-[28px] md:text-[36px] text-white leading-[100%]"
+                className="w-fit uppercase md:text-start text-center font-black text-[24px] leading-[36px] sm:text-[28px] sm:leading-[40px] md:text-[32px] md:leading-[48px] text-white"
                 style={{ fontFamily: 'Kanit, sans-serif' }}
               >
                 run your business
               </h3>
-              <p className="w-fit md:text-start text-center text-[#A6A7B5] text-sm mt-2">
+              <p className="w-fit md:text-start text-center text-[#A6A7B5] text-[14px] leading-[21px] tracking-[-0.24px] mt-2">
                 Manage all your customer interactions, data,<br />
                 and tools in one simple platform.
               </p>

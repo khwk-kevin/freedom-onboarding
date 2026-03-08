@@ -36,7 +36,7 @@ function TipCardComponent({ tip }: { tip: TipCard }) {
       className="md:w-auto md:flex-1 min-w-[300px] w-full md:min-w-0 z-30 h-[395px] rounded-[32px] relative"
       style={{
         background: 'linear-gradient(-70deg,#F742A240 25%, #F742A254 33%, #36BBF699 60%)',
-        padding: 1,
+        padding: "1.5px",
       }}
     >
       <div
@@ -50,7 +50,7 @@ function TipCardComponent({ tip }: { tip: TipCard }) {
           unoptimized
         />
         <h3
-          className="text-center w-fit text-white uppercase font-black text-lg leading-tight"
+          className="text-center w-fit text-white uppercase font-black text-[18px] leading-[27px] sm:text-[20px] sm:leading-[30px] md:text-[24px] md:leading-[36px]"
           style={{ fontFamily: 'Kanit, sans-serif' }}
         >
           {tip.id === 1 ? (

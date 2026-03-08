@@ -157,7 +157,7 @@ export default function HeroClone() {
             width={1179}
             height={773}
             sizes="(max-width: 768px) 100vw, 1179px"
-            className="w-full h-auto absolute bottom-0 animate-[fadeIn_0.6s_ease_0.6s_both]"
+            className="w-full h-auto absolute bottom-0 fade-in" style={{animationDelay: "0.6s"}}
             priority
             fetchPriority="high"
             loading="eager"

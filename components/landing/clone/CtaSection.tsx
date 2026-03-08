@@ -8,7 +8,7 @@ function CtaCard1() {
       className="flex-1 rounded-[32px] relative"
       style={{
         background: 'linear-gradient(281deg, rgba(247,66,162,0.25) 14.21%, rgba(247,66,162,0.33) 49.46%, rgba(55,200,245,0.80) 95.44%)',
-        padding: 1,
+        padding: "1.5px",
       }}
     >
       <div
@@ -108,7 +108,7 @@ function CtaCard2() {
       className="flex-1 z-50 rounded-[32px] relative"
       style={{
         background: 'linear-gradient(281deg, rgba(247,66,162,0.25) 14.21%, rgba(247,66,162,0.33) 49.46%, rgba(55,200,245,0.80) 95.44%)',
-        padding: 1,
+        padding: "1.5px",
       }}
     >
       <div

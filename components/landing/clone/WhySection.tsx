@@ -40,7 +40,7 @@ function WhyCard({ why }: { why: WhyCard }) {
       className="md:w-auto md:flex-1 min-w-[300px] w-full md:min-w-0 z-30 h-auto md:h-[430px] rounded-[32px] relative"
       style={{
         background: 'linear-gradient(281deg, #F742A240 25%, #F742A254 33%, #36BBF699 60%)',
-        padding: 1,
+        padding: "1.5px",
       }}
     >
       <a
@@ -76,7 +76,7 @@ function WhyCard({ why }: { why: WhyCard }) {
               </h5>
             </div>
           </div>
-          <p className="text-[#A6A7B5] w-full text-left whitespace-normal line-clamp-4 text-sm">
+          <p className="text-[#A6A7B5] w-full text-left whitespace-normal line-clamp-4 text-[12px] leading-[18px] md:text-[14px] md:leading-[21px] tracking-[-0.24px]">
             {why.subTitle}
           </p>
         </div>

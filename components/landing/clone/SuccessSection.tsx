@@ -331,7 +331,7 @@ export default function SuccessSection() {
 
       {/* Heading desktop */}
       <div className="px-[14px] sm:px-[16px] md:px-[32px] py-[4px] sm:py-[8px] md:py-[12px] pl-[4px] sm:pl-[8px] md:pl-[12px] gap-[6px] sm:gap-[10px] md:gap-[16px] hidden sm:flex items-center rounded-full m-auto">
-        <h1 className="rounded-full w-fit text-white uppercase font-black text-3xl sm:text-5xl md:text-6xl"
+        <h1 className="rounded-full w-fit text-white uppercase font-black text-3xl"
           style={{ fontFamily: 'Kanit, sans-serif' }}>
           success stories
         </h1>

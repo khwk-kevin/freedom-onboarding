@@ -93,7 +93,7 @@ export default function MapSection() {
               className="md:w-auto md:flex-1 w-full md:min-w-0 z-30 min-h-[188px] rounded-[24px] relative"
               style={{
                 background: 'linear-gradient(281deg, #F742A240 25%, #F742A254 33%, #36BBF699 60%)',
-                padding: 1,
+                padding: "1.5px",
               }}
             >
               <div className="rounded-[23px] bg-[#120A2A]/90 backdrop-blur-md flex flex-col justify-start items-start min-h-[188px] relative w-full p-4 gap-[6px] sm:gap-[10px] md:gap-[16px] break-words">

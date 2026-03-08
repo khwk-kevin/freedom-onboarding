@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Kanit } from 'next/font/google'
+import { Kanit, Encode_Sans_Expanded } from 'next/font/google'
 import './globals.css'
 import { PHProvider, PostHogPageview } from '@/lib/posthog/provider'
 import { GTMProvider } from '@/lib/gtm/provider'
@@ -7,6 +7,12 @@ import { GTMProvider } from '@/lib/gtm/provider'
 const kanit = Kanit({
   subsets: ['thai', 'latin'],
   weight: ['300', '400', '500', '600', '700'],
+})
+
+const encodeSansExpanded = Encode_Sans_Expanded({
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '800', '900'],
+  variable: '--font-encode-sans',
 })
 
 export const metadata: Metadata = {
@@ -21,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="th">
-      <body className={`${kanit.className} bg-fw-bg text-fw-text-primary antialiased`}>
+      <body className={`${kanit.className} ${encodeSansExpanded.variable} bg-fw-bg text-fw-text-primary antialiased`}>
         <PHProvider>
           <GTMProvider />
           <PostHogPageview />

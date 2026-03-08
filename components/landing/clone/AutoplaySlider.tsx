@@ -100,7 +100,8 @@ export function AutoplaySlider({
       <div ref={containerRef} className={`flex w-full flex-col gap-4 ${className}`}>
         {title && (
           <h4
-            className="font-bold text-[24px] leading-8 uppercase text-center px-4 text-[#F4F4FC]"
+            className="font-bold text-[24px] leading-[34px] uppercase text-center px-4 text-[#F4F4FC]"
+            style={{ fontFamily: 'var(--font-encode-sans, "Encode Sans Expanded", sans-serif)' }}
           >
             {title}
           </h4>
@@ -156,7 +157,10 @@ export function AutoplaySlider({
       {/* Left: tab list */}
       <div className="flex flex-col items-start gap-6 flex-1 min-w-0">
         {title && (
-          <h4 className="font-bold text-[24px] leading-8 uppercase text-[#F4F4FC]">
+          <h4
+            className="font-bold text-[24px] leading-[34px] uppercase text-[#F4F4FC]"
+            style={{ fontFamily: 'var(--font-encode-sans, "Encode Sans Expanded", sans-serif)' }}
+          >
             {title}
           </h4>
         )}

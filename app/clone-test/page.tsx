@@ -24,12 +24,12 @@ export default function CloneTestPage() {
       <Navbar />
 
       {/* Sections stacked with freedom.world spacing */}
-      <div className="flex flex-col gap-[120px] md:gap-[190px] pb-[120px] md:pb-[190px]">
-        {/* 1. Video placeholder */}
-        <VideoSection />
-
-        {/* 2. Hero */}
-        <HeroClone />
+      <div className="flex flex-col md:gap-[190px] gap-[120px]">
+        {/* 1+2. Video + Hero grouped (no gap between them, matching original) */}
+        <div>
+          <VideoSection />
+          <HeroClone />
+        </div>
 
         {/* 3. Stats / All-in-one */}
         <StatsSection />
@@ -60,6 +60,7 @@ export default function CloneTestPage() {
       </div>
 
       <FooterDark />
+
     </main>
   )
 }
