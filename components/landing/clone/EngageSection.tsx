@@ -39,7 +39,7 @@ export default function EngageSection() {
             <div>
               <h3
                 className="w-fit uppercase md:text-start text-center font-black text-[24px] leading-[36px] sm:text-[28px] sm:leading-[40px] md:text-[32px] md:leading-[48px] text-white"
-                style={{ fontFamily: 'Kanit, sans-serif' }}
+                
               >
                 run your business
               </h3>

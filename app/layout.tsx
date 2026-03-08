@@ -6,7 +6,7 @@ import { GTMProvider } from '@/lib/gtm/provider'
 
 const kanit = Kanit({
   subsets: ['thai', 'latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
 })
 
 const encodeSansExpanded = Encode_Sans_Expanded({

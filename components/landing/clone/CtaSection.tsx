@@ -21,14 +21,14 @@ function CtaCard1() {
             <div className="px-2 m-0">
               <h3
                 className="uppercase p-0 m-0 font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center"
-                style={{ fontFamily: 'Kanit, sans-serif' }}
+                
               >
                 build customer
               </h3>
             </div>
             <h3
               className="rounded-full w-fit uppercase px-2 m-0 font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center"
-              style={{ fontFamily: 'Kanit, sans-serif' }}
+              
             >
               connections
             </h3>
@@ -62,13 +62,13 @@ function CtaCard1() {
         <div className="md:hidden flex flex-col w-full">
           <div className="flex flex-col justify-center items-center uppercase p-[24px] gap-[6px] sm:gap-[8px] md:gap-[12px]">
             <div className="px-[14px] sm:px-[16px] md:px-[32px]">
-              <h3 className="font-black text-[#F4F4FC] text-2xl text-center" style={{ fontFamily: 'Kanit, sans-serif' }}>
+              <h3 className="font-black text-[#F4F4FC] text-2xl text-center" >
                 build customer
               </h3>
             </div>
             <h3
               className="rounded-full w-fit uppercase font-black text-[#F4F4FC] text-2xl py-[4px] sm:py-[8px] md:py-[12px] px-[14px] sm:px-[16px] md:px-[32px] text-center"
-              style={{ fontFamily: 'Kanit, sans-serif' }}
+              
             >
               connections
             </h3>
@@ -121,14 +121,14 @@ function CtaCard2() {
             <div className="px-2">
               <h3
                 className="uppercase font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center"
-                style={{ fontFamily: 'Kanit, sans-serif' }}
+                
               >
                 join as a partner
               </h3>
             </div>
             <h3
               className="rounded-full w-fit uppercase px-2 font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center"
-              style={{ fontFamily: 'Kanit, sans-serif' }}
+              
             >
               with freedom
             </h3>
@@ -162,13 +162,13 @@ function CtaCard2() {
         <div className="md:hidden flex flex-col w-full">
           <div className="flex flex-col justify-center items-center p-[24px] gap-[6px] sm:gap-[8px] md:gap-[12px]">
             <div className="px-[14px] sm:px-[16px] md:px-[32px]">
-              <h3 className="uppercase font-black text-[#F4F4FC] text-2xl text-center" style={{ fontFamily: 'Kanit, sans-serif' }}>
+              <h3 className="uppercase font-black text-[#F4F4FC] text-2xl text-center" >
                 join as a partner
               </h3>
             </div>
             <h3
               className="rounded-full w-fit uppercase font-black text-[#F4F4FC] text-2xl py-[4px] sm:py-[8px] md:py-[12px] px-[14px] sm:px-[16px] md:px-[32px] text-center"
-              style={{ fontFamily: 'Kanit, sans-serif' }}
+              
             >
               with freedom
             </h3>

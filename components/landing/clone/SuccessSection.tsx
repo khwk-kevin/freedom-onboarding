@@ -175,7 +175,7 @@ function SlideContent({ slide }: { slide: Slide }) {
             ) : (
               <>
                 <Image alt="" src={slide.iconUrl} width={44} height={44} className="object-cover py-3 rounded-3xl flex-1" unoptimized />
-                <h4 className="w-fit text-white uppercase font-black" style={{ fontFamily: 'Kanit, sans-serif' }}>
+                <h4 className="w-fit text-white uppercase font-black" >
                   {slide.title.toUpperCase()}
                 </h4>
               </>
@@ -184,7 +184,7 @@ function SlideContent({ slide }: { slide: Slide }) {
 
           {/* Text content */}
           <div className="flex flex-col gap-4 self-stretch">
-            <h4 className="w-fit text-white font-black uppercase" style={{ fontFamily: 'Kanit, sans-serif' }}>
+            <h4 className="w-fit text-white font-black uppercase" >
               {slide.textTitle.toUpperCase()}
             </h4>
             <p className="w-fit text-white text-sm">{slide.text}</p>
@@ -241,7 +241,7 @@ function SlideContent({ slide }: { slide: Slide }) {
             ) : (
               <>
                 <Image alt="" src={slide.iconUrl} width={44} height={44} className="object-cover py-3 rounded-3xl flex-1" unoptimized />
-                <h4 className="w-fit text-white uppercase font-black" style={{ fontFamily: 'Kanit, sans-serif' }}>
+                <h4 className="w-fit text-white uppercase font-black" >
                   {slide.title.toUpperCase()}
                 </h4>
               </>
@@ -250,7 +250,7 @@ function SlideContent({ slide }: { slide: Slide }) {
 
           {/* Text content */}
           <div className="flex flex-col gap-4 self-stretch">
-            <h4 className="w-fit text-white uppercase font-black" style={{ fontFamily: 'Kanit, sans-serif' }}>
+            <h4 className="w-fit text-white uppercase font-black" >
               {slide.textTitle.toUpperCase()}
             </h4>
             <p className="w-fit text-white text-sm">{slide.text}</p>
@@ -332,7 +332,7 @@ export default function SuccessSection() {
       {/* Heading desktop */}
       <div className="px-[14px] sm:px-[16px] md:px-[32px] py-[4px] sm:py-[8px] md:py-[12px] pl-[4px] sm:pl-[8px] md:pl-[12px] gap-[6px] sm:gap-[10px] md:gap-[16px] hidden sm:flex items-center rounded-full m-auto">
         <h1 className="rounded-full w-fit text-white uppercase font-black text-3xl"
-          style={{ fontFamily: 'Kanit, sans-serif' }}>
+          >
           success stories
         </h1>
       </div>
@@ -340,7 +340,7 @@ export default function SuccessSection() {
       {/* Heading mobile */}
       <div className="flex sm:hidden flex-col gap-0 justify-center items-center z-10 text-center">
         <h2 className="w-fit text-white uppercase text-3xl font-black"
-          style={{ fontFamily: 'Kanit, sans-serif' }}>
+          >
           success stories
         </h2>
       </div>

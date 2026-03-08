@@ -63,7 +63,7 @@ function BlogCard({ blog }: { blog: BlogCard }) {
           <div className="flex justify-between items-start gap-1 w-full">
             <h3
               className="text-[#F4F4FC] text-2xl font-black uppercase"
-              style={{ fontFamily: 'Kanit, sans-serif' }}
+              
             >
               {blog.title}
             </h3>
@@ -111,13 +111,13 @@ export default function BlogsSection() {
         <div className="hidden sm:flex flex-col justify-center items-center z-10 text-center">
           <h2
             className="w-fit text-white uppercase text-[40px] font-black"
-            style={{ fontFamily: 'Kanit, sans-serif' }}
+            
           >
             community insights &amp; ideas
           </h2>
           <h1
             className="rounded-full w-fit text-[#10F48B] uppercase text-[90px] font-black leading-[100%]"
-            style={{ fontFamily: 'Kanit, sans-serif' }}
+            
           >
             for your inspiration
           </h1>
@@ -138,13 +138,13 @@ export default function BlogsSection() {
         <div className="flex sm:hidden flex-col gap-0 justify-center items-center z-10 text-center">
           <h2
             className="w-fit text-white uppercase text-3xl font-black"
-            style={{ fontFamily: 'Kanit, sans-serif' }}
+            
           >
             community insights &amp; ideas
           </h2>
           <h1
             className="rounded-full w-fit text-[#10F48B] uppercase text-3xl font-black"
-            style={{ fontFamily: 'Kanit, sans-serif' }}
+            
           >
             for your inspiration
           </h1>

@@ -46,11 +46,11 @@ export default function CrmSection() {
       <div className="flex w-full flex-col items-center gap-2 self-stretch">
         <div>
           <h2 className="text-center text-[30px] md:text-[40px] font-black leading-[100%] uppercase text-[#F4F4FC]"
-            style={{ fontFamily: 'Kanit, sans-serif' }}>
+            >
             grow faster with
           </h2>
           <p className="text-center text-[30px] md:text-[60px] font-black leading-[100%] uppercase text-[#10F48B]"
-            style={{ fontFamily: 'Kanit, sans-serif' }}>
+            >
             crm &amp; ai
           </p>
         </div>

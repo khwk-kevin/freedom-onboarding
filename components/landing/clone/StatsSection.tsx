@@ -51,7 +51,7 @@ function TipCardComponent({ tip }: { tip: TipCard }) {
         />
         <h3
           className="text-center w-fit text-white uppercase font-black text-[18px] leading-[27px] sm:text-[20px] sm:leading-[30px] md:text-[24px] md:leading-[36px]"
-          style={{ fontFamily: 'Kanit, sans-serif' }}
+          
         >
           {tip.id === 1 ? (
             <>integrated<br />e-commerce</>
@@ -97,11 +97,11 @@ export default function StatsSection() {
 
       <div className="flex flex-col justify-center items-center z-10 text-center gap-[6px] sm:gap-[10px] md:gap-[16px]">
         <h2 className="w-fit text-white uppercase text-[30px] md:text-[40px] text-center font-black leading-[100%]"
-          style={{ fontFamily: 'Kanit, sans-serif' }}>
+          >
           all-in-one platform to grow and
         </h2>
         <p className="rounded-full w-fit text-[#10F48B] uppercase text-[30px] md:text-[60px] text-center font-black leading-[100%]"
-          style={{ fontFamily: 'Kanit, sans-serif' }}>
+          >
           engage your customers
         </p>
       </div>

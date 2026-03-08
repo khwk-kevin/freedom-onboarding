@@ -34,11 +34,11 @@ export default function MapSection() {
       <div className="flex w-full flex-col items-center gap-2 self-stretch">
         <div>
           <h2 className="text-center text-[30px] md:text-[40px] font-black leading-[100%] uppercase text-[#F4F4FC]"
-            style={{ fontFamily: 'Kanit, sans-serif' }}>
+            >
             put your business
           </h2>
           <p className="text-center text-[30px] md:text-[60px] font-black leading-[100%] uppercase text-[#10F48B]"
-            style={{ fontFamily: 'Kanit, sans-serif' }}>
+            >
             on the map
           </p>
         </div>
