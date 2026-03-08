@@ -1,276 +1,250 @@
-import Link from 'next/link'
+'use client'
 
-const LOYALTY_FEATURES = [
+import { useState } from 'react'
+import Image from 'next/image'
+import { AutoplaySlider } from './AutoplaySlider'
+
+const loyaltyItems = [
   {
-    color: '#10F48B',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M10 2C5.582 2 2 5.582 2 10s3.582 8 8 8 8-3.582 8-8-3.582-8-8-8z" stroke="#10F48B" strokeWidth="1.3" fill="none"/>
-        <path d="M7 10c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z" fill="#10F48B" opacity="0.5"/>
-        <path d="M10 7V4M10 16v-3M4 10H1M19 10h-3" stroke="#10F48B" strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
-      </svg>
-    ),
-    title: 'Missions & Daily Challenges',
-    desc: 'Create consistent engagement loops through daily missions that inspire participation and reinforce loyalty behaviors.',
-  },
-  {
-    color: '#36BBF6',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M4 17V7l6-5 6 5v10" stroke="#36BBF6" strokeWidth="1.3" fill="none" strokeLinejoin="round"/>
-        <path d="M7 17v-5h6v5" stroke="#36BBF6" strokeWidth="1.3" fill="none"/>
-        <path d="M1 17h18" stroke="#36BBF6" strokeWidth="1.3" strokeLinecap="round"/>
-      </svg>
-    ),
-    title: 'Top Contribution Tracker',
-    desc: 'Inspire your community to engage more by celebrating high-performing members through badges and rankings.',
-  },
-  {
-    color: '#F742A2',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="7" stroke="#F742A2" strokeWidth="1.3" fill="none"/>
-        <path d="M10 6v4l3 3" stroke="#F742A2" strokeWidth="1.3" strokeLinecap="round"/>
-        <path d="M7 3l1.5 2.5M13 3l-1.5 2.5" stroke="#F742A2" strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
-      </svg>
-    ),
-    title: 'Loyalty Tokens',
-    desc: 'Give your customers something worth earning. Launch your own tokens or points that can be redeemed or collected across your ecosystem.',
-  },
-  {
-    color: '#10F48B',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M10 2l2 6h6l-5 3.5 2 6L10 14l-5 3.5 2-6L2 8h6L10 2z" stroke="#10F48B" strokeWidth="1.2" fill="none" strokeLinejoin="round"/>
-      </svg>
-    ),
+    id: 'converted_referrals',
     title: 'Converted Referrals',
-    desc: 'Expand your customer base through performance-based referrals that reward verified purchases and mission completions.',
+    subtitle: 'Expand your customer base through performance-based referrals that reward verified purchases and mission completions.',
+    image: '/images/cdn/features/visual_loyalty01.webp',
+  },
+  {
+    id: 'missions',
+    title: 'Missions',
+    subtitle: 'Create consistent engagement loops through daily missions that inspire participation and reinforce loyalty behaviors.',
+    image: '/images/cdn/features/visual_loyalty02.webp',
+  },
+  {
+    id: 'loyalty_tokens',
+    title: 'Loyalty Tokens',
+    subtitle: 'Give your customers something worth earning. Launch your own tokens or points that can be redeemed or collected across your ecosystem.',
+    image: '/images/cdn/features/visual_loyalty03.webp',
+  },
+  {
+    id: 'top_contribution',
+    title: 'Top Contribution',
+    subtitle: 'Recognize and reward your most active members with leaderboard features that celebrate loyalty and drive competition.',
+    image: '/images/cdn/features/visual_loyalty04.webp',
   },
 ]
 
-const COMMUNITY_FEATURES = [
+const shopItems = [
   {
-    color: '#36BBF6',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M18 10c0 4.418-3.582 8-8 8a7.976 7.976 0 01-4.5-1.38L2 18l1.38-3.5A7.976 7.976 0 012 10c0-4.418 3.582-8 8-8s8 3.582 8 8z" stroke="#36BBF6" strokeWidth="1.3" fill="none" strokeLinejoin="round"/>
-        <path d="M7 10h6M7 13h4" stroke="#36BBF6" strokeWidth="1.2" strokeLinecap="round"/>
-      </svg>
-    ),
-    title: 'Customer Support Chat',
-    desc: 'Resolve issues faster through integrated chat that connects customers to human or AI support in real time.',
-  },
-  {
-    color: '#F742A2',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M15 8c0 3.866-3.134 7-7 7a6.977 6.977 0 01-3.94-1.21L1 15l1.21-3.06A6.977 6.977 0 012 8c0-3.866 3.134-7 7-7s7 3.134 7 7z" stroke="#F742A2" strokeWidth="1.3" fill="none"/>
-        <path d="M19 16l-2-1.5A5.5 5.5 0 0118 12c0-3.038-2.462-5.5-5.5-5.5" stroke="#F742A2" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
-        <path d="M6 8h8M6 11h5" stroke="#F742A2" strokeWidth="1.2" strokeLinecap="round"/>
-      </svg>
-    ),
-    title: 'Community Chat',
-    desc: 'Keep conversations flowing with live chat channels designed for collaboration and community building.',
-  },
-  {
-    color: '#10F48B',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <rect x="2" y="4" width="16" height="12" rx="2" stroke="#10F48B" strokeWidth="1.3" fill="none"/>
-        <path d="M6 8h8M6 11h5" stroke="#10F48B" strokeWidth="1.2" strokeLinecap="round"/>
-        <circle cx="15" cy="4" r="3" fill="#10F48B" opacity="0.3" stroke="#10F48B" strokeWidth="1"/>
-      </svg>
-    ),
-    title: 'Feed',
-    desc: 'Broadcast important news, offers, and alerts straight into your users\' activity feed for real-time visibility.',
-  },
-  {
-    color: '#36BBF6',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="8" stroke="#36BBF6" strokeWidth="1.3" fill="none"/>
-        <path d="M6 10h8M10 6v8" stroke="#36BBF6" strokeWidth="1.3" strokeLinecap="round"/>
-      </svg>
-    ),
-    title: 'Polls & Surveys',
-    desc: 'Test ideas, measure satisfaction, and identify trends fast with built-in polls and surveys.',
-  },
-]
-
-const COMMERCE_FEATURES = [
-  {
-    color: '#F742A2',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M3 5h14l-1.5 9H4.5L3 5z" stroke="#F742A2" strokeWidth="1.3" fill="none"/>
-        <path d="M7 5l1-3h4l1 3" stroke="#F742A2" strokeWidth="1.2" strokeLinecap="round"/>
-        <circle cx="7.5" cy="16.5" r="1.5" fill="#F742A2"/>
-        <circle cx="13.5" cy="16.5" r="1.5" fill="#F742A2"/>
-      </svg>
-    ),
+    id: 'shop',
     title: 'Shop',
-    desc: 'Reach customers everywhere. List and manage products or NFTs across multiple channels, including POS and in-app sales.',
+    subtitle: 'List and sell products or services directly from your community, with full inventory management built in.',
+    image: '/images/cdn/features/visual_shop01.webp',
   },
   {
-    color: '#10F48B',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <rect x="2" y="5" width="16" height="11" rx="2" stroke="#10F48B" strokeWidth="1.3" fill="none"/>
-        <path d="M6 10h3M11 10h3" stroke="#10F48B" strokeWidth="1.2" strokeLinecap="round"/>
-        <path d="M2 8h16" stroke="#10F48B" strokeWidth="1.2"/>
-      </svg>
-    ),
-    title: 'Payments',
-    desc: 'Expand your payment capabilities with integrated support for cards, tokens, and loyalty systems, fully secure and compliant.',
-  },
-  {
-    color: '#36BBF6',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M10 2l2.5 7.5H20L14 14l2.5 7.5L10 18l-6.5 3.5L6 14 0 9.5h7.5L10 2z" stroke="#36BBF6" strokeWidth="1.2" fill="none" strokeLinejoin="round"/>
-      </svg>
-    ),
+    id: 'secure_checkout',
     title: 'Secure Checkout',
-    desc: 'Reduce friction at the final step with a checkout process designed for speed, safety, and trust.',
+    subtitle: 'Give buyers a frictionless, trusted checkout experience with built-in security and multiple payment options.',
+    image: '/images/cdn/features/visual_shop04.webp',
   },
   {
-    color: '#F742A2',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <rect x="3" y="3" width="14" height="14" rx="3" stroke="#F742A2" strokeWidth="1.3" fill="none"/>
-        <path d="M7 10h6M10 7v6" stroke="#F742A2" strokeWidth="1.3" strokeLinecap="round"/>
-      </svg>
-    ),
+    id: 'payments',
+    title: 'Payments',
+    subtitle: 'Accept digital payments seamlessly, from QR scans to wallet top-ups, fully integrated with your community.',
+    image: '/images/cdn/features/visual_shop02.webp',
+  },
+  {
+    id: 'pos',
     title: 'POS',
-    desc: 'Gain financial clarity with a dashboard that consolidates all sales and payment settlement activity in one place with Merchant Mode.',
+    subtitle: 'Manage in-person transactions with a lightweight point-of-sale system connected to your digital community.',
+    image: '/images/cdn/features/visual_shop03.webp',
   },
 ]
 
-function FeatureCard({ feat }: { feat: { color: string; icon: React.ReactNode; title: string; desc: string } }) {
+const communityItems = [
+  {
+    id: 'customer_support',
+    title: 'Customer Support Chat',
+    subtitle: 'Resolve issues faster through integrated chat that connects customers to human or AI support in real time.',
+    image: '/images/cdn/features/visual_community01.webp',
+  },
+  {
+    id: 'feed',
+    title: 'Feed',
+    subtitle: "Broadcast important news, offers, and alerts straight into your users' activity feed for real-time visibility.",
+    image: '/images/cdn/features/visual_community02.webp',
+  },
+  {
+    id: 'community',
+    title: 'Community Chat',
+    subtitle: 'Keep conversations flowing with live chat channels designed for collaboration and community building.',
+    image: '/images/cdn/features/visual_community03.webp',
+  },
+  {
+    id: 'polls',
+    title: 'Polls',
+    subtitle: 'Gather instant feedback and drive engagement with interactive polls your community can respond to in real time.',
+    image: '/images/cdn/features/visual_community04.webp',
+  },
+]
+
+function MobileImagePreview({ items, activeIndex }: { items: typeof loyaltyItems; activeIndex: number }) {
   return (
-    <div className="relative rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5 flex gap-4 hover:border-white/[0.12] transition-colors group">
+    <div className="md:hidden relative w-[358px] h-[350px] mx-auto overflow-hidden rounded-2xl">
+      {items.map((item, i) => (
+        <div
+          key={item.id}
+          className={`absolute inset-0 transition-opacity duration-300 ${i === activeIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        >
+          <Image
+            src={item.image}
+            alt={item.title}
+            fill
+            sizes="358px"
+            className="object-contain"
+            priority={i === 0}
+            unoptimized
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MobileCard({ item }: { item: (typeof loyaltyItems)[0] }) {
+  return (
+    <div className="flex flex-col w-[calc(100vw-80px)] max-w-[358px] min-w-[280px] px-6">
       <div
-        className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
-        style={{ background: `${feat.color}18`, border: `1px solid ${feat.color}28` }}
+        className="md:w-auto md:flex-1 w-full md:min-w-0 z-30 min-h-[165px] rounded-[24px] relative"
+        style={{
+          background: 'linear-gradient(281deg, #F742A240 25%, #F742A254 33%, #36BBF699 60%)',
+          padding: 1,
+        }}
       >
-        {feat.icon}
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <h4 className="text-white text-sm font-bold">{feat.title}</h4>
-        <p className="text-[#67697C] text-xs leading-relaxed">{feat.desc}</p>
+        <div className="rounded-[23px] bg-[#120A2A]/90 backdrop-blur-md flex flex-col justify-start items-start min-h-[165px] relative w-full break-words p-4 gap-[6px] sm:gap-[10px] md:gap-[16px]">
+          <div className="flex flex-col items-start gap-2 w-full">
+            <h3 className="text-[16px] font-bold text-[#F4F4FC] line-clamp-2">{item.title}</h3>
+            <p className="text-[12px] font-normal leading-[160%] text-[#A6A7B5]">{item.subtitle}</p>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
 export default function FeaturesSection() {
+  const [loyaltyActive, setLoyaltyActive] = useState(0)
+  const [shopActive, setShopActive] = useState(0)
+  const [communityActive, setCommunityActive] = useState(0)
+
   return (
-    <section className="relative w-full px-4 md:px-8 max-w-7xl mx-auto overflow-hidden">
-      {/* Glow */}
+    <div className="relative mx-auto flex w-full max-w-[1080px] flex-col items-start gap-12 md:gap-12 px-[24px] sm:px-[32px] md:px-[24px]">
+      {/* Background glow */}
       <div
-        className="absolute pointer-events-none"
-        style={{
-          top: '30%',
-          right: '-10%',
-          width: '50%',
-          height: '50%',
-          background: 'radial-gradient(ellipse at 70%, rgba(16,244,139,0.1) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-        }}
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[300px] md:w-[800px] md:h-[800px] rounded-full blur-[80px] md:blur-[100px] opacity-15 z-0"
+        style={{ background: 'linear-gradient(135deg, #3b82f6, #9333ea, #4f46e5)' }}
       />
 
-      <div className="relative z-10 flex flex-col gap-16 md:gap-24">
-        {/* Section header */}
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="uppercase text-xs font-semibold tracking-[0.2em] text-[#10F48B]">
-            Features
-          </span>
-          <h2 className="text-3xl md:text-5xl font-black uppercase text-white leading-tight">
+      {/* Section Header */}
+      <div className="flex w-full flex-col items-center gap-2 self-stretch">
+        <div>
+          <h2 className="text-center text-[30px] md:text-[40px] font-black leading-[100%] uppercase text-[#F4F4FC]"
+            style={{ fontFamily: 'Kanit, sans-serif' }}>
             explore features built to
           </h2>
-          <h2 className="text-3xl md:text-5xl font-black uppercase text-[#10F48B] leading-tight -mt-2 md:-mt-3">
+          <p className="text-center text-[30px] md:text-[60px] font-black leading-[100%] uppercase text-[#10F48B]"
+            style={{ fontFamily: 'Kanit, sans-serif' }}>
             lift your business higher
-          </h2>
-        </div>
-
-        {/* Block 1: Loyalty Engine */}
-        <div className="flex flex-col gap-8">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <div className="flex flex-col gap-2">
-              <h3 className="text-2xl md:text-4xl font-black uppercase text-white leading-tight">
-                build a loyalty engine that lasts.
-              </h3>
-            </div>
-            <Link
-              href="/onboarding"
-              className="flex items-center gap-2.5 rounded-full px-5 pr-2 py-2 bg-[#1248C8] hover:scale-105 active:scale-95 transition-transform w-fit self-start md:self-auto"
-            >
-              <span className="text-sm font-black uppercase leading-[150%] text-white whitespace-nowrap">
-                build loyalty today
-              </span>
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10F48B]">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 11L11 3M11 3H5M11 3v6" stroke="#050314" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {LOYALTY_FEATURES.map((f, i) => <FeatureCard key={i} feat={f} />)}
-          </div>
-        </div>
-
-        {/* Block 2: Community */}
-        <div className="flex flex-col gap-8">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <h3 className="text-2xl md:text-4xl font-black uppercase text-white leading-tight whitespace-pre-line">
-              {'connect better.\nsupport smarter.'}
-            </h3>
-            <Link
-              href="/onboarding"
-              className="flex items-center gap-2.5 rounded-full px-5 pr-2 py-2 bg-[#1248C8] hover:scale-105 active:scale-95 transition-transform w-fit self-start md:self-auto"
-            >
-              <span className="text-sm font-black uppercase leading-[150%] text-white whitespace-nowrap">
-                explore community hub
-              </span>
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10F48B]">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 11L11 3M11 3H5M11 3v6" stroke="#050314" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {COMMUNITY_FEATURES.map((f, i) => <FeatureCard key={i} feat={f} />)}
-          </div>
-        </div>
-
-        {/* Block 3: Commerce */}
-        <div className="flex flex-col gap-8">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <h3 className="text-2xl md:text-4xl font-black uppercase text-white leading-tight whitespace-pre-line">
-              {'sell anything.\nget paid anywhere.'}
-            </h3>
-            <Link
-              href="/onboarding"
-              className="flex items-center gap-2.5 rounded-full px-5 pr-2 py-2 bg-[#1248C8] hover:scale-105 active:scale-95 transition-transform w-fit self-start md:self-auto"
-            >
-              <span className="text-sm font-black uppercase leading-[150%] text-white whitespace-nowrap">
-                open your shop
-              </span>
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10F48B]">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 11L11 3M11 3H5M11 3v6" stroke="#050314" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {COMMERCE_FEATURES.map((f, i) => <FeatureCard key={i} feat={f} />)}
-          </div>
+          </p>
         </div>
       </div>
-    </section>
+
+      {/* Loyalty subsection */}
+      <MobileImagePreview items={loyaltyItems} activeIndex={loyaltyActive} />
+      <AutoplaySlider
+        items={loyaltyItems}
+        duration={5000}
+        imageLeft
+        isLoyalty
+        title="build a loyalty engine that lasts."
+        onActiveChange={setLoyaltyActive}
+        renderRight={(_, idx) => (
+          <div className="relative overflow-hidden rounded-2xl w-[400px]" style={{ aspectRatio: '48/53' }}>
+            {loyaltyItems.map((item, i) => (
+              <div
+                key={item.id}
+                className={`absolute inset-0 transition-opacity duration-300 ${i === idx ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+              >
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  className="object-contain"
+                  priority={i === 0}
+                  unoptimized
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        renderMobileCard={(item) => <MobileCard item={item} />}
+      />
+
+      {/* Shop subsection */}
+      <MobileImagePreview items={shopItems} activeIndex={shopActive} />
+      <AutoplaySlider
+        items={shopItems}
+        duration={5000}
+        title="sell anything. fulfill everywhere."
+        onActiveChange={setShopActive}
+        renderRight={(_, idx) => (
+          <div className="relative w-full max-w-[479px] overflow-hidden rounded-2xl" style={{ aspectRatio: '48/53' }}>
+            {shopItems.map((item, i) => (
+              <div
+                key={item.id}
+                className={`absolute inset-0 transition-opacity duration-300 ${i === idx ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+              >
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  className="object-contain"
+                  priority={i === 0}
+                  unoptimized
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        renderMobileCard={(item) => <MobileCard item={item} />}
+      />
+
+      {/* Community subsection */}
+      <MobileImagePreview items={communityItems} activeIndex={communityActive} />
+      <AutoplaySlider
+        items={communityItems}
+        duration={5000}
+        imageLeft
+        title="connect better. support smarter."
+        onActiveChange={setCommunityActive}
+        renderRight={(_, idx) => (
+          <div className="relative w-full max-w-[479px] overflow-hidden rounded-2xl" style={{ aspectRatio: '48/53' }}>
+            {communityItems.map((item, i) => (
+              <div
+                key={item.id}
+                className={`absolute inset-0 transition-opacity duration-300 ${i === idx ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+              >
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  className="object-contain"
+                  priority={i === 0}
+                  unoptimized
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        renderMobileCard={(item) => <MobileCard item={item} />}
+      />
+    </div>
   )
 }

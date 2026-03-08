@@ -1,121 +1,158 @@
-const WHY_CARDS = [
+'use client'
+
+import Image from 'next/image'
+
+interface WhyCard {
+  id: number
+  title: string
+  title2: string
+  subTitle: string
+  image: string
+}
+
+const whyCards: WhyCard[] = [
   {
-    accent: '#10F48B',
-    icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" stroke="#10F48B" strokeWidth="1.5" fill="none"/>
-        <path d="M10 16l4 4 8-8" stroke="#10F48B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <circle cx="24" cy="8" r="4" fill="#10F48B" opacity="0.25"/>
-        <path d="M22 8h4M24 6v4" stroke="#10F48B" strokeWidth="1.2" strokeLinecap="round"/>
-      </svg>
-    ),
-    titleLine1: 'pay less, ',
-    titleLine2: 'earn more.',
-    desc: 'All the tools you need to grow your business – without breaking the bank.',
+    id: 1,
+    title: 'pay less,',
+    title2: 'earn more.',
+    subTitle: 'All the tools you need to grow your business – without breaking the bank.',
+    image: '/images/home/why/Visual_WhyItWorks_Card01.webp',
   },
   {
-    accent: '#36BBF6',
-    icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <rect x="4" y="4" width="24" height="24" rx="5" stroke="#36BBF6" strokeWidth="1.5" fill="none"/>
-        <path d="M10 12h12M10 16h8M10 20h10" stroke="#36BBF6" strokeWidth="1.5" strokeLinecap="round"/>
-        <circle cx="26" cy="8" r="3" fill="#36BBF6" opacity="0.3" stroke="#36BBF6" strokeWidth="1"/>
-      </svg>
-    ),
-    titleLine1: 'everything in ',
-    titleLine2: 'one dashboard.',
-    desc: 'Save time and manage your business from a single, easy-to-use console.',
+    id: 2,
+    title: 'everything in',
+    title2: 'one dashboard.',
+    subTitle: 'Save time and manage your business from a single, easy-to-use console.',
+    image: '/images/home/why/Visual_WhyItWorks_Card02.webp',
   },
   {
-    accent: '#F742A2',
-    icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <circle cx="16" cy="11" r="5" stroke="#F742A2" strokeWidth="1.5" fill="none"/>
-        <path d="M6 26c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="#F742A2" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-        <path d="M21 8l2 2 4-4" stroke="#10F48B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    titleLine1: 'know your',
-    titleLine2: 'customers better.',
-    desc: 'Use deep customer data to deliver personalized offers, exclusive content, and gamified experiences.',
+    id: 3,
+    title: 'know your',
+    title2: 'customers better.',
+    subTitle: 'Use deep customer data to deliver personalized offers, exclusive content, and gamified experiences.',
+    image: '/images/home/why/Visual_WhyItWorks_Card03.webp',
   },
 ]
 
-export default function WhySection() {
+function WhyCard({ why }: { why: WhyCard }) {
   return (
-    <section className="relative w-full px-4 md:px-8 max-w-7xl mx-auto overflow-hidden">
-      {/* Background glow */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          bottom: '-10%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '60%',
-          height: '60%',
-          background: 'radial-gradient(ellipse, rgba(16,244,139,0.08) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-        }}
-      />
-
-      <div className="relative z-10 flex flex-col gap-10 md:gap-16">
-        {/* Header */}
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="uppercase text-xs font-semibold tracking-[0.2em] text-[#10F48B]">
-            Benefits
-          </span>
-          <h2 className="text-3xl md:text-5xl font-black uppercase text-white leading-tight">
-            why will freedom world
-          </h2>
-          <h2 className="text-3xl md:text-5xl font-black uppercase text-[#10F48B] leading-tight -mt-2 md:-mt-3">
-            work for you?
-          </h2>
+    <div
+      className="md:w-auto md:flex-1 min-w-[300px] w-full md:min-w-0 z-30 h-auto md:h-[430px] rounded-[32px] relative"
+      style={{
+        background: 'linear-gradient(281deg, #F742A240 25%, #F742A254 33%, #36BBF699 60%)',
+        padding: 1,
+      }}
+    >
+      <a
+        className="rounded-[31px] bg-[#120A2A]/90 backdrop-blur-md flex flex-col justify-start items-center h-auto md:h-[430px] relative w-full break-words p-3 md:p-6 overflow-hidden gap-[6px] sm:gap-[10px] md:gap-[16px]"
+        href="https://console.freedom.world/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <div className="w-full relative h-50 shrink-0">
+          <Image
+            alt={why.title}
+            src={why.image}
+            width={277}
+            height={200}
+            className="object-cover rounded-[22px] md:rounded-[10px] w-full h-full"
+            unoptimized
+          />
         </div>
-
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {WHY_CARDS.map((card, i) => (
-            <div
-              key={i}
-              className="relative rounded-2xl overflow-hidden p-px"
-              style={{
-                background: `linear-gradient(135deg, ${card.accent}20 0%, transparent 50%)`,
-              }}
-            >
-              <div className="relative rounded-2xl bg-[#050314] border border-white/[0.06] p-8 h-full flex flex-col gap-6">
-                {/* Glow top corner */}
-                <div
-                  className="absolute top-0 left-0 w-32 h-32 pointer-events-none"
-                  style={{
-                    background: `radial-gradient(ellipse at 0% 0%, ${card.accent}15 0%, transparent 70%)`,
-                  }}
-                />
-
-                <div
-                  className="relative w-14 h-14 rounded-2xl flex items-center justify-center"
-                  style={{ background: `${card.accent}12`, border: `1px solid ${card.accent}25` }}
-                >
-                  {card.icon}
-                </div>
-
-                <div className="relative flex flex-col gap-3">
-                  <h3 className="text-2xl md:text-3xl font-black uppercase text-white leading-tight">
-                    <span>{card.titleLine1}</span>
-                    <span style={{ color: card.accent }}>{card.titleLine2}</span>
-                  </h3>
-                  <p className="text-[#A6A7B5] text-sm leading-relaxed">{card.desc}</p>
-                </div>
-
-                {/* Bottom accent line */}
-                <div
-                  className="absolute bottom-0 left-0 right-0 h-px"
-                  style={{ background: `linear-gradient(90deg, transparent, ${card.accent}40, transparent)` }}
-                />
-              </div>
+        <div className="flex flex-col w-full p-4 px-0 md:pt-4 md:px-8 md:pb-8 gap-2 flex-1">
+          <div className="flex justify-between items-start gap-1 w-full">
+            <div className="flex flex-col">
+              <h5
+                className="text-[#F4F4FC] text-2xl font-bold uppercase line-clamp-2"
+                style={{ fontFamily: 'Kanit, sans-serif' }}
+              >
+                {why.title}
+              </h5>
+              <h5
+                className="text-[#F4F4FC] text-2xl font-bold uppercase line-clamp-2"
+                style={{ fontFamily: 'Kanit, sans-serif' }}
+              >
+                {why.title2}
+              </h5>
             </div>
+          </div>
+          <p className="text-[#A6A7B5] w-full text-left whitespace-normal line-clamp-4 text-sm">
+            {why.subTitle}
+          </p>
+        </div>
+      </a>
+    </div>
+  )
+}
+
+function CardsGrid() {
+  return (
+    <div className="w-full">
+      {/* Mobile */}
+      <div className="lg:hidden flex justify-start overflow-y-hidden scrollbar-hide py-4">
+        <div className="flex flex-col gap-6 w-full">
+          {whyCards.map((card) => (
+            <WhyCard key={card.id} why={card} />
           ))}
         </div>
       </div>
-    </section>
+      {/* Desktop */}
+      <div className="hidden lg:flex gap-6 justify-center max-w-[1080px] m-auto items-stretch">
+        {whyCards.map((card) => (
+          <WhyCard key={card.id} why={card} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function WhySection() {
+  return (
+    <div className="relative m-auto md:flex md:flex-col overflow-hidden px-[24px] sm:px-[32px] md:px-[24px]">
+      {/* Background glow */}
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[200px] md:w-[700px] md:h-[700px] rounded-full blur-[80px] md:blur-[100px] opacity-15 z-0"
+        style={{ background: 'linear-gradient(135deg, #3b82f6, #9333ea, #4f46e5)' }}
+      />
+
+      <div className="flex flex-col items-center m-auto relative gap-[36px] sm:gap-[48px] md:gap-[64px]">
+        {/* Desktop heading */}
+        <div className="hidden sm:flex flex-col justify-center items-center z-10 text-center">
+          <h2
+            className="w-fit text-white uppercase text-[40px] font-black"
+            style={{ fontFamily: 'Kanit, sans-serif' }}
+          >
+            why will freedom world
+          </h2>
+          <h1
+            className="rounded-full w-fit text-[#10F48B] uppercase text-[90px] font-black leading-[100%]"
+            style={{ fontFamily: 'Kanit, sans-serif' }}
+          >
+            work for you?
+          </h1>
+        </div>
+
+        {/* Mobile heading */}
+        <div className="flex sm:hidden flex-col gap-0 justify-center items-center z-10 text-center">
+          <h2
+            className="w-fit text-white uppercase text-3xl font-black"
+            style={{ fontFamily: 'Kanit, sans-serif' }}
+          >
+            why will freedom world
+          </h2>
+          <h1
+            className="rounded-full w-fit text-[#10F48B] uppercase text-3xl font-black"
+            style={{ fontFamily: 'Kanit, sans-serif' }}
+          >
+            work for you?
+          </h1>
+        </div>
+
+        {/* Cards */}
+        <div className="relative flex flex-col md:pt-0 pt-0 w-full gap-[36px] sm:gap-[48px] md:gap-[64px]">
+          <CardsGrid />
+        </div>
+      </div>
+    </div>
   )
 }
