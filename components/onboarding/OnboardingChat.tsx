@@ -5,6 +5,7 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import { ChatMessageComponent, TypingIndicator } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { PreviewSidebar } from './PreviewSidebar';
+import { MobilePreviewCard } from './MobilePreviewCard';
 import { SignupWall } from './SignupWall';
 
 export function OnboardingChat() {
@@ -28,10 +29,9 @@ export function OnboardingChat() {
   } = useOnboarding();
 
   const conversationAreaRef = useRef<HTMLDivElement>(null);
-  const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [isDark, setIsDark] = useState(true);
 
-  // Detect system preference
+  // Detect system preference — no manual toggle
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     setIsDark(mq.matches);
@@ -127,47 +127,34 @@ export function OnboardingChat() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-3 shrink-0">
-              {/* Progress bar */}
-              <div className="hidden sm:flex items-center gap-2 text-xs" style={{ color: theme.textMuted }}>
-                <div className="w-20 md:w-24 h-1 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB' }}>
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${progress}%`, background: '#10F48B' }}
-                  />
-                </div>
-                <span style={{ color: '#10F48B' }}>{progress}%</span>
+            {/* Progress bar (header right) */}
+            <div className="hidden sm:flex items-center gap-2 text-xs shrink-0" style={{ color: theme.textMuted }}>
+              <div className="w-20 md:w-24 h-1 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%`, background: '#10F48B' }}
+                />
               </div>
-
-              {/* Theme toggle */}
-              <button
-                onClick={() => setIsDark(!isDark)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors"
-                style={{ background: isDark ? 'rgba(255,255,255,0.05)' : '#F3F4F6', color: theme.text }}
-                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {isDark ? '☀️' : '🌙'}
-              </button>
-
-              {/* Mobile preview toggle */}
-              {isPreviewVisible && (
-                <button
-                  onClick={() => setShowMobilePreview(!showMobilePreview)}
-                  className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors"
-                  style={{ background: showMobilePreview ? '#10F48B' : (isDark ? 'rgba(255,255,255,0.05)' : '#F3F4F6'), color: showMobilePreview ? '#000' : theme.text }}
-                  title="Toggle preview"
-                >
-                  👁
-                </button>
-              )}
+              <span style={{ color: '#10F48B' }}>{progress}%</span>
             </div>
           </header>
 
           {/* Mobile progress bar */}
-          <div className="sm:hidden h-1 w-full" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB' }}>
+          <div className="sm:hidden h-1 w-full shrink-0" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB' }}>
             <div
               className="h-full transition-all duration-500"
               style={{ width: `${progress}%`, background: '#10F48B' }}
+            />
+          </div>
+
+          {/* Mobile compact preview card — pinned below header, mobile only */}
+          <div className="md:hidden shrink-0">
+            <MobilePreviewCard
+              businessName={communityData.name}
+              logoUrl={communityData.logo}
+              primaryColor={communityData.primaryColor}
+              isGeneratingLogo={isGeneratingLogo}
+              isDark={isDark}
             />
           </div>
 
@@ -233,43 +220,8 @@ export function OnboardingChat() {
               isGeneratingLogo={isGeneratingLogo}
               isGeneratingBanner={isGeneratingBanner}
               isAnonymous={isAnonymous}
+              isDark={isDark}
             />
-          </div>
-        )}
-
-        {/* Mobile Preview - slides up from bottom */}
-        {isPreviewVisible && showMobilePreview && (
-          <div className="md:hidden absolute inset-0 z-50 flex flex-col">
-            {/* Backdrop */}
-            <div
-              className="flex-shrink-0 h-14"
-              onClick={() => setShowMobilePreview(false)}
-              style={{ background: 'rgba(0,0,0,0.5)' }}
-            />
-            {/* Preview panel */}
-            <div
-              className="flex-1 overflow-y-auto animate-[slideUp_0.3s_ease]"
-              style={{ background: theme.bg, borderTop: `1px solid ${theme.border}` }}
-            >
-              <div className="flex items-center justify-between px-4 py-3 sticky top-0 z-10" style={{ background: theme.bg, borderBottom: `1px solid ${theme.border}` }}>
-                <h3 className="text-sm font-semibold" style={{ color: theme.text }}>Community Preview</h3>
-                <button
-                  onClick={() => setShowMobilePreview(false)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ background: isDark ? 'rgba(255,255,255,0.05)' : '#F3F4F6', color: theme.text }}
-                >
-                  ✕
-                </button>
-              </div>
-              <PreviewSidebar
-                communityData={communityData}
-                onUpdate={updateCommunityData}
-                onGenerateImage={generateImage}
-                isGeneratingLogo={isGeneratingLogo}
-                isGeneratingBanner={isGeneratingBanner}
-                isAnonymous={isAnonymous}
-              />
-            </div>
           </div>
         )}
       </main>

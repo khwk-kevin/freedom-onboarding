@@ -1,5 +1,13 @@
 import type { CommunityData } from '@/types/onboarding';
 
+// Extended community data that includes merchant-onboarding-specific fields
+interface MerchantCommunityData extends Partial<CommunityData> {
+  businessType?: string;
+  vibe?: string;
+  products?: string[];
+  brandStyle?: string;
+}
+
 const GEMINI_API_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent';
 const MAX_RETRIES = 3;
@@ -80,104 +88,66 @@ export async function generateImage(
 
 function buildPrompt(request: ImageGenerationRequest): string {
   if (request.prompt) return request.prompt;
+  const data = request.communityData as MerchantCommunityData;
   return request.type === 'logo'
-    ? buildLogoPrompt(request.communityData)
-    : buildBannerPrompt(request.communityData);
+    ? buildLogoPrompt(data)
+    : buildBannerPrompt(data);
 }
 
-function buildLogoPrompt(data: Partial<CommunityData>): string {
-  const name = data.name || 'Community';
-  const category = data.category || 'General';
-  const description = data.description || '';
-  const audience = data.targetAudience || '';
+function buildLogoPrompt(data: MerchantCommunityData): string {
+  const name = data.name || 'My Business';
+  const businessType = data.businessType || data.category || 'local business';
+  const vibe = data.vibe || 'professional';
+  const products = Array.isArray(data.products) && data.products.length
+    ? data.products.join(', ')
+    : data.description || 'products and services';
+  const audience = data.targetAudience || 'local customers';
+  const brandStyle = data.brandStyle || 'modern and clean';
 
-  const sceneMapping: Record<string, string> = {
-    'Finance/ Investment': 'Private library with leather-bound investment tomes and antique brass calculators',
-    'Parents & Baby': 'Sun-dappled treehouse with hand-carved growth charts and shared storybooks',
-    Technology: 'Steampunk laboratory with brass gears turning code wheels and holographic blueprints',
-    'Health & Wellness': 'Zen garden with raked sand forming energy meridians and stone balance sculptures',
-    Education: "Ancient scholar's study room merging with digital future",
-    'Food & Beverages': 'Artisan kitchen with heritage tools and modern precision equipment',
-    Fashion: 'Haute couture atelier with fabric cascades and design sketches',
-    Gaming: 'Neon-lit arcade meets fantasy realm with pixel art murals',
-  };
+  return `Create a modern, professional logo for "${name}" — a ${businessType} business.
 
-  const scene =
-    (typeof category === 'string' ? sceneMapping[category] : undefined) ||
-    'Modern workspace with carefully curated elements';
+Business details:
+- Products/services: ${products}
+- Target customers: ${audience}
+- Brand vibe: ${vibe}
+- Visual style preference: ${brandStyle}
 
-  return `CREATE A PHOTOREALISTIC LOGO THAT VISUALLY TELLS THE STORY OF: ${description || `A ${category} community bringing together ${audience}`}
+Requirements:
+- Clean, modern logo design on a solid background
+- The business name "${name}" must be clearly readable
+- Use colours that match the "${vibe}" aesthetic
+- Style: ${brandStyle}
+- Square format (1:1 ratio)
+- Professional quality, suitable for a mobile app icon
 
-SCENE SETTING: ${scene} at golden hour with warm, inviting natural light
-
-KEY ELEMENTS PRESENT: Three symbolic objects representing the community's core values - each telling part of the story through tangible, photographic detail
-
-COMMUNITY NAME INTEGRATION: '${name}' appears as carved lettering in natural materials (wood/stone/metal), organically integrated into the scene environment
-
-PHOTOGRAPHIC EXECUTION: Shot with 50mm macro lens at f/2.8, ISO 100. Composition: Rule of thirds with name at intersection. Depth layers: foreground detail, midground subject, background atmosphere
-
-STYLE REQUIREMENTS: ULTRA-PHOTOREALISTIC. Must look like professional still-life photography with visible texture details, realistic depth of field with accurate bokeh, natural light behavior with authentic shadows. Material authenticity where metal reflects, wood shows grain, glass refracts.
-
-CRITICAL: This is a 1:1 square logo. DO NOT create generic shapes with text. Create a unique photographic composition that embodies this specific community's story. The name should be discovered in the scene, not imposed upon it.`.trim();
+Do NOT include: stock photo elements, realistic scenes, complex backgrounds, multiple fonts. Keep it SIMPLE and ICONIC. The logo should be instantly recognisable and work at small sizes.`.trim();
 }
 
-function buildBannerPrompt(data: Partial<CommunityData>): string {
-  const name = data.name || 'Community';
-  const category = data.category || 'General';
-  const description = data.description || '';
-  const audience = data.targetAudience || '';
+function buildBannerPrompt(data: MerchantCommunityData): string {
+  const name = data.name || 'My Business';
+  const businessType = data.businessType || data.category || 'local business';
+  const vibe = data.vibe || 'professional';
+  const products = Array.isArray(data.products) && data.products.length
+    ? data.products.join(', ')
+    : data.description || 'products and services';
+  const audience = data.targetAudience || 'local customers';
+  const brandStyle = data.brandStyle || 'modern and clean';
 
-  const genreMapping: Record<string, { genre: string; location: string; lighting: string; slugline: string }> = {
-    'Finance/ Investment': {
-      genre: 'Corporate thriller with intellectual noir lighting',
-      location: 'After-hours trading floor with glass walls and city lights',
-      lighting: 'Single source practicals (desk lamps, screen glow), neon reflections',
-      slugline: 'WHERE DATA BECOMES WISDOM',
-    },
-    Technology: {
-      genre: 'Cyberpunk meets lab thriller',
-      location: 'Loft workspace with prototype clutter and server room aesthetics',
-      lighting: 'LED strips, screen burn, industrial fluorescents with blue tones',
-      slugline: 'CODE THE FUTURE TOGETHER',
-    },
-    'Health & Wellness': {
-      genre: 'Peaceful documentary with tranquil drama',
-      location: 'Home wellness space at dawn with nature integration',
-      lighting: 'Morning light, soft diffusion, breath-like pacing',
-      slugline: 'YOUR STRENGTH, OUR SUPPORT',
-    },
-    Gaming: {
-      genre: 'Esports thriller meets underground arcade atmosphere',
-      location: 'Battle station setup or LAN party with competitive energy',
-      lighting: 'RGB glow, monitor burn, dark room with neon accent lighting',
-      slugline: 'PLAY TOGETHER, WIN TOGETHER',
-    },
-    Fashion: {
-      genre: 'High-fashion editorial with cinematic flair',
-      location: 'Urban rooftop or minimalist studio with bold visual contrast',
-      lighting: 'Dramatic directional light, golden hour, high contrast silhouettes',
-      slugline: 'STYLE IS YOUR STORY',
-    },
-  };
+  return `Create a wide marketing banner (16:5 ratio, 1920x600px) for "${name}" — a ${businessType} business.
 
-  const genreData = (typeof category === 'string' ? genreMapping[category] : undefined) || {
-    genre: 'Documentary realism',
-    location: 'Authentic workspace showing community in action',
-    lighting: 'Natural available light with atmospheric depth',
-    slugline: 'TOGETHER WE THRIVE',
-  };
+Business details:
+- Products/services: ${products}
+- Target customers: ${audience}
+- Brand vibe: ${vibe}
+- Visual style: ${brandStyle}
 
-  return `CREATE A CINEMATIC 16:5 BANNER THAT CAPTURES THIS MOMENT: The defining moment that shows ${description || `what this ${category} community creates for ${audience}`}
+Requirements:
+- Visually striking banner that captures the essence of "${name}"
+- Prominently feature the business name "${name}"
+- Colours and mood that match the "${vibe}" aesthetic and "${brandStyle}" style
+- Wide horizontal composition (panoramic / cinematic)
+- Professional quality, suitable for a loyalty app community header
+- Warm, inviting atmosphere that resonates with ${audience}
 
-SCENE: ${genreData.location} with ${genreData.genre} atmosphere
-
-IN SCENE: People engaged in the community's core activity, showing authentic action (not posing). Composition emphasizes collaborative energy and shared purpose.
-
-CINEMATIC TITLE: '${genreData.slugline}' appears as environmental text (neon sign/projection/carved element) naturally integrated into the scene with subtle glow
-
-CINEMATOGRAPHY: Shot on digital cinema with anamorphic widescreen lens at f/2.8. ${genreData.lighting}. Color grade: Cinematic with emotional depth.
-
-ART DIRECTION: Lived-in authenticity with purpose-driven details. Atmosphere: Environmental elements (light beams, atmospheric haze, tactile textures) that create depth and mood.
-
-CRITICAL: This is a 16:5 cinematic banner (1920x600). Must feel like a movie still from this community's story. NOT a stock photo — this should capture a REAL moment of transformation or connection. The slugline is part of the environment, not overlaid text.`.trim();
+Do NOT include: random stock imagery, clipart, or elements unrelated to this specific business. Keep it authentic and on-brand.`.trim();
 }

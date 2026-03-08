@@ -13,6 +13,7 @@ interface MerchantOnboardingData extends Partial<CommunityData> {
   businessType?: string;
   vibe?: string;
   products?: string[];
+  brandStyle?: string;
   rewards?: string;
   step?: string;
 }
@@ -231,12 +232,35 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
         setMessages((prev) => [...prev, assistantMessage]);
 
-        // Auto-trigger logo generation after step 2 (name + vibe collected)
-        if (newExchangeCount === 2 && communityData.businessType && !communityData.logo) {
+        // Parse structured tags from assistant reply to enrich communityData
+        const tagUpdates: Partial<MerchantOnboardingData> = {};
+        const productsMatch = replyText.match(/\[\[PRODUCTS:([^\]]+)\]\]/);
+        if (productsMatch) {
+          tagUpdates.products = productsMatch[1].split(',').map((p) => p.trim()).filter(Boolean);
+        }
+        const audienceMatch = replyText.match(/\[\[AUDIENCE:([^\]]+)\]\]/);
+        if (audienceMatch) {
+          tagUpdates.targetAudience = audienceMatch[1].trim();
+        }
+        const styleMatch = replyText.match(/\[\[STYLE:([^\]]+)\]\]/);
+        if (styleMatch) {
+          tagUpdates.brandStyle = styleMatch[1].trim();
+        }
+        if (Object.keys(tagUpdates).length > 0) {
+          setCommunityData((prev) => ({ ...prev, ...tagUpdates }));
+        }
+
+        // Auto-trigger logo generation after step 4 (all brand context collected)
+        if (newExchangeCount === 4 && communityData.businessType && !communityData.logo) {
           setTimeout(async () => {
             try {
               setIsGeneratingLogo(true);
-              await generateImageInternal('logo', communityData);
+              // Build enriched data snapshot with all collected context
+              const enrichedData = {
+                ...communityData,
+                ...tagUpdates,
+              };
+              await generateImageInternal('logo', enrichedData);
             } catch {
               // Logo generation failure is non-fatal
             } finally {
@@ -245,7 +269,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           }, 800);
         }
 
-        // Show signup wall after logo generation (exchange 3) or after exchange 3
+        // Show signup wall after logo generation (triggered via generateImageInternal) or after exchange 3
         if (shouldBlock) {
           setTimeout(() => setShowSignupWall(true), 1500);
         }

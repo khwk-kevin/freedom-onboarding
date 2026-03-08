@@ -15,6 +15,8 @@ interface PreviewSidebarProps {
   isGeneratingBanner?: boolean;
   /** Show "preview" watermark (anonymous/pre-signup) */
   isAnonymous?: boolean;
+  /** Follow system dark/light theme */
+  isDark?: boolean;
 }
 
 function getCardColors(hex: string) {
@@ -38,7 +40,14 @@ export function PreviewSidebar({
   isGeneratingLogo,
   isGeneratingBanner,
   isAnonymous = false,
+  isDark = true,
 }: PreviewSidebarProps) {
+  // Sidebar shell theme
+  const sidebarBg = isDark ? '#0D0B1E' : '#F8F9FA';
+  const sidebarBorder = isDark ? 'rgba(255,255,255,0.07)' : '#E5E7EB';
+  const sidebarHeaderBg = isDark ? '#0D0B1E' : '#FFFFFF';
+  const sidebarText = isDark ? '#F4F4FC' : '#374151';
+  const sidebarTextMuted = isDark ? 'rgba(244,244,252,0.4)' : '#9CA3AF';
   // Merge template defaults when a business type is selected but no data yet
   const template = communityData.businessType ? getTemplateById(communityData.businessType) : null;
   const effectiveData: Partial<CommunityData> & { businessType?: string } = {
@@ -106,14 +115,20 @@ export function PreviewSidebar({
   const cardColors = getCardColors(cardColor);
 
   return (
-    <section className="w-[35%] h-full bg-gray-50 flex flex-col border-l border-gray-200 relative overflow-hidden">
+    <section
+      className="w-[35%] h-full flex flex-col border-l relative overflow-hidden"
+      style={{ background: sidebarBg, borderColor: sidebarBorder }}
+    >
       {/* Header */}
-      <div className="h-16 px-6 border-b border-gray-200 flex items-center justify-between bg-white">
+      <div
+        className="h-16 px-6 border-b flex items-center justify-between"
+        style={{ background: sidebarHeaderBg, borderColor: sidebarBorder }}
+      >
         <div className="flex items-center space-x-2">
           <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#00FF88' }} />
-          <span className="text-sm font-semibold text-gray-700">Community Preview</span>
+          <span className="text-sm font-semibold" style={{ color: sidebarText }}>Community Preview</span>
         </div>
-        <span className="text-xs text-gray-400">Auto-updating</span>
+        <span className="text-xs" style={{ color: sidebarTextMuted }}>Auto-updating</span>
       </div>
 
       {/* Anonymous watermark */}
