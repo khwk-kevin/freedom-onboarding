@@ -12,12 +12,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-fw-green to-fw-cyan flex items-center justify-center text-fw-bg font-heading font-bold text-sm">
-            FW
-          </div>
-          <span className="font-heading font-semibold text-fw-text-primary text-sm tracking-wider hidden sm:block">
-            FREEDOM WORLD
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/freedom-logo.svg" alt="Freedom World" className="h-7 w-auto" />
         </Link>
 
         {/* Desktop links */}

@@ -1,17 +1,12 @@
 import type { Metadata } from 'next'
-import { Encode_Sans_Expanded, Noto_Sans_Thai } from 'next/font/google'
+import { GeistSans } from 'geist/font/sans'
+import { Kanit } from 'next/font/google'
 import './globals.css'
 import { PHProvider, PostHogPageview } from '@/lib/posthog/provider'
 import { GTMProvider } from '@/lib/gtm/provider'
 
-const encodeSans = Encode_Sans_Expanded({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
-  variable: '--font-heading',
-})
-
-const notoThai = Noto_Sans_Thai({
-  subsets: ['thai'],
+const kanit = Kanit({
+  subsets: ['thai', 'latin'],
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-thai',
 })
@@ -28,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="th">
-      <body className={`${encodeSans.variable} ${notoThai.variable} font-thai bg-fw-bg text-fw-text-primary antialiased`}>
+      <body className={`${GeistSans.variable} ${kanit.variable} font-thai bg-fw-bg text-fw-text-primary antialiased`}>
         <PHProvider>
           <GTMProvider />
           <PostHogPageview />

@@ -77,16 +77,13 @@ export function OnboardingChat() {
             style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
           >
             <div className="flex items-center space-x-3">
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border"
-                style={{
-                  background: 'rgba(16,244,139,0.1)',
-                  borderColor: 'rgba(16,244,139,0.3)',
-                  color: '#10F48B',
-                }}
-              >
-                AVA
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/freedom-logo.svg"
+                alt="Freedom World"
+                className="h-8 w-auto"
+              />
+              <div className="w-px h-6 bg-white/10" />
               <div>
                 <h2 className="text-sm font-semibold" style={{ color: '#F4F4FC' }}>AVA — Community Builder</h2>
                 <p className="text-[10px]" style={{ color: 'rgba(244,244,252,0.4)' }}>

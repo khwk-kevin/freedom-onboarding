@@ -36,8 +36,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        heading: ['"Encode Sans Expanded"', 'sans-serif'],
-        thai: ['"Noto Sans Thai"', '"Encode Sans Expanded"', 'sans-serif'],
+        heading: ['var(--font-heading)', 'sans-serif'],
+        thai: ['var(--font-thai)', 'var(--font-heading)', 'sans-serif'],
       },
       backgroundImage: {
         'fw-hero-glow': 'linear-gradient(-70deg, rgba(247,66,162,0.25) 25%, rgba(247,66,162,0.33) 33%, rgba(54,187,246,0.6) 60%)',
