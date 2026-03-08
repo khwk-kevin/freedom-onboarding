@@ -7,14 +7,14 @@ import { track } from '@/lib/tracking/unified'
 
 /* ─── Logo Marquee ─────────────────────────────────────────── */
 const LOGOS = [
-  '/images/home/logos/01.png',
-  '/images/home/logos/02.png',
-  '/images/home/logos/03.png',
-  '/images/home/logos/04.png',
-  '/images/home/logos/05.png',
-  '/images/home/logos/06.png',
-  '/images/home/logos/07.png',
-  '/images/home/logos/08.png',
+  '/images/home/logos/001.png',
+  '/images/home/logos/002.png',
+  '/images/home/logos/003.png',
+  '/images/home/logos/004.png',
+  '/images/home/logos/005.png',
+  '/images/home/logos/006.png',
+  '/images/home/logos/007.png',
+  '/images/home/logos/008.png',
 ]
 
 function LogoMarquee() {
