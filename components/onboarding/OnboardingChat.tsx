@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { ChatMessageComponent, TypingIndicator } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { PreviewSidebar } from './PreviewSidebar';
 import { SignupWall } from './SignupWall';
-import { ProgressBar } from './ProgressBar';
 
 export function OnboardingChat() {
   const {
@@ -29,6 +28,17 @@ export function OnboardingChat() {
   } = useOnboarding();
 
   const conversationAreaRef = useRef<HTMLDivElement>(null);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
+  const [isDark, setIsDark] = useState(true);
+
+  // Detect system preference
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    setIsDark(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -40,11 +50,34 @@ export function OnboardingChat() {
     }
   }, [messages, isLoading]);
 
-  // Simple progress: 0-100 based on exchange count (max 6 total steps)
   const progress = Math.min(Math.round((exchangeCount / 6) * 100), 100);
 
+  // Theme colors
+  const theme = isDark
+    ? {
+        bg: '#050314',
+        cardBg: 'rgba(255,255,255,0.03)',
+        border: 'rgba(255,255,255,0.07)',
+        headerBg: '#050314',
+        text: '#F4F4FC',
+        textMuted: 'rgba(244,244,252,0.4)',
+        inputBg: 'rgba(255,255,255,0.05)',
+      }
+    : {
+        bg: '#FFFFFF',
+        cardBg: '#F8F9FA',
+        border: '#E5E7EB',
+        headerBg: '#FFFFFF',
+        text: '#111827',
+        textMuted: '#6B7280',
+        inputBg: '#F3F4F6',
+      };
+
   return (
-    <div className="h-screen w-screen flex items-center justify-center overflow-hidden" style={{ background: '#050314' }}>
+    <div
+      className="h-[100dvh] w-screen flex items-center justify-center overflow-hidden"
+      style={{ background: theme.bg }}
+    >
       {/* Signup Wall Overlay */}
       {showSignupWall && (
         <SignupWall
@@ -57,60 +90,93 @@ export function OnboardingChat() {
 
       {/* Main Container */}
       <main
-        className="w-full h-full max-h-[960px] max-w-[1440px] flex overflow-hidden"
+        className="w-full h-full md:max-h-[960px] md:max-w-[1440px] flex flex-col md:flex-row overflow-hidden relative"
         style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: '0',
+          background: theme.cardBg,
+          border: `1px solid ${theme.border}`,
         }}
       >
-        {/* Chat Panel */}
+        {/* Chat Panel — full width on mobile */}
         <section
-          className={`${
-            isPreviewVisible ? 'flex-1' : 'w-full'
-          } h-full flex flex-col relative z-10 transition-all duration-500`}
-          style={{ background: '#050314' }}
+          className="flex-1 h-full flex flex-col relative z-10 min-w-0"
+          style={{ background: theme.bg }}
         >
           {/* Chat Header */}
           <header
-            className="h-16 px-6 flex items-center justify-between shrink-0"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+            className="h-14 md:h-16 px-4 md:px-6 flex items-center justify-between shrink-0"
+            style={{ borderBottom: `1px solid ${theme.border}`, background: theme.headerBg }}
           >
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 md:space-x-3 min-w-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/freedom-logo.svg"
                 alt="Freedom World"
-                className="h-8 w-auto"
+                className="h-6 md:h-8 w-auto shrink-0"
+                style={isDark ? {} : { filter: 'brightness(0)' }}
               />
-              <div className="w-px h-6 bg-white/10" />
-              <div>
-                <h2 className="text-sm font-semibold" style={{ color: '#F4F4FC' }}>AVA — Community Builder</h2>
-                <p className="text-[10px]" style={{ color: 'rgba(244,244,252,0.4)' }}>
-                  {isAnonymous ? `Free preview · ${Math.max(0, 3 - exchangeCount)} free exchanges left` : 'Building your community ✨'}
+              <div className="w-px h-5 md:h-6 shrink-0" style={{ background: theme.border }} />
+              <div className="min-w-0">
+                <h2 className="text-xs md:text-sm font-semibold truncate" style={{ color: theme.text }}>
+                  AVA — Community Builder
+                </h2>
+                <p className="text-[9px] md:text-[10px] truncate" style={{ color: theme.textMuted }}>
+                  {isAnonymous
+                    ? `Free preview · ${Math.max(0, 3 - exchangeCount)} free exchanges`
+                    : 'Building your community ✨'}
                 </p>
               </div>
             </div>
 
-            {/* Progress */}
-            <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(244,244,252,0.4)' }}>
-              <div className="w-24 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${progress}%`, background: '#10F48B' }}
-                />
+            <div className="flex items-center gap-2 md:gap-3 shrink-0">
+              {/* Progress bar */}
+              <div className="hidden sm:flex items-center gap-2 text-xs" style={{ color: theme.textMuted }}>
+                <div className="w-20 md:w-24 h-1 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB' }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${progress}%`, background: '#10F48B' }}
+                  />
+                </div>
+                <span style={{ color: '#10F48B' }}>{progress}%</span>
               </div>
-              <span style={{ color: '#10F48B' }}>{progress}%</span>
+
+              {/* Theme toggle */}
+              <button
+                onClick={() => setIsDark(!isDark)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors"
+                style={{ background: isDark ? 'rgba(255,255,255,0.05)' : '#F3F4F6', color: theme.text }}
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? '☀️' : '🌙'}
+              </button>
+
+              {/* Mobile preview toggle */}
+              {isPreviewVisible && (
+                <button
+                  onClick={() => setShowMobilePreview(!showMobilePreview)}
+                  className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors"
+                  style={{ background: showMobilePreview ? '#10F48B' : (isDark ? 'rgba(255,255,255,0.05)' : '#F3F4F6'), color: showMobilePreview ? '#000' : theme.text }}
+                  title="Toggle preview"
+                >
+                  👁
+                </button>
+              )}
             </div>
           </header>
+
+          {/* Mobile progress bar */}
+          <div className="sm:hidden h-1 w-full" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB' }}>
+            <div
+              className="h-full transition-all duration-500"
+              style={{ width: `${progress}%`, background: '#10F48B' }}
+            />
+          </div>
 
           {/* Chat Conversation Area */}
           <div
             ref={conversationAreaRef}
-            className="flex-1 overflow-y-auto px-6 py-6 space-y-5"
-            style={{ background: '#050314' }}
+            className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-5"
+            style={{ background: theme.bg }}
           >
-            {/* Messages */}
             {messages.map((message, index) => {
               const isLatestAssistant =
                 index === messages.length - 1 && message.role === 'assistant';
@@ -127,13 +193,11 @@ export function OnboardingChat() {
               );
             })}
 
-            {/* Typing Indicator */}
             {isLoading && <TypingIndicator />}
 
-            {/* Logo generating indicator */}
             {isGeneratingLogo && (
               <div
-                className="flex items-center gap-2 text-xs px-4 py-2 rounded-xl w-fit"
+                className="flex items-center gap-2 text-xs px-3 py-2 rounded-xl w-fit"
                 style={{ background: 'rgba(16,244,139,0.08)', color: '#10F48B', border: '1px solid rgba(16,244,139,0.2)' }}
               >
                 <span className="animate-spin">⟳</span>
@@ -141,10 +205,9 @@ export function OnboardingChat() {
               </div>
             )}
 
-            {/* Error Message */}
             {error && (
               <div
-                className="rounded-xl px-4 py-3 text-sm flex items-center gap-2"
+                className="rounded-xl px-3 py-2 text-sm flex items-center gap-2"
                 style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}
               >
                 ⚠️ {error}
@@ -160,16 +223,54 @@ export function OnboardingChat() {
           />
         </section>
 
-        {/* Preview Sidebar */}
+        {/* Desktop Preview Sidebar */}
         {isPreviewVisible && (
-          <PreviewSidebar
-            communityData={communityData}
-            onUpdate={updateCommunityData}
-            onGenerateImage={generateImage}
-            isGeneratingLogo={isGeneratingLogo}
-            isGeneratingBanner={isGeneratingBanner}
-            isAnonymous={isAnonymous}
-          />
+          <div className="hidden md:block">
+            <PreviewSidebar
+              communityData={communityData}
+              onUpdate={updateCommunityData}
+              onGenerateImage={generateImage}
+              isGeneratingLogo={isGeneratingLogo}
+              isGeneratingBanner={isGeneratingBanner}
+              isAnonymous={isAnonymous}
+            />
+          </div>
+        )}
+
+        {/* Mobile Preview - slides up from bottom */}
+        {isPreviewVisible && showMobilePreview && (
+          <div className="md:hidden absolute inset-0 z-50 flex flex-col">
+            {/* Backdrop */}
+            <div
+              className="flex-shrink-0 h-14"
+              onClick={() => setShowMobilePreview(false)}
+              style={{ background: 'rgba(0,0,0,0.5)' }}
+            />
+            {/* Preview panel */}
+            <div
+              className="flex-1 overflow-y-auto animate-[slideUp_0.3s_ease]"
+              style={{ background: theme.bg, borderTop: `1px solid ${theme.border}` }}
+            >
+              <div className="flex items-center justify-between px-4 py-3 sticky top-0 z-10" style={{ background: theme.bg, borderBottom: `1px solid ${theme.border}` }}>
+                <h3 className="text-sm font-semibold" style={{ color: theme.text }}>Community Preview</h3>
+                <button
+                  onClick={() => setShowMobilePreview(false)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ background: isDark ? 'rgba(255,255,255,0.05)' : '#F3F4F6', color: theme.text }}
+                >
+                  ✕
+                </button>
+              </div>
+              <PreviewSidebar
+                communityData={communityData}
+                onUpdate={updateCommunityData}
+                onGenerateImage={generateImage}
+                isGeneratingLogo={isGeneratingLogo}
+                isGeneratingBanner={isGeneratingBanner}
+                isAnonymous={isAnonymous}
+              />
+            </div>
+          </div>
         )}
       </main>
     </div>
