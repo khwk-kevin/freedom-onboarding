@@ -22,7 +22,7 @@ export default function FooterDark() {
           <div>
             <h4 className="text-fw-text-primary text-sm font-semibold mb-4">เริ่มต้น</h4>
             <ul className="space-y-2 text-fw-text-tertiary text-xs">
-              <li><a href="/signup" className="hover:text-fw-text-primary transition-colors">สร้างชุมชน</a></li>
+              <li><a href="/onboarding" className="hover:text-fw-text-primary transition-colors">สร้างชุมชน</a></li>
               <li><a href="https://freedom.world" className="hover:text-fw-text-primary transition-colors">เข้าร่วมชุมชน</a></li>
               <li><a href="https://console.freedom.world" className="hover:text-fw-text-primary transition-colors">Freedom Console</a></li>
               <li><a href="https://info.freedom.world" className="hover:text-fw-text-primary transition-colors">นัดเดโม</a></li>

@@ -39,7 +39,7 @@ export default function Navbar() {
         {/* CTA */}
         <div className="flex items-center gap-3">
           <Link
-            href="/signup"
+            href="/onboarding"
             className="bg-fw-green hover:bg-fw-green-hover text-fw-bg font-semibold px-5 py-2 rounded-xl text-sm transition-all hover:shadow-[0_0_20px_rgba(16,244,139,0.3)]"
           >
             เริ่มต้นเลย

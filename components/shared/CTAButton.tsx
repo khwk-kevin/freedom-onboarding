@@ -14,7 +14,7 @@ interface CTAButtonProps {
 }
 
 export default function CTAButton({
-  href = '/signup',
+  href = '/onboarding',
   onClick,
   children,
   location,

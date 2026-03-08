@@ -112,7 +112,7 @@ export default function FoodVerticalPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <a
-                href="/signup"
+                href="/onboarding"
                 aria-label="Create your free community — live in 15 minutes"
                 className="inline-flex items-center justify-center rounded-xl px-8 py-4 text-lg bg-brand-green hover:bg-[#00E87A] text-gray-900 font-bold shadow-lg hover:shadow-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green focus-visible:ring-offset-2"
               >

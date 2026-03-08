@@ -23,7 +23,7 @@ export default function BottomCTADark() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            href="/signup"
+            href="/onboarding"
             onClick={() => track.ctaClick('bottom_cta', 'dark')}
             className="group bg-fw-green hover:bg-fw-green-hover text-fw-bg font-bold px-10 py-4 rounded-2xl text-lg transition-all hover:shadow-[0_0_40px_rgba(16,244,139,0.3)] hover:scale-105"
           >
