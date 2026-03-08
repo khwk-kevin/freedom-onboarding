@@ -202,9 +202,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         const newExchangeCount = exchangeCount + 1;
         setExchangeCount(newExchangeCount);
 
-        // Check if signup wall should appear (after exchange 3, still anonymous)
-        // Grace period: if wall was dismissed without signing up, allow 1 more exchange
-        const shouldBlock = isAnonymous && newExchangeCount >= 5 && !graceUsed;
+        // Signup wall is ONLY triggered after logo generation completes (in generateImageInternal)
+        // NOT based on exchange count — we want the full flow to complete first
 
         const res = await fetch('/api/onboarding/chat', {
           method: 'POST',
@@ -269,10 +268,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           }, 800);
         }
 
-        // Show signup wall after logo generation (triggered via generateImageInternal) or after exchange 3
-        if (shouldBlock) {
-          setTimeout(() => setShowSignupWall(true), 1500);
-        }
+        // Signup wall is triggered via generateImageInternal after logo completes — not here
       } catch (err: unknown) {
         const e = err as Error;
         setError(e.message || 'Failed to send message');
