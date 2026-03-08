@@ -204,7 +204,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
         // Check if signup wall should appear (after exchange 3, still anonymous)
         // Grace period: if wall was dismissed without signing up, allow 1 more exchange
-        const shouldBlock = isAnonymous && newExchangeCount >= 3 && !graceUsed;
+        const shouldBlock = isAnonymous && newExchangeCount >= 5 && !graceUsed;
 
         const res = await fetch('/api/onboarding/chat', {
           method: 'POST',
@@ -250,8 +250,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           setCommunityData((prev) => ({ ...prev, ...tagUpdates }));
         }
 
-        // Auto-trigger logo generation after step 4 (all brand context collected)
-        if (newExchangeCount === 4 && communityData.businessType && !communityData.logo) {
+        // Auto-trigger logo generation after step 5 (all brand context collected)
+        if (newExchangeCount === 5 && communityData.businessType && !communityData.logo) {
           setTimeout(async () => {
             try {
               setIsGeneratingLogo(true);
