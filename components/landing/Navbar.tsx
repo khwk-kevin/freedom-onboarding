@@ -1,11 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { useState } from 'react'
+import { useTranslation } from '@/context/TranslationContext'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { t, locale, setLocale } = useTranslation()
+
+  const navLinks = [
+    { href: '#features', label: locale === 'en' ? 'Features' : 'ฟีเจอร์' },
+    { href: '#why',      label: locale === 'en' ? 'Why Us'   : 'ทำไมต้องเรา' },
+    { href: '#success',  label: locale === 'en' ? 'Success'  : 'ความสำเร็จ' },
+    { href: '#explore',  label: locale === 'en' ? 'Explore'  : 'สำรวจ' },
+  ]
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-fw-bg/80 backdrop-blur-xl border-b border-white/5">
@@ -18,27 +26,48 @@ export default function Navbar() {
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8 text-sm">
-          <a href="#features" className="text-fw-text-secondary hover:text-fw-text-primary transition-colors">
-            ฟีเจอร์
-          </a>
-          <a href="#why" className="text-fw-text-secondary hover:text-fw-text-primary transition-colors">
-            ทำไมต้องเรา
-          </a>
-          <a href="#success" className="text-fw-text-secondary hover:text-fw-text-primary transition-colors">
-            ความสำเร็จ
-          </a>
-          <a href="#explore" className="text-fw-text-secondary hover:text-fw-text-primary transition-colors">
-            สำรวจ
-          </a>
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="text-fw-text-secondary hover:text-fw-text-primary transition-colors"
+            >
+              {link.label}
+            </a>
+          ))}
         </div>
 
-        {/* CTA */}
+        {/* CTA + Language toggle */}
         <div className="flex items-center gap-3">
+          {/* EN / TH pill toggle */}
+          <div className="hidden md:flex items-center rounded-full border border-white/15 bg-white/5 p-[2px] text-xs font-bold select-none">
+            <button
+              onClick={() => setLocale('en')}
+              className={`px-3 py-1 rounded-full transition-all ${
+                locale === 'en'
+                  ? 'bg-[#10F48B] text-[#050314]'
+                  : 'text-fw-text-secondary hover:text-white'
+              }`}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLocale('th')}
+              className={`px-3 py-1 rounded-full transition-all ${
+                locale === 'th'
+                  ? 'bg-[#10F48B] text-[#050314]'
+                  : 'text-fw-text-secondary hover:text-white'
+              }`}
+            >
+              TH
+            </button>
+          </div>
+
           <Link
             href="/onboarding"
             className="bg-fw-green hover:bg-fw-green-hover text-fw-bg font-semibold px-5 py-2 rounded-xl text-sm transition-all hover:shadow-[0_0_20px_rgba(16,244,139,0.3)]"
           >
-            เริ่มต้นเลย
+            {locale === 'en' ? 'Get Started' : 'เริ่มต้นเลย'}
           </Link>
 
           {/* Mobile menu toggle */}
@@ -61,10 +90,38 @@ export default function Navbar() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden bg-fw-bg/95 backdrop-blur-xl border-t border-white/5 px-6 py-4 space-y-3">
-          <a href="#features" className="block text-fw-text-secondary hover:text-fw-text-primary text-sm py-2" onClick={() => setMenuOpen(false)}>ฟีเจอร์</a>
-          <a href="#why" className="block text-fw-text-secondary hover:text-fw-text-primary text-sm py-2" onClick={() => setMenuOpen(false)}>ทำไมต้องเรา</a>
-          <a href="#success" className="block text-fw-text-secondary hover:text-fw-text-primary text-sm py-2" onClick={() => setMenuOpen(false)}>ความสำเร็จ</a>
-          <a href="#explore" className="block text-fw-text-secondary hover:text-fw-text-primary text-sm py-2" onClick={() => setMenuOpen(false)}>สำรวจ</a>
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="block text-fw-text-secondary hover:text-fw-text-primary text-sm py-2"
+              onClick={() => setMenuOpen(false)}
+            >
+              {link.label}
+            </a>
+          ))}
+          {/* Mobile language toggle */}
+          <div className="flex items-center gap-2 pt-2">
+            <span className="text-fw-text-secondary text-xs">Lang:</span>
+            <div className="flex items-center rounded-full border border-white/15 bg-white/5 p-[2px] text-xs font-bold">
+              <button
+                onClick={() => setLocale('en')}
+                className={`px-3 py-1 rounded-full transition-all ${
+                  locale === 'en' ? 'bg-[#10F48B] text-[#050314]' : 'text-fw-text-secondary'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => setLocale('th')}
+                className={`px-3 py-1 rounded-full transition-all ${
+                  locale === 'th' ? 'bg-[#10F48B] text-[#050314]' : 'text-fw-text-secondary'
+                }`}
+              >
+                TH
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </nav>

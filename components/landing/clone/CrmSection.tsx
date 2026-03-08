@@ -3,59 +3,66 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { AutoplaySlider } from './AutoplaySlider'
+import { useTranslation } from '@/context/TranslationContext'
 
-const crmItems = [
+const crmItemDefs = [
   {
     id: 'profiles',
-    title: 'customer profiles & dashboards',
-    subtitle: 'Understand your customers better with a full overview of their behavior, spending, and engagement patterns.',
+    titleKey: 'crm_customer_profile_title',
+    subtitleKey: 'crm_customer_profile_desc',
     image: '/images/cdn/crm/visual_crm01.webp',
   },
   {
     id: 'funnel',
-    title: 'Funnel',
-    subtitle: 'Monitor the full customer journey and trigger targeted actions when users are inactive or ready to convert.',
+    titleKey: 'crm_funnel_title',
+    subtitleKey: 'crm_funnel_desc',
     image: '/images/cdn/crm/visual_crm02.webp',
   },
   {
     id: 'segments',
-    title: 'Segment Tracking',
-    subtitle: 'Spot your most valuable, ready-to-buy, and inactive customers, and run targeted campaigns that drive results.',
+    titleKey: 'crm_segment_tracking_title',
+    subtitleKey: 'crm_segment_tracking_desc',
     image: '/images/cdn/crm/visual_crm04.webp',
   },
   {
     id: 'ai',
-    title: 'AI Insights',
-    subtitle: 'AI scans your data 24/7 to deliver automatic recommendations on what action will improve growth or retention.',
+    titleKey: 'crm_ai_insights_title',
+    subtitleKey: 'crm_ai_insights_desc',
     image: '/images/cdn/crm/visual_crm03.webp',
   },
   {
     id: 'assistant',
-    title: 'Assistant',
-    subtitle: 'Save hours with AI that interprets plain-language requests to build, schedule, and enhance campaigns on your behalf.',
+    titleKey: 'crm_assistant_title',
+    subtitleKey: 'crm_assistant_desc',
     image: '/images/cdn/crm/visual_crm05.webp',
   },
 ]
 
 export default function CrmSection() {
   const [activeIndex, setActiveIndex] = useState(0)
+  const { t } = useTranslation()
+
+  const crmItems = crmItemDefs.map((def) => ({
+    id: def.id,
+    title: t(def.titleKey),
+    subtitle: t(def.subtitleKey),
+    image: def.image,
+  }))
 
   return (
     <div className="mx-auto flex w-full max-w-[1080px] flex-col items-start gap-12 px-[24px] sm:px-[32px] md:px-[24px]">
       {/* Header */}
       <div className="flex w-full flex-col items-center gap-2 self-stretch">
         <div>
-          <h2 className="text-center text-[30px] md:text-[40px] font-black leading-[100%] uppercase text-[#F4F4FC]"
-            >
-            grow faster with
+          <h2 className="text-center text-[30px] md:text-[40px] font-black leading-[100%] uppercase text-[#F4F4FC]">
+            {t('crm_grow_faster_title')}
           </h2>
-          <p className="text-center text-[30px] md:text-[60px] font-black leading-[100%] uppercase text-[#10F48B]"
-            >
-            crm &amp; ai
+          <p className="text-center text-[30px] md:text-[60px] font-black leading-[100%] uppercase text-[#10F48B]">
+            {t('crm_grow_faster_title2')}
           </p>
         </div>
         <p className="text-center text-[14px] font-normal leading-[160%] text-[#A6A7B5]">
-          Manage your entire community with our Freedom Console
+          {t('crm_grow_faster_desc')}
         </p>
       </div>
 

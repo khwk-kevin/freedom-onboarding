@@ -1,11 +1,12 @@
 'use client'
 
 import Image from 'next/image'
+import { useTranslation } from '@/context/TranslationContext'
 
 interface BlogCard {
   id: number
-  title: string
-  subTitle: string
+  titleKey: string
+  subTitleKey: string
   image: string
   url: string
 }
@@ -13,28 +14,28 @@ interface BlogCard {
 const blogs: BlogCard[] = [
   {
     id: 1,
-    title: 'inspiration',
-    subTitle: "Why Building Your Community\nDrives More Impact",
+    titleKey: 'community_insights_inspiration_title',
+    subTitleKey: 'community_insights_inspiration_desc',
     image: '/images/home/blogs/blog1.webp',
     url: 'https://blog.freedom.world/blog/why-building-your-community-drives-more-impact',
   },
   {
     id: 2,
-    title: 'playbooks',
-    subTitle: "Creative Ways to Monetize\nYour Virtual Communities",
+    titleKey: 'community_insights_playbooks_title',
+    subTitleKey: 'community_insights_playbooks_desc',
     image: '/images/home/blogs/blog2.webp',
     url: 'https://blog.freedom.world/blog/creative-ways-to-monetize-your-virtual-communities-0',
   },
   {
     id: 3,
-    title: 'features',
-    subTitle: 'The New Era of Community Recognition with Freedom World',
+    titleKey: 'community_insights_features_title',
+    subTitleKey: 'community_insights_features_desc',
     image: '/images/home/blogs/blog3.webp',
     url: 'https://blog.freedom.world/blog/the-new-era-of-community-recognition-with-freedom-world',
   },
 ]
 
-function BlogCard({ blog }: { blog: BlogCard }) {
+function BlogCard({ blog, t }: { blog: BlogCard; t: (key: string) => string }) {
   return (
     <div
       className="md:w-auto md:flex-1 min-w-[300px] w-full md:min-w-0 z-30 h-auto rounded-[32px] relative"
@@ -51,7 +52,7 @@ function BlogCard({ blog }: { blog: BlogCard }) {
       >
         <div className="mt-auto w-full relative">
           <Image
-            alt={blog.title}
+            alt={t(blog.titleKey)}
             src={blog.image}
             width={277}
             height={200}
@@ -61,36 +62,35 @@ function BlogCard({ blog }: { blog: BlogCard }) {
         </div>
         <div className="flex flex-col w-full p-4 px-0 md:pt-4 md:px-8 md:pb-8 gap-2">
           <div className="flex justify-between items-start gap-1 w-full">
-            <h3
-              className="text-[#F4F4FC] text-2xl font-black uppercase"
-              
-            >
-              {blog.title}
+            <h3 className="text-[#F4F4FC] text-2xl font-black uppercase">
+              {t(blog.titleKey)}
             </h3>
             <Image alt="Read more" src="/svgs/up-right-arrow.svg" width={41} height={41} className="w-6 h-6 lg:w-10 lg:h-10" />
           </div>
-          <p className="text-[#A6A7B5] w-full text-left whitespace-normal text-[12px] leading-[18px] md:text-[14px] md:leading-[21px] tracking-[-0.24px]">{blog.subTitle}</p>
+          <p className="text-[#A6A7B5] w-full text-left whitespace-pre-line text-[12px] leading-[18px] md:text-[14px] md:leading-[21px] tracking-[-0.24px]">
+            {t(blog.subTitleKey)}
+          </p>
         </div>
       </a>
     </div>
   )
 }
 
-function BlogsGrid() {
+function BlogsGrid({ t }: { t: (key: string) => string }) {
   return (
     <div className="w-full">
       {/* Mobile */}
       <div className="lg:hidden flex justify-start overflow-y-hidden scrollbar-hide py-4">
         <div className="flex flex-col gap-6 w-full">
           {blogs.map((blog) => (
-            <BlogCard key={blog.id} blog={blog} />
+            <BlogCard key={blog.id} blog={blog} t={t} />
           ))}
         </div>
       </div>
       {/* Desktop */}
       <div className="hidden lg:flex gap-6 justify-center max-w-[1080px] m-auto items-stretch">
         {blogs.map((blog) => (
-          <BlogCard key={blog.id} blog={blog} />
+          <BlogCard key={blog.id} blog={blog} t={t} />
         ))}
       </div>
     </div>
@@ -98,6 +98,8 @@ function BlogsGrid() {
 }
 
 export default function BlogsSection() {
+  const { t } = useTranslation()
+
   return (
     <div className="relative m-auto md:flex md:flex-col overflow-hidden md:mb-[277px] mb-0 px-[24px] sm:px-[32px] md:px-[24px]">
       {/* Background glow */}
@@ -109,25 +111,19 @@ export default function BlogsSection() {
       <div className="flex flex-col items-center m-auto relative gap-[36px] sm:gap-[48px] md:gap-[64px]">
         {/* Desktop heading */}
         <div className="hidden sm:flex flex-col justify-center items-center z-10 text-center">
-          <h2
-            className="w-fit text-white uppercase text-[40px] font-black"
-            
-          >
-            community insights &amp; ideas
+          <h2 className="w-fit text-white uppercase text-[40px] font-black">
+            {t('community_insights_title')}
           </h2>
-          <h1
-            className="rounded-full w-fit text-[#10F48B] uppercase text-[90px] font-black leading-[100%]"
-            
-          >
-            for your inspiration
+          <h1 className="rounded-full w-fit text-[#10F48B] uppercase text-[90px] font-black leading-[100%]">
+            {t('community_insights_title2')}
           </h1>
           <a
-            href="https://blog.freedom.world/blog"
+            href="/onboarding"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm mt-4 hover:scale-105 transition-transform"
           >
-            see more
+            {t('community_insights_see_more_cta')}
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10F48B]">
               <Image src="/svgs/up-right-arrow.svg" alt="" width={14} height={14} />
             </span>
@@ -136,23 +132,17 @@ export default function BlogsSection() {
 
         {/* Mobile heading */}
         <div className="flex sm:hidden flex-col gap-0 justify-center items-center z-10 text-center">
-          <h2
-            className="w-fit text-white uppercase text-3xl font-black"
-            
-          >
-            community insights &amp; ideas
+          <h2 className="w-fit text-white uppercase text-3xl font-black">
+            {t('community_insights_title')}
           </h2>
-          <h1
-            className="rounded-full w-fit text-[#10F48B] uppercase text-3xl font-black"
-            
-          >
-            for your inspiration
+          <h1 className="rounded-full w-fit text-[#10F48B] uppercase text-3xl font-black">
+            {t('community_insights_title2')}
           </h1>
         </div>
 
         {/* Blogs grid */}
         <div className="relative flex flex-col md:pt-0 pt-0 w-full gap-[36px] sm:gap-[48px] md:gap-[64px]">
-          <BlogsGrid />
+          <BlogsGrid t={t} />
         </div>
       </div>
     </div>

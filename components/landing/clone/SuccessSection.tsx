@@ -2,21 +2,22 @@
 
 import { useState, useRef } from 'react'
 import Image from 'next/image'
+import { useTranslation } from '@/context/TranslationContext'
 
 interface FeatureIcon {
-  title: string
+  titleKey: string
   icon: string
 }
 
 interface Slide {
   id: string
-  title: string
-  textTitle: string
-  text: string
-  text2?: string
+  titleKey: string
+  textTitleKey: string
+  textKey: string
+  text2Key?: string
   imageUrl: string
   imageUrlMO: string
-  category: string
+  categoryKey: string
   icons: FeatureIcon[]
   iconUrl: string
   link: string
@@ -25,136 +26,138 @@ interface Slide {
 const slides: Slide[] = [
   {
     id: 'slide1',
-    title: 'Discover Thailand',
-    textTitle: 'Personalized adventures and rewarding discoveries.',
-    text: 'Freedom World and the Tourism of Thailand (TAT) have teamed up to embark travelers onto a unique journey where they can explore up to 80+ local businesses, enjoy special deals, and earn epic rewards.',
+    titleKey: 'success_tat_discoverthailand',
+    textTitleKey: 'success_tat_title',
+    textKey: 'success_tat_desc',
     imageUrl: "linear-gradient(to right, #050314 0%, #050314 30%, #050314CC 40%, #05031499 50%, #0503144D 60%, #0503141A 70%, #05031400 80%), url('https://public.freedom.world/landing_page/community/discover_thailand.avif')",
     imageUrlMO: "linear-gradient(to right, #050314CC 0%, #050314CC 30%, #050314CC 40%, #05031499 50%, #05031499 60%, #05031499 70%, #05031499 80%), url('https://public.freedom.world/landing_page/community/discover_thailand.avif')",
-    category: 'Tourism',
+    categoryKey: 'success_tat_tourism',
     icons: [
-      { title: 'Universal Rewards', icon: '/svgs/reward.svg' },
-      { title: 'Interactive Map', icon: '/svgs/location.svg' },
+      { titleKey: 'success_tat_universal_rewards', icon: '/svgs/reward.svg' },
+      { titleKey: 'success_tat_interactive_map', icon: '/svgs/location.svg' },
     ],
     iconUrl: '/images/home/community/icons/discover_thailand.png',
     link: 'https://freedom.world/discover-thailand',
   },
   {
     id: 'slide2',
-    title: 'Mystic Valley Festival',
-    textTitle: 'Immersive and cutting-edge festival experience',
-    text: 'By integrating the Freedom World App, Mystic Valley transforms the traditional festival into a cutting-edge digital ecosystem where NFT tickets provide secure, collectible access, while MYST points streamline on-site transactions for a frictionless, cashless environment.',
+    titleKey: 'success_myst_mysticvalley',
+    textTitleKey: 'success_myst_title',
+    textKey: 'success_myst_desc',
     imageUrl: "linear-gradient(to right, #050314 0%, #050314 30%, #050314CC 40%, #05031499 50%, #0503144D 60%, #0503141A 70%, #05031400 80%), url('https://public.freedom.world/landing_page/community/valley.avif')",
     imageUrlMO: "linear-gradient(to right, #050314CC 0%, #050314CC 30%, #050314CC 40%, #05031499 50%, #05031499 60%, #05031499 70%, #05031499 80%), url('https://public.freedom.world/landing_page/community/valley.avif')",
-    category: 'Entertainment',
+    categoryKey: 'success_myst_entertainment',
     icons: [
-      { title: 'MYST Points', icon: '/svgs/reward.svg' },
-      { title: 'NFT Tickets', icon: '/svgs/nft.svg' },
-      { title: 'Missions', icon: '/svgs/missons.svg' },
+      { titleKey: 'success_myst_points', icon: '/svgs/reward.svg' },
+      { titleKey: 'success_myst_nft_tickets', icon: '/svgs/nft.svg' },
+      { titleKey: 'success_myst_missions', icon: '/svgs/missons.svg' },
     ],
     iconUrl: '/images/home/community/icons/mystic_valley.png',
     link: 'https://freedom.world/mystic-valley-festival',
   },
   {
     id: 'slide3',
-    title: 'Raja Ferry',
-    textTitle: 'Rewarding & engaging journey experience',
-    text: "Through the Freedom World ecosystem, Thailand's leading ferry service transforms travel into a premium experience by driving engagement and loyalty via referral systems, RAJA points, and NFT e-vouchers.",
+    titleKey: 'success_raja_ferry',
+    textTitleKey: 'success_raja_title',
+    textKey: 'success_raja_desc',
     imageUrl: "linear-gradient(to right, #050314 0%, #050314 30%, #050314CC 40%, #05031499 50%, #0503144D 60%, #0503141A 70%, #05031400 80%), url('https://public.freedom.world/landing_page/community/raja.avif')",
     imageUrlMO: "linear-gradient(to right, #050314CC 0%, #050314CC 30%, #050314CC 40%, #05031499 50%, #05031499 60%, #05031499 70%, #05031499 80%), url('https://public.freedom.world/landing_page/community/raja.avif')",
-    category: 'Transportation',
+    categoryKey: 'success_raja_transportation',
     icons: [
-      { title: 'Referral System', icon: '/svgs/referral.svg' },
-      { title: 'RAJA Points', icon: '/svgs/location.svg' },
-      { title: 'NFT E-Voucher', icon: '/svgs/nft.svg' },
+      { titleKey: 'success_raja_referral_system', icon: '/svgs/referral.svg' },
+      { titleKey: 'success_raja_points', icon: '/svgs/location.svg' },
+      { titleKey: 'success_raja_nft_evoucher', icon: '/svgs/nft.svg' },
     ],
     iconUrl: '/images/home/community/icons/raja_ferry.png',
     link: 'https://freedom.world/raja-ferry',
   },
   {
     id: 'slide30',
-    title: 'Topgolf Thailand',
-    textTitle: 'Rewarding Every Swing through A Seamless Loyalty Journey',
-    text: 'Topgolf Thailand has implemented the top-up function, mission system, and merchant system through Freedom World to drive customer loyalty, enhance engagement, and boost retention within the Topgolf ecosystem.',
-    text2: 'By adopting the Freedom App, Topgolf has elevated its customer journey by combining seamless payment experiences with interactive reward mechanisms.',
+    titleKey: 'success_top_golf',
+    textTitleKey: 'success_topgolf_title',
+    textKey: 'success_topgolf_desc',
+    text2Key: 'success_topgolf_desc2',
     imageUrl: "linear-gradient(to right, #050314 0%, #050314 30%, #050314CC 40%, #05031499 50%, #0503144D 60%, #0503141A 70%, #05031400 80%), url('https://public.freedom.world/landing_page/community/image_topgolf.avif')",
     imageUrlMO: "linear-gradient(to right, #050314CC 0%, #050314CC 30%, #050314CC 40%, #05031499 50%, #05031499 60%, #05031499 70%, #05031499 80%), url('https://public.freedom.world/landing_page/community/image_topgolf.avif')",
-    category: 'Activity',
+    categoryKey: 'success_topgolf_activity',
     icons: [
-      { title: 'Missions', icon: '/svgs/Flag.svg' },
-      { title: 'Merchant System', icon: '/svgs/shop.svg' },
-      { title: 'Top Up', icon: '/svgs/hand-holding-circle-dollar.svg' },
+      { titleKey: 'success_topgolf_missions', icon: '/svgs/Flag.svg' },
+      { titleKey: 'success_topgolf_merchant_system', icon: '/svgs/shop.svg' },
+      { titleKey: 'success_topgolf_topup', icon: '/svgs/hand-holding-circle-dollar.svg' },
     ],
     iconUrl: '/images/home/community/icons/logo_topgolf.avif',
     link: 'https://freedom.world/topgolf-thailand',
   },
   {
     id: 'slide4',
-    title: 'Roon Khanom Khai',
-    textTitle: 'BOOSTING LOYALTY THROUGH DIGITAL REWARDS',
-    text: 'By embracing the Freedom World app, Roon Khanom Khai connects with customers in new ways, offering top-ups, missions, and special in-store deals that drive repeat visits and lasting loyalty.',
+    titleKey: 'success_roon_khanom',
+    textTitleKey: 'success_roon_title',
+    textKey: 'success_roon_desc',
     imageUrl: "linear-gradient(to right, #050314 0%, #050314 30%, #050314CC 40%, #05031499 50%, #0503144D 60%, #0503141A 70%, #05031400 80%), url('https://public.freedom.world/landing_page/community/RoonKhanomKhai.avif')",
     imageUrlMO: "linear-gradient(to right, #050314CC 0%, #050314CC 30%, #050314CC 40%, #05031499 50%, #05031499 60%, #05031499 70%, #05031499 80%), url('https://public.freedom.world/landing_page/community/RoonKhanomKhai-mobile.avif')",
-    category: 'Food & Beverage',
+    categoryKey: 'success_roon_fnb',
     icons: [
-      { title: 'Topup', icon: '/svgs/nft-certificates.svg' },
-      { title: 'Missions', icon: '/svgs/missons.svg' },
-      { title: 'NFT E-Voucher', icon: '/svgs/nft.svg' },
+      { titleKey: 'success_roon_topup', icon: '/svgs/nft-certificates.svg' },
+      { titleKey: 'success_roon_missions', icon: '/svgs/missons.svg' },
+      { titleKey: 'success_roon_nft_evoucher', icon: '/svgs/nft.svg' },
     ],
     iconUrl: '/images/home/community/icons/RoonKhanomKhai.avif',
     link: 'https://freedom.world/roon-khanom-khai',
   },
   {
     id: 'slide5',
-    title: 'Onyx Bangkok',
-    textTitle: 'REDEFINING THE NIGHTLIFE EXPERIENCE',
-    text: 'In the heart of RCA, ONYX is blending entertainment with digital innovation. Patrons top up ONYX Points, redeem rewards, and enjoy seamless QR payments. Missions and campaigns extend engagement beyond the dance floor.',
+    titleKey: 'success_onyx_bangkok',
+    textTitleKey: 'success_onyx_title',
+    textKey: 'success_onyx_desc',
     imageUrl: "linear-gradient(to right, #050314 0%, #050314 30%, #050314CC 40%, #05031499 50%, #0503144D 60%, #0503141A 70%, #05031400 80%), url('https://public.freedom.world/landing_page/community/Onyx.avif')",
     imageUrlMO: "linear-gradient(to right, #050314CC 0%, #050314CC 30%, #050314CC 40%, #05031499 50%, #05031499 60%, #05031499 70%, #05031499 80%), url('https://public.freedom.world/landing_page/community/Onyx-mobile.avif')",
-    category: 'Nightlife',
+    categoryKey: 'success_onyx_nightlife',
     icons: [
-      { title: 'QR Payments', icon: '/svgs/points.svg' },
-      { title: 'ONYX Points', icon: '/svgs/qr-payment.svg' },
-      { title: 'Missions', icon: '/svgs/missons.svg' },
+      { titleKey: 'success_onyx_qr_payments', icon: '/svgs/points.svg' },
+      { titleKey: 'success_onyx_points', icon: '/svgs/qr-payment.svg' },
+      { titleKey: 'success_onyx_missions', icon: '/svgs/missons.svg' },
     ],
     iconUrl: '/images/home/community/icons/Onyx.avif',
     link: 'https://freedom.world/onyx',
   },
   {
     id: 'slide10',
-    title: 'Bangkok Community Help Foundation',
-    textTitle: 'Turning compassion into action',
-    text: "Through the Freedom World Impact program, the Bangkok Community Help Foundation leverages the Merchant System and QuickScan to transform donations into a seamless, secure, and transparent experience.",
-    text2: 'By linking donations to structured Missions and recognizing milestones with on-chain digital badges, the platform converts one-time contributions into a verifiable, high-engagement journey.',
+    titleKey: 'success_bchf',
+    textTitleKey: 'success_bchf_title',
+    textKey: 'success_bchf_desc',
+    text2Key: 'success_bchf_desc2',
     imageUrl: "linear-gradient(to right, #050314 0%, #050314 30%, #050314CC 40%, #05031499 50%, #0503144D 60%, #0503141A 70%, #05031400 80%), url('https://public.freedom.world/landing_page/community/image_bchf.avif')",
     imageUrlMO: "linear-gradient(to right, #050314CC 0%, #050314CC 30%, #050314CC 40%, #05031499 50%, #05031499 60%, #05031499 70%, #05031499 80%), url('https://public.freedom.world/landing_page/community/image_bchf.avif')",
-    category: 'Impact',
+    categoryKey: 'success_bchf_non_profit',
     icons: [
-      { title: 'BCHF Points', icon: '/svgs/points.svg' },
-      { title: 'Missions', icon: '/svgs/missons.svg' },
-      { title: 'Merchant System', icon: '/svgs/shop.svg' },
+      { titleKey: 'success_bchf_points', icon: '/svgs/points.svg' },
+      { titleKey: 'success_bchf_missions', icon: '/svgs/missons.svg' },
+      { titleKey: 'success_bchf_merchant_system', icon: '/svgs/shop.svg' },
     ],
     iconUrl: '/images/home/community/icons/logo_bchf.avif',
     link: 'https://freedom.world/Bangkok-Community-Help-Foundation',
   },
   {
     id: 'slide11',
-    title: 'Freedom Run',
-    textTitle: 'Thriving community fostered by a shared passion',
-    text: 'Igniting a passionate community of running lovers from just a small group of runners from the Amazing Thailand Marathon 2023, the community has shown what a strong bond and shared enthusiasm can achieve.',
+    titleKey: 'success_fdrun_freedom_run',
+    textTitleKey: 'success_fdrun_title',
+    textKey: 'success_fdrun_desc',
     imageUrl: "linear-gradient(to right, #050314 0%, #050314 30%, #050314CC 40%, #05031499 50%, #0503144D 60%, #0503141A 70%, #05031400 80%), url('https://public.freedom.world/landing_page/community/freedom_run.avif')",
     imageUrlMO: "linear-gradient(to right, #050314CC 0%, #050314CC 30%, #050314CC 40%, #05031499 50%, #05031499 60%, #05031499 70%, #05031499 80%), url('https://public.freedom.world/landing_page/community/freedom_run.avif')",
-    category: 'Shared Interest',
+    categoryKey: 'success_fdrun_shared_interest',
     icons: [
-      { title: 'RUN Points', icon: '/svgs/points.svg' },
-      { title: 'Referral System', icon: '/svgs/referral.svg' },
+      { titleKey: 'success_fdrun_points', icon: '/svgs/points.svg' },
+      { titleKey: 'success_fdrun_referral_system', icon: '/svgs/referral.svg' },
     ],
     iconUrl: '/images/home/community/icons/fd_run.png',
     link: 'https://freedom.world/freedom-run',
   },
 ]
 
-function SlideContent({ slide }: { slide: Slide }) {
-  const isSEENSPACE = slide.title === 'SEENSPACE'
+function SlideContent({ slide, t }: { slide: Slide; t: (key: string) => string }) {
+  const titleText = t(slide.titleKey)
+  const isSEENSPACE = titleText === 'SEENSPACE'
+
   return (
     <div className="h-full">
       {/* Mobile */}
@@ -175,8 +178,8 @@ function SlideContent({ slide }: { slide: Slide }) {
             ) : (
               <>
                 <Image alt="" src={slide.iconUrl} width={44} height={44} className="object-cover py-3 rounded-3xl flex-1" unoptimized />
-                <h4 className="w-fit text-white uppercase font-black" >
-                  {slide.title.toUpperCase()}
+                <h4 className="w-fit text-white uppercase font-black">
+                  {titleText.toUpperCase()}
                 </h4>
               </>
             )}
@@ -184,27 +187,27 @@ function SlideContent({ slide }: { slide: Slide }) {
 
           {/* Text content */}
           <div className="flex flex-col gap-4 self-stretch">
-            <h4 className="w-fit text-white font-black uppercase" >
-              {slide.textTitle.toUpperCase()}
+            <h4 className="w-fit text-white font-black uppercase">
+              {t(slide.textTitleKey).toUpperCase()}
             </h4>
-            <p className="w-fit text-white text-sm">{slide.text}</p>
-            {slide.text2 && <p className="w-fit text-white text-sm">{slide.text2}</p>}
+            <p className="w-fit text-white text-sm">{t(slide.textKey)}</p>
+            {slide.text2Key && <p className="w-fit text-white text-sm">{t(slide.text2Key)}</p>}
           </div>
 
           {/* Feature icons */}
           <div className="flex gap-3 border-t border-b justify-between border-white/20 py-3 lg:flex-row flex-col">
             {slide.icons.map((icon, i) => (
-              <div key={icon.title + i} className="flex gap-2 items-center px-2.5">
+              <div key={icon.titleKey + i} className="flex gap-2 items-center px-2.5">
                 <Image alt="" src={icon.icon} height={24} width={24} />
-                <span className="w-fit text-white capitalize text-sm">{icon.title}</span>
+                <span className="w-fit text-white capitalize text-sm">{t(icon.titleKey)}</span>
               </div>
             ))}
           </div>
 
           {/* Category */}
           <div className="flex flex-col gap-2">
-            <h3 className="font-black text-white text-sm">Category</h3>
-            <p className="w-fit text-white text-sm">{slide.category}</p>
+            <h3 className="font-black text-white text-sm">{t('success_category_title')}</h3>
+            <p className="w-fit text-white text-sm">{t(slide.categoryKey)}</p>
           </div>
 
           {slide.link !== '' && (
@@ -214,7 +217,7 @@ function SlideContent({ slide }: { slide: Slide }) {
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm w-fit"
             >
-              join the community
+              {t('success_join_cta')}
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10F48B]">
                 <Image src="/svgs/up-right-arrow.svg" alt="" width={14} height={14} />
               </span>
@@ -241,8 +244,8 @@ function SlideContent({ slide }: { slide: Slide }) {
             ) : (
               <>
                 <Image alt="" src={slide.iconUrl} width={44} height={44} className="object-cover py-3 rounded-3xl flex-1" unoptimized />
-                <h4 className="w-fit text-white uppercase font-black" >
-                  {slide.title.toUpperCase()}
+                <h4 className="w-fit text-white uppercase font-black">
+                  {titleText.toUpperCase()}
                 </h4>
               </>
             )}
@@ -250,27 +253,27 @@ function SlideContent({ slide }: { slide: Slide }) {
 
           {/* Text content */}
           <div className="flex flex-col gap-4 self-stretch">
-            <h4 className="w-fit text-white uppercase font-black" >
-              {slide.textTitle.toUpperCase()}
+            <h4 className="w-fit text-white uppercase font-black">
+              {t(slide.textTitleKey).toUpperCase()}
             </h4>
-            <p className="w-fit text-white text-sm">{slide.text}</p>
-            {slide.text2 && <p className="w-fit text-white text-sm">{slide.text2}</p>}
+            <p className="w-fit text-white text-sm">{t(slide.textKey)}</p>
+            {slide.text2Key && <p className="w-fit text-white text-sm">{t(slide.text2Key)}</p>}
           </div>
 
           {/* Feature icons */}
           <div className="flex gap-3 border-t border-b justify-between border-white/20 py-3 lg:flex-row flex-col">
             {slide.icons.map((icon, i) => (
-              <div key={icon.title + i} className="flex gap-2 items-center px-2.5">
+              <div key={icon.titleKey + i} className="flex gap-2 items-center px-2.5">
                 <Image alt="" src={icon.icon} height={24} width={24} />
-                <span className="w-fit text-white capitalize text-sm">{icon.title}</span>
+                <span className="w-fit text-white capitalize text-sm">{t(icon.titleKey)}</span>
               </div>
             ))}
           </div>
 
           {/* Category */}
           <div className="flex flex-col gap-2">
-            <h3 className="font-black text-white text-sm"> Category</h3>
-            <h4 className="text-sm text-white">{slide.category}</h4>
+            <h3 className="font-black text-white text-sm">{t('success_category_title')}</h3>
+            <h4 className="text-sm text-white">{t(slide.categoryKey)}</h4>
           </div>
 
           {slide.link !== '' && (
@@ -280,7 +283,7 @@ function SlideContent({ slide }: { slide: Slide }) {
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm w-fit"
             >
-              join the community
+              {t('success_join_cta')}
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10F48B]">
                 <Image src="/svgs/up-right-arrow.svg" alt="" width={14} height={14} />
               </span>
@@ -298,6 +301,7 @@ export default function SuccessSection() {
   const [visible, setVisible] = useState(true)
   const touchStartX = useRef<number | null>(null)
   const touchMoveX = useRef<number | null>(null)
+  const { t } = useTranslation()
 
   const goTo = (idx: number) => {
     if (idx === activeIndex) return
@@ -331,17 +335,15 @@ export default function SuccessSection() {
 
       {/* Heading desktop */}
       <div className="px-[14px] sm:px-[16px] md:px-[32px] py-[4px] sm:py-[8px] md:py-[12px] pl-[4px] sm:pl-[8px] md:pl-[12px] gap-[6px] sm:gap-[10px] md:gap-[16px] hidden sm:flex items-center rounded-full m-auto">
-        <h1 className="rounded-full w-fit text-white uppercase font-black text-3xl"
-          >
-          success stories
+        <h1 className="rounded-full w-fit text-white uppercase font-black text-3xl">
+          {t('success_stories_title')}
         </h1>
       </div>
 
       {/* Heading mobile */}
       <div className="flex sm:hidden flex-col gap-0 justify-center items-center z-10 text-center">
-        <h2 className="w-fit text-white uppercase text-3xl font-black"
-          >
-          success stories
+        <h2 className="w-fit text-white uppercase text-3xl font-black">
+          {t('success_stories_title')}
         </h2>
       </div>
 
@@ -371,13 +373,13 @@ export default function SuccessSection() {
                   className="absolute inset-0 h-full opacity-0 pointer-events-none transition-opacity duration-500 ease-in-out"
                   aria-hidden="true"
                 >
-                  <SlideContent slide={slides[prevIndex]} />
+                  <SlideContent slide={slides[prevIndex]} t={t} />
                 </div>
               )}
               <div
                 className={`relative h-full transition-opacity duration-500 ease-in-out ${visible ? 'opacity-100' : 'opacity-0'}`}
               >
-                <SlideContent slide={slides[activeIndex]} />
+                <SlideContent slide={slides[activeIndex]} t={t} />
               </div>
             </div>
           </div>

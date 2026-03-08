@@ -1,8 +1,9 @@
 'use client'
 
 import Image from 'next/image'
+import { useTranslation } from '@/context/TranslationContext'
 
-function CtaCard1() {
+function CtaCard1({ t }: { t: (key: string) => string }) {
   return (
     <div
       className="flex-1 rounded-[32px] relative"
@@ -19,18 +20,12 @@ function CtaCard1() {
         <div className="md:flex hidden flex-col justify-center flex-1">
           <div className="flex flex-col justify-center items-center p-[24px] sm:p-[24px] md:p-[32px]">
             <div className="px-2 m-0">
-              <h3
-                className="uppercase p-0 m-0 font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center"
-                
-              >
-                build customer
+              <h3 className="uppercase p-0 m-0 font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center">
+                {t('build_customer_title')}
               </h3>
             </div>
-            <h3
-              className="rounded-full w-fit uppercase px-2 m-0 font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center"
-              
-            >
-              connections
+            <h3 className="rounded-full w-fit uppercase px-2 m-0 font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center">
+              {t('build_customer_title2')}
             </h3>
           </div>
           <div className="px-[14px] sm:px-[16px] md:px-[32px] pr-0">
@@ -45,12 +40,12 @@ function CtaCard1() {
           </div>
           <div className="p-[24px] sm:p-[24px] md:p-[32px] flex justify-center">
             <a
-              href="https://console.freedom.world/"
+              href="/onboarding"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm hover:scale-105 transition-transform"
             >
-              create your community
+              {t('build_customer_create_community_cta')}
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10F48B]">
                 <Image src="/svgs/up-right-arrow.svg" alt="" width={14} height={14} />
               </span>
@@ -62,15 +57,12 @@ function CtaCard1() {
         <div className="md:hidden flex flex-col w-full">
           <div className="flex flex-col justify-center items-center uppercase p-[24px] gap-[6px] sm:gap-[8px] md:gap-[12px]">
             <div className="px-[14px] sm:px-[16px] md:px-[32px]">
-              <h3 className="font-black text-[#F4F4FC] text-2xl text-center" >
-                build customer
+              <h3 className="font-black text-[#F4F4FC] text-2xl text-center">
+                {t('build_customer_title')}
               </h3>
             </div>
-            <h3
-              className="rounded-full w-fit uppercase font-black text-[#F4F4FC] text-2xl py-[4px] sm:py-[8px] md:py-[12px] px-[14px] sm:px-[16px] md:px-[32px] text-center"
-              
-            >
-              connections
+            <h3 className="rounded-full w-fit uppercase font-black text-[#F4F4FC] text-2xl py-[4px] sm:py-[8px] md:py-[12px] px-[14px] sm:px-[16px] md:px-[32px] text-center">
+              {t('build_customer_title2')}
             </h3>
           </div>
           <div className="px-[14px] sm:px-[16px] md:px-[32px] pr-0 flex flex-col justify-center items-center">
@@ -84,12 +76,12 @@ function CtaCard1() {
             />
             <div className="p-[24px]">
               <a
-                href="https://console.freedom.world/"
+                href="/onboarding"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm"
               >
-                create your community
+                {t('build_customer_create_community_cta')}
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10F48B]">
                   <Image src="/svgs/up-right-arrow.svg" alt="" width={14} height={14} />
                 </span>
@@ -102,7 +94,7 @@ function CtaCard1() {
   )
 }
 
-function CtaCard2() {
+function CtaCard2({ t }: { t: (key: string) => string }) {
   return (
     <div
       className="flex-1 z-50 rounded-[32px] relative"
@@ -119,18 +111,12 @@ function CtaCard2() {
         <div className="md:flex hidden flex-col justify-center flex-1">
           <div className="flex flex-col justify-center items-center p-[24px] sm:p-[24px] md:p-[32px]">
             <div className="px-2">
-              <h3
-                className="uppercase font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center"
-                
-              >
-                join as a partner
+              <h3 className="uppercase font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center">
+                {t('join_as_partner_title')}
               </h3>
             </div>
-            <h3
-              className="rounded-full w-fit uppercase px-2 font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center"
-              
-            >
-              with freedom
+            <h3 className="rounded-full w-fit uppercase px-2 font-black text-[28px] md:text-[36px] text-[#F4F4FC] leading-tight text-center">
+              {t('join_as_partner_title2')}
             </h3>
           </div>
           <div className="px-[14px] sm:px-[16px] md:px-[32px] pl-0">
@@ -145,12 +131,12 @@ function CtaCard2() {
           </div>
           <div className="p-[24px] sm:p-[24px] md:p-[32px] flex justify-center">
             <a
-              href="https://freedom.world/community-features/request-demo"
+              href="/onboarding"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm hover:scale-105 transition-transform"
             >
-              contact us
+              {t('join_as_partner_contact_cta')}
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10F48B]">
                 <Image src="/svgs/up-right-arrow.svg" alt="" width={14} height={14} />
               </span>
@@ -162,15 +148,12 @@ function CtaCard2() {
         <div className="md:hidden flex flex-col w-full">
           <div className="flex flex-col justify-center items-center p-[24px] gap-[6px] sm:gap-[8px] md:gap-[12px]">
             <div className="px-[14px] sm:px-[16px] md:px-[32px]">
-              <h3 className="uppercase font-black text-[#F4F4FC] text-2xl text-center" >
-                join as a partner
+              <h3 className="uppercase font-black text-[#F4F4FC] text-2xl text-center">
+                {t('join_as_partner_title')}
               </h3>
             </div>
-            <h3
-              className="rounded-full w-fit uppercase font-black text-[#F4F4FC] text-2xl py-[4px] sm:py-[8px] md:py-[12px] px-[14px] sm:px-[16px] md:px-[32px] text-center"
-              
-            >
-              with freedom
+            <h3 className="rounded-full w-fit uppercase font-black text-[#F4F4FC] text-2xl py-[4px] sm:py-[8px] md:py-[12px] px-[14px] sm:px-[16px] md:px-[32px] text-center">
+              {t('join_as_partner_title2')}
             </h3>
           </div>
           <div className="px-[14px] sm:px-[16px] md:px-[32px] pl-0 flex flex-col justify-center items-center">
@@ -184,12 +167,12 @@ function CtaCard2() {
             />
             <div className="p-[24px]">
               <a
-                href="https://freedom.world/community-features/request-demo"
+                href="/onboarding"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm"
               >
-                contact us
+                {t('join_as_partner_contact_cta')}
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10F48B]">
                   <Image src="/svgs/up-right-arrow.svg" alt="" width={14} height={14} />
                 </span>
@@ -203,6 +186,8 @@ function CtaCard2() {
 }
 
 export default function CtaSection() {
+  const { t } = useTranslation()
+
   return (
     <div className="relative px-[24px] sm:px-[32px] md:px-[24px]">
       {/* Background glow */}
@@ -212,8 +197,8 @@ export default function CtaSection() {
       />
       <div className="relative max-w-[1080px] m-auto flex flex-col gap-6 overflow-hidden">
         <div className="flex flex-col md:flex-row gap-6 z-30 pb-0">
-          <CtaCard1 />
-          <CtaCard2 />
+          <CtaCard1 t={t} />
+          <CtaCard2 t={t} />
         </div>
       </div>
     </div>

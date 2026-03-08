@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { track } from '@/lib/tracking/unified'
+import { useTranslation } from '@/context/TranslationContext'
 
 /* ─── Logo Marquee ─────────────────────────────────────────── */
 const LOGOS = [
@@ -18,13 +19,14 @@ const LOGOS = [
 ]
 
 function LogoMarquee() {
+  const { t } = useTranslation()
   // Duplicate logos enough times for seamless scroll
   const repeated = [...LOGOS, ...LOGOS, ...LOGOS, ...LOGOS]
 
   return (
     <div className="flex flex-col items-center gap-4 mt-10 mb-4 w-full">
       <h3 className="text-center text-base font-semibold text-[#A6A7B5] z-40 uppercase">
-        As Seen In
+        {t('as_seen_in_title')}
       </h3>
       <div
         className="relative w-full overflow-hidden"
@@ -106,6 +108,8 @@ function CTABtn({ label, onClick }: { label: string; onClick?: () => void }) {
 
 /* ─── Hero Section (cloned from freedom.world) ────────────── */
 export default function HeroClone() {
+  const { t } = useTranslation()
+
   return (
     <div className="relative md:min-h-screen px-1 xs:px-4 md:pb-10 pb-20 text-white w-full flex flex-col items-center gap-6 md:gap-12 lg:gap-24 justify-center"
       style={{ backgroundSize: 'cover', backgroundPosition: 'center' }}
@@ -129,23 +133,21 @@ export default function HeroClone() {
           style={{ background: 'linear-gradient(0deg, #02021000 0%, #020210 10%)' }}
         >
           <h2 className="w-fit text-white uppercase text-[30px] md:text-[40px] text-center font-black p-0 leading-[40px] md:leading-[60px]">
-            Your Business, Your World
+            {t('hero_your_business_your_world_title')}
           </h2>
           <h1 className="rounded-full w-fit text-[#10F48B] uppercase text-[30px] md:text-[60px] text-center font-black p-0 leading-[48px] md:leading-[60px]">
-            Yours To Create
+            {t('hero_your_business_your_world_title2')}
           </h1>
         </div>
 
         {/* Subtitle */}
-        <p className="text-center px-4 text-[#A6A7B5] text-[14px] leading-[21px] tracking-[-0.24px] p-0">
-          Create, engage, and grow your community with Freedom World.
-          <br className="hidden sm:block" />
-          Built for creators, managed for success.
+        <p className="text-center px-4 text-[#A6A7B5] text-[14px] leading-[21px] tracking-[-0.24px] p-0 whitespace-pre-line">
+          {t('hero_your_business_your_world_desc')}
         </p>
 
         {/* CTA */}
         <Link href="/onboarding" onClick={() => track.ctaClick('hero_clone', 'fw')}>
-          <CTABtn label="Get Started" />
+          <CTABtn label={t('footer_getstarted_title')} />
         </Link>
 
         {/* iPad + floating assets composition */}

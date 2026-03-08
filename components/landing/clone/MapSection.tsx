@@ -3,43 +3,50 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { AutoplaySlider } from './AutoplaySlider'
+import { useTranslation } from '@/context/TranslationContext'
 
-const mapItems = [
+const mapItemDefs = [
   {
     id: 'map_reach_explorers',
-    title: 'Reach Explorers Across the Globe',
-    subtitle: 'Tourists and explorers collect digital stamps as they travel. Featuring your business turns every visit into a collectible memory — promoting your brand to a global audience.',
+    titleKey: 'map_reach_explorers_title',
+    subtitleKey: 'map_reach_explorers_desc',
     image: '/images/cdn/map/visual_map01.webp',
   },
   {
     id: 'bring_customers',
-    title: 'Bring Customers to Your Door',
-    subtitle: 'Draw more foot traffic with Missions that bring motivated customers to your door to complete challenges, redeem NFTs, and claim rewards or exclusive offers.',
+    titleKey: 'map_bring_customers_title',
+    subtitleKey: 'map_bring_customers_desc',
     image: '/images/cdn/map/visual_map02.webp',
   },
   {
     id: 'map_win_visibility',
-    title: 'Win Visibility Inside The Scape',
-    subtitle: 'Give your customers something worth earning. Launch your own tokens or points that can be redeemed or collected across your ecosystem.',
+    titleKey: 'map_win_visibility_title',
+    subtitleKey: 'map_win_visibility_desc',
     image: '/images/cdn/map/visual_map03.webp',
   },
 ]
 
 export default function MapSection() {
   const [activeIndex, setActiveIndex] = useState(0)
+  const { t } = useTranslation()
+
+  const mapItems = mapItemDefs.map((def) => ({
+    id: def.id,
+    title: t(def.titleKey),
+    subtitle: t(def.subtitleKey),
+    image: def.image,
+  }))
 
   return (
     <div className="mx-auto flex w-full max-w-[1080px] flex-col items-start gap-12 px-[24px] sm:px-[32px] md:px-[24px]">
       {/* Header */}
       <div className="flex w-full flex-col items-center gap-2 self-stretch">
         <div>
-          <h2 className="text-center text-[30px] md:text-[40px] font-black leading-[100%] uppercase text-[#F4F4FC]"
-            >
-            put your business
+          <h2 className="text-center text-[30px] md:text-[40px] font-black leading-[100%] uppercase text-[#F4F4FC]">
+            {t('map_put_your_business_title')}
           </h2>
-          <p className="text-center text-[30px] md:text-[60px] font-black leading-[100%] uppercase text-[#10F48B]"
-            >
-            on the map
+          <p className="text-center text-[30px] md:text-[60px] font-black leading-[100%] uppercase text-[#10F48B]">
+            {t('map_put_your_business_title2')}
           </p>
         </div>
       </div>

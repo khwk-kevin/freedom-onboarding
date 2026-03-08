@@ -1,8 +1,11 @@
 'use client'
 
 import Image from 'next/image'
+import { useTranslation } from '@/context/TranslationContext'
 
 export default function EngageSection() {
+  const { t } = useTranslation()
+
   return (
     <div className="gap-[36px] sm:gap-[48px] md:gap-[64px] px-[24px] sm:px-[32px] md:px-[24px] relative flex flex-col">
       {/* Background glows */}
@@ -38,25 +41,23 @@ export default function EngageSection() {
           <div className="flex-1 flex flex-col gap-7 w-full md:w-1/2 max-w-[390px] z-10 md:order-1">
             <div>
               <h3
-                className="w-fit uppercase md:text-start text-center font-black text-[24px] leading-[36px] sm:text-[28px] sm:leading-[40px] md:text-[32px] md:leading-[48px] text-white"
-                
+                className="w-fit uppercase md:text-start text-center font-black text-[24px] leading-[36px] sm:text-[28px] sm:leading-[40px] md:text-[32px] md:leading-[48px] text-white whitespace-pre-line"
               >
-                run your business
+                {t('run_your_business_title')}
               </h3>
-              <p className="w-fit md:text-start text-center text-[#A6A7B5] text-[14px] leading-[21px] tracking-[-0.24px] mt-2">
-                Manage all your customer interactions, data,<br />
-                and tools in one simple platform.
+              <p className="w-fit md:text-start text-center text-[#A6A7B5] text-[14px] leading-[21px] tracking-[-0.24px] mt-2 whitespace-pre-line">
+                {t('run_your_business_desc')}
               </p>
             </div>
 
             <div className="relative pt-3 pb-0 md:py-0 md:pt-1 flex flex-col items-center md:items-start">
               <a
-                href="https://console.freedom.world/"
+                href="/onboarding"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm hover:scale-105 transition-transform"
               >
-                try it now
+                {t('run_your_business_tryitnow_cta')}
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10F48B]">
                   <Image src="/svgs/up-right-arrow.svg" alt="" width={14} height={14} />
                 </span>
@@ -64,7 +65,7 @@ export default function EngageSection() {
 
               {/* App store badges */}
               <div className="flex gap-2 sm:gap-[9px] pt-6 md:pt-10 flex-nowrap md:justify-start justify-center z-50">
-                <a href="https://play.google.com/store/apps/details?id=com.bitazza.freedom.wallet&hl=en" target="_blank" rel="noopener noreferrer">
+                <a href="/onboarding">
                   <Image
                     alt="Get it on Google Play"
                     src="/images/cdn/engage/google-play.png"
@@ -74,7 +75,7 @@ export default function EngageSection() {
                     unoptimized
                   />
                 </a>
-                <a href="https://apps.apple.com/my/app/freedom-world-social-chat/id1606936073" target="_blank" rel="noopener noreferrer">
+                <a href="/onboarding">
                   <Image
                     alt="Download on the App Store"
                     src="/images/cdn/engage/app-store.png"

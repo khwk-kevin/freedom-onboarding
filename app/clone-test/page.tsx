@@ -1,6 +1,6 @@
-import Navbar from '@/components/landing/Navbar'
+import CloneNavbar from '@/components/landing/clone/CloneNavbar'
+import CloneFooter from '@/components/landing/clone/CloneFooter'
 import HeroClone from '@/components/landing/HeroClone'
-import FooterDark from '@/components/landing/FooterDark'
 
 import VideoSection from '@/components/landing/clone/VideoSection'
 import StatsSection from '@/components/landing/clone/StatsSection'
@@ -14,53 +14,33 @@ import CtaSection from '@/components/landing/clone/CtaSection'
 import BlogsSection from '@/components/landing/clone/BlogsSection'
 
 export const metadata = {
-  title: 'Clone Test — Freedom World',
+  title: 'Freedom World — Your Business, Your World, Yours To Create',
+  description: 'Create, engage, and grow your community with Freedom World. Built for creators, managed for success.',
   robots: 'noindex',
 }
 
 export default function CloneTestPage() {
   return (
     <main className="min-h-screen bg-[#050314] text-white overflow-x-hidden">
-      <Navbar />
+      <CloneNavbar />
 
-      {/* Sections stacked with freedom.world spacing */}
       <div className="flex flex-col md:gap-[190px] gap-[120px]">
-        {/* 1+2. Video + Hero grouped (no gap between them, matching original) */}
         <div>
           <VideoSection />
           <HeroClone />
         </div>
-
-        {/* 3. Stats / All-in-one */}
         <StatsSection />
-
-        {/* 4. Engage */}
         <EngageSection />
-
-        {/* 5. CRM */}
         <CrmSection />
-
-        {/* 6. Map */}
         <MapSection />
-
-        {/* 7. Why Freedom */}
         <WhySection />
-
-        {/* 8. Features */}
         <FeaturesSection />
-
-        {/* 9. Success Stories */}
         <SuccessSection />
-
-        {/* 10. CTA */}
         <CtaSection />
-
-        {/* 11. Blogs */}
         <BlogsSection />
       </div>
 
-      <FooterDark />
-
+      <CloneFooter />
     </main>
   )
 }
