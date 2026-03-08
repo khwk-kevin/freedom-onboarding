@@ -249,12 +249,15 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           setCommunityData((prev) => ({ ...prev, ...tagUpdates }));
         }
 
-        // Auto-trigger logo generation after step 5 (all brand context collected)
-        if (newExchangeCount === 5 && communityData.businessType && !communityData.logo) {
+        // Auto-trigger logo generation when AVA outputs [[STEP:6]] (brand look collected)
+        const stepMatch = replyText.match(/\[\[STEP:(\d+|complete)\]\]/);
+        const currentStep = stepMatch ? stepMatch[1] : null;
+        
+        if (currentStep === '6' && communityData.businessType && !communityData.logo) {
           setTimeout(async () => {
             try {
               setIsGeneratingLogo(true);
-              // Build enriched data snapshot with all collected context
+              // Build enriched data snapshot with ALL collected context
               const enrichedData = {
                 ...communityData,
                 ...tagUpdates,
@@ -265,7 +268,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
             } finally {
               setIsGeneratingLogo(false);
             }
-          }, 800);
+          }, 1500); // Give user time to see AVA's "generating..." message
         }
 
         // Signup wall is triggered via generateImageInternal after logo completes — not here
@@ -343,8 +346,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       setCommunityData((prev) => ({ ...prev, [type]: result.imageUrl }));
 
       // Show signup wall after logo is generated (if still anonymous)
+      // Give them 3 seconds to appreciate the logo before asking to sign up
       if (type === 'logo' && isAnonymous) {
-        setTimeout(() => setShowSignupWall(true), 800);
+        setTimeout(() => setShowSignupWall(true), 3000);
       }
     } else {
       throw new Error(result.error || `Failed to generate ${type}`);

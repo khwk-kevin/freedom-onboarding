@@ -121,7 +121,7 @@ export function OnboardingChat() {
                 </h2>
                 <p className="text-[9px] md:text-[10px] truncate" style={{ color: theme.textMuted }}>
                   {isAnonymous
-                    ? `Free preview · ${Math.max(0, 5 - exchangeCount)} free exchanges`
+                    ? 'Free preview · Building your brand'
                     : 'Building your community ✨'}
                 </p>
               </div>
