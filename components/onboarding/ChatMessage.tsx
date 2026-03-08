@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { ChatMessage } from '@/types/onboarding';
 import { BUSINESS_TEMPLATES } from '@/lib/onboarding/templates';
 
@@ -11,18 +11,25 @@ interface ChatMessageProps {
   onBusinessTypeSelect?: (typeId: string) => void;
 }
 
-// Detect numbered options like "1️⃣ Personal/Family" or "1. Personal/Family"
+// Detect if message contains "pick all that apply" or "select multiple"
+function isMultiSelect(text: string): boolean {
+  const lower = text.toLowerCase();
+  return lower.includes('all that apply') || lower.includes('select multiple') || lower.includes('pick all');
+}
+
+// Detect numbered options like "1️⃣ Cozy & Warm" or "1. Option"
 function extractOptions(text: string): string[] | null {
   const optionPatterns = [
-    /^[1-4]️⃣\s+(.+)$/gm,
-    /^[1-4]\.\s+(.+)$/gm,
-    /^[1-4]\)\s+(.+)$/gm,
+    /^([1-9]️⃣)\s+(.+)$/gm,
+    /^([1-9])\.\s+(.+)$/gm,
+    /^([1-9])\)\s+(.+)$/gm,
   ];
 
   for (const pattern of optionPatterns) {
     const matches = [...text.matchAll(pattern)];
     if (matches.length >= 2) {
-      return matches.map(m => m[1].trim());
+      // Return the full option text WITH the number emoji
+      return matches.map(m => m[2].trim());
     }
   }
   return null;
@@ -46,9 +53,87 @@ function BusinessTypePicker({ onSelect }: { onSelect: (typeId: string) => void }
   );
 }
 
+// ── Multi-Select Options ──────────────────────────────────────────
+function MultiSelectOptions({ options, onConfirm }: { options: string[]; onConfirm: (selected: string[]) => void }) {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggle = (opt: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(opt)) next.delete(opt);
+      else next.add(opt);
+      return next;
+    });
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        {options.map((opt, i) => {
+          const isSelected = selected.has(opt);
+          return (
+            <button
+              key={i}
+              onClick={() => toggle(opt)}
+              className="px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150 active:scale-95"
+              style={{
+                borderColor: isSelected ? '#10F48B' : '#10F48B40',
+                background: isSelected ? '#10F48B25' : '#10F48B10',
+                color: isSelected ? '#10F48B' : '#F4F4FC',
+                boxShadow: isSelected ? '0 0 8px rgba(16,244,139,0.2)' : 'none',
+              }}
+            >
+              {isSelected ? '✓ ' : ''}{opt}
+            </button>
+          );
+        })}
+      </div>
+      {selected.size > 0 && (
+        <button
+          onClick={() => onConfirm(Array.from(selected))}
+          className="px-4 py-2 text-xs font-bold rounded-full transition-all duration-150 active:scale-95"
+          style={{
+            background: '#10F48B',
+            color: '#050314',
+          }}
+        >
+          Confirm ({selected.size}) →
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Single-Select Options ─────────────────────────────────────────
+function SingleSelectOptions({ options, onSelect }: { options: string[]; onSelect: (option: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((opt, i) => (
+        <button
+          key={i}
+          onClick={() => onSelect(opt)}
+          className="px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150 active:scale-95"
+          style={{
+            borderColor: '#10F48B40',
+            background: '#10F48B10',
+            color: '#F4F4FC',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = '#10F48B25';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = '#10F48B10';
+          }}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ── User message ──────────────────────────────────────────────────
 function UserMessage({ message }: { message: ChatMessage }) {
-  // Don't render internal system messages
   if (message.content.startsWith('[[')) return null;
 
   return (
@@ -71,13 +156,13 @@ export function ChatMessageComponent({
   onBusinessTypeSelect,
 }: ChatMessageProps) {
   const isUser = message.role === 'user';
-
   if (isUser) return <UserMessage message={message} />;
 
   const showBusinessPicker =
     isLatest && Boolean(message.metadata?.showBusinessTypePicker) && Boolean(onBusinessTypeSelect);
 
   const options = isLatest && !showBusinessPicker ? extractOptions(message.content) : null;
+  const multiSelect = options && isMultiSelect(message.content);
 
   return (
     <div className="flex items-start space-x-3 max-w-sm">
@@ -111,30 +196,16 @@ export function ChatMessageComponent({
           <BusinessTypePicker onSelect={onBusinessTypeSelect} />
         )}
 
-        {/* Option buttons */}
+        {/* Option buttons — multi or single select */}
         {options && onOptionClick && (
-          <div className="flex flex-wrap gap-2">
-            {options.map((opt, i) => (
-              <button
-                key={i}
-                onClick={() => onOptionClick(opt)}
-                className="px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150 active:scale-95"
-                style={{
-                  borderColor: '#10F48B40',
-                  background: '#10F48B10',
-                  color: '#F4F4FC',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = '#10F48B25';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = '#10F48B10';
-                }}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
+          multiSelect ? (
+            <MultiSelectOptions
+              options={options}
+              onConfirm={(selected) => onOptionClick(selected.join(', '))}
+            />
+          ) : (
+            <SingleSelectOptions options={options} onSelect={onOptionClick} />
+          )
         )}
       </div>
     </div>
