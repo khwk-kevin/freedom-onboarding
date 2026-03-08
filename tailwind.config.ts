@@ -36,7 +36,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        heading: ['var(--font-heading)', 'sans-serif'],
+        heading: ['var(--font-thai)', 'var(--font-heading)', 'sans-serif'],
         thai: ['var(--font-thai)', 'var(--font-heading)', 'sans-serif'],
       },
       backgroundImage: {
