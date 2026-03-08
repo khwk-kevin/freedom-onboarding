@@ -41,10 +41,10 @@ export default function ExploreFeatures() {
 
       <div className="relative z-10 max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
-          <span className="text-fw-green text-xs font-heading font-semibold tracking-[0.2em] uppercase">
+          <span className="text-fw-green text-xs font-semibold tracking-[0.2em] uppercase">
             EXPLORE FEATURES
           </span>
-          <h2 className="font-heading font-bold text-3xl md:text-5xl mt-4">
+          <h2 className="font-bold text-3xl md:text-5xl mt-4">
             ฟีเจอร์ที่ช่วยยกระดับธุรกิจคุณ
           </h2>
         </div>
@@ -54,12 +54,12 @@ export default function ExploreFeatures() {
             <div key={si}>
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-px flex-1 bg-gradient-to-r from-fw-green/30 to-transparent" />
-                <span className="text-fw-green text-xs font-heading font-semibold tracking-[0.15em]">
+                <span className="text-fw-green text-xs font-semibold tracking-[0.15em]">
                   {section.label}
                 </span>
                 <div className="h-px flex-1 bg-gradient-to-l from-fw-green/30 to-transparent" />
               </div>
-              <h3 className="font-heading font-bold text-xl md:text-2xl text-center mb-8">
+              <h3 className="font-bold text-xl md:text-2xl text-center mb-8">
                 {section.title}
               </h3>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

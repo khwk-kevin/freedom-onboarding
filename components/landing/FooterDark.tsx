@@ -6,10 +6,10 @@ export default function FooterDark() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-fw-green to-fw-cyan flex items-center justify-center text-fw-bg font-heading font-bold text-xs">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-fw-green to-fw-cyan flex items-center justify-center text-fw-bg font-bold text-xs">
                 FW
               </div>
-              <span className="font-heading font-semibold text-sm tracking-wider">
+              <span className="font-semibold text-sm tracking-wider">
                 FREEDOM WORLD
               </span>
             </div>

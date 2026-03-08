@@ -12,7 +12,7 @@ export default function BottomCTADark() {
       </div>
 
       <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
-        <h2 className="font-heading font-bold text-3xl md:text-5xl mb-6">
+        <h2 className="font-bold text-3xl md:text-5xl mb-6">
           พร้อมเริ่มต้นหรือยัง?
         </h2>
         <p className="text-fw-text-secondary text-lg mb-10 leading-relaxed">

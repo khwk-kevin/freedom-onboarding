@@ -34,7 +34,7 @@ export default function HeroDark() {
         </div>
 
         {/* Headline */}
-        <h1 className="font-heading font-bold text-4xl sm:text-5xl md:text-7xl leading-tight mb-6">
+        <h1 className="font-bold text-4xl sm:text-5xl md:text-7xl leading-tight mb-6">
           <span className="text-fw-text-primary">ธุรกิจของคุณ.</span>
           <br />
           <span className="text-fw-text-primary">โลกของคุณ.</span>
@@ -74,15 +74,15 @@ export default function HeroDark() {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto">
           <div>
-            <div className="text-2xl md:text-3xl font-heading font-bold text-fw-green">800K+</div>
+            <div className="text-2xl md:text-3xl font-bold text-fw-green">800K+</div>
             <div className="text-fw-text-tertiary text-xs mt-1">ผู้ใช้งาน</div>
           </div>
           <div>
-            <div className="text-2xl md:text-3xl font-heading font-bold text-fw-green">1,000+</div>
+            <div className="text-2xl md:text-3xl font-bold text-fw-green">1,000+</div>
             <div className="text-fw-text-tertiary text-xs mt-1">ร้านค้าพาร์ทเนอร์</div>
           </div>
           <div>
-            <div className="text-2xl md:text-3xl font-heading font-bold text-fw-green">฿50M+</div>
+            <div className="text-2xl md:text-3xl font-bold text-fw-green">฿50M+</div>
             <div className="text-fw-text-tertiary text-xs mt-1">ยอดธุรกรรม</div>
           </div>
         </div>

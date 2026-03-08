@@ -19,11 +19,11 @@ export default function SignupPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fw-green to-fw-cyan flex items-center justify-center text-fw-bg font-heading font-bold text-sm">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fw-green to-fw-cyan flex items-center justify-center text-fw-bg font-bold text-sm">
               FW
             </div>
           </Link>
-          <h1 className="font-heading font-bold text-2xl text-fw-text-primary">Freedom World</h1>
+          <h1 className="font-bold text-2xl text-fw-text-primary">Freedom World</h1>
           <p className="text-fw-text-secondary text-sm mt-1">สร้างบัญชีร้านค้าของคุณ</p>
         </div>
 

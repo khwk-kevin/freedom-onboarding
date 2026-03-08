@@ -49,10 +49,10 @@ export default function FeaturesDark() {
       <div className="max-w-7xl mx-auto px-6">
         {/* Section header */}
         <div className="text-center mb-16">
-          <span className="text-fw-green text-xs font-heading font-semibold tracking-[0.2em] uppercase">
+          <span className="text-fw-green text-xs font-semibold tracking-[0.2em] uppercase">
             ALL-IN-ONE PLATFORM
           </span>
-          <h2 className="font-heading font-bold text-3xl md:text-5xl mt-4 mb-6">
+          <h2 className="font-bold text-3xl md:text-5xl mt-4 mb-6">
             แพลตฟอร์มครบวงจร
             <br />
             <span className="text-fw-text-secondary">เพื่อเพิ่มยอดขายและสร้างชุมชน</span>
@@ -73,7 +73,7 @@ export default function FeaturesDark() {
                 <div className="w-12 h-12 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-fw-green mb-5">
                   {f.icon}
                 </div>
-                <h3 className="font-heading font-semibold text-xl mb-3 text-fw-text-primary">
+                <h3 className="font-semibold text-xl mb-3 text-fw-text-primary">
                   {f.title}
                 </h3>
                 <p className="text-fw-text-secondary text-sm leading-relaxed">

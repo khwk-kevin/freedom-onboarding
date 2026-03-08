@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
 import { Kanit } from 'next/font/google'
 import './globals.css'
 import { PHProvider, PostHogPageview } from '@/lib/posthog/provider'
@@ -8,7 +7,6 @@ import { GTMProvider } from '@/lib/gtm/provider'
 const kanit = Kanit({
   subsets: ['thai', 'latin'],
   weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-thai',
 })
 
 export const metadata: Metadata = {
@@ -23,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="th">
-      <body className={`${GeistSans.variable} ${kanit.variable} font-thai bg-fw-bg text-fw-text-primary antialiased`}>
+      <body className={`${kanit.className} bg-fw-bg text-fw-text-primary antialiased`}>
         <PHProvider>
           <GTMProvider />
           <PostHogPageview />

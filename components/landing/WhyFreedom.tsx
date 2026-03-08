@@ -27,10 +27,10 @@ export default function WhyFreedom() {
       <div className="relative z-10 max-w-6xl mx-auto px-6">
         {/* Section header */}
         <div className="text-center mb-16">
-          <span className="text-fw-green text-xs font-heading font-semibold tracking-[0.2em] uppercase">
+          <span className="text-fw-green text-xs font-semibold tracking-[0.2em] uppercase">
             WHY FREEDOM WORLD
           </span>
-          <h2 className="font-heading font-bold text-3xl md:text-5xl mt-4">
+          <h2 className="font-bold text-3xl md:text-5xl mt-4">
             ทำไมต้อง Freedom World?
           </h2>
         </div>
@@ -43,7 +43,7 @@ export default function WhyFreedom() {
               className="group bg-white/[0.03] border border-white/[0.06] rounded-2xl p-8 text-center hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-300"
             >
               <div className="text-4xl mb-5">{r.emoji}</div>
-              <h3 className="font-heading font-bold text-lg mb-3 text-fw-text-primary">
+              <h3 className="font-bold text-lg mb-3 text-fw-text-primary">
                 {r.title}
               </h3>
               <p className="text-fw-text-secondary text-sm leading-relaxed">
