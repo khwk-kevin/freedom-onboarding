@@ -259,7 +259,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         const currentStep = extractions.step;
         console.log('[onboarding] step:', currentStep, 'extractions:', extractions);
         
-        if (currentStep === '6' && communityData.businessType && !communityData.logo) {
+        if (currentStep === '6' && communityData.businessType && !communityData.banner) {
           setTimeout(async () => {
             try {
               setIsGeneratingLogo(true);
@@ -268,7 +268,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                 ...communityData,
                 ...tagUpdates,
               };
-              await generateImageInternal('logo', enrichedData);
+              await generateImageInternal('banner', enrichedData);
             } catch {
               // Logo generation failure is non-fatal
             } finally {
@@ -351,9 +351,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     if (result.success && result.imageUrl) {
       setCommunityData((prev) => ({ ...prev, [type]: result.imageUrl }));
 
-      // Show signup wall after logo is generated (if still anonymous)
-      // Give them 3 seconds to appreciate the logo before asking to sign up
-      if (type === 'logo' && isAnonymous) {
+      // Show signup wall after cover page is generated (if still anonymous)
+      // Give them 3 seconds to appreciate the cover before asking to sign up
+      if ((type === 'banner' || type === 'logo') && isAnonymous) {
         setTimeout(() => setShowSignupWall(true), 3000);
       }
     } else {

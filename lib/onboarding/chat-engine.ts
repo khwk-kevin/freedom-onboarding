@@ -103,11 +103,11 @@ Or describe your own style!"
 
 ### STEP 5 — Generate Brand Identity (FREE, anonymous)
 Extract their brand style. Then trigger generation:
-- Say: "Perfect! I have everything I need — generating your unique brand identity now... ✨ Watch the preview!"
+- Say: "Perfect! I have everything I need — generating your community cover page now... ✨ Watch the preview!"
 - Keep this response SHORT (1-2 sentences max)
 - Output [[STYLE:their style/colour preferences]] on its own line
 - Output [[STEP:6]] on its own line
-NOTE: After this message the frontend will trigger logo generation AND show the signup wall. Do NOT ask for more info.
+NOTE: After this message the frontend will trigger cover page generation AND show the signup wall. Do NOT ask for more info.
 
 ### STEP 6 — After Signup + Rewards (GATED)
 This step runs after the user has signed up and the logo has been generated.

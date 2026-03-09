@@ -11,26 +11,20 @@ interface ChatMessageProps {
   onBusinessTypeSelect?: (typeId: string) => void;
 }
 
-// Detect if message contains "pick all that apply" or "select multiple"
 function isMultiSelect(text: string): boolean {
   const lower = text.toLowerCase();
   return lower.includes('all that apply') || lower.includes('select multiple') || lower.includes('pick all');
 }
 
-// Detect numbered options like "1️⃣ Cozy & Warm" or "1. Option"
 function extractOptions(text: string): string[] | null {
   const optionPatterns = [
     /^([1-9]️⃣)\s+(.+)$/gm,
     /^([1-9])\.\s+(.+)$/gm,
     /^([1-9])\)\s+(.+)$/gm,
   ];
-
   for (const pattern of optionPatterns) {
     const matches = [...text.matchAll(pattern)];
-    if (matches.length >= 2) {
-      // Return the full option text WITH the number emoji
-      return matches.map(m => m[2].trim());
-    }
+    if (matches.length >= 2) return matches.map(m => m[2].trim());
   }
   return null;
 }
@@ -43,7 +37,12 @@ function BusinessTypePicker({ onSelect }: { onSelect: (typeId: string) => void }
         <button
           key={template.id}
           onClick={() => onSelect(template.id)}
-          className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/25 text-white transition-all duration-150 active:scale-95"
+          className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl transition-all duration-150 active:scale-95"
+          style={{
+            background: 'var(--oc-bubble-bg)',
+            border: '1px solid var(--oc-bubble-border)',
+            color: 'var(--oc-text)',
+          }}
         >
           <span className="text-2xl leading-none">{template.icon}</span>
           <span className="text-xs font-medium text-center leading-tight">{template.name}</span>
@@ -77,9 +76,9 @@ function MultiSelectOptions({ options, onConfirm }: { options: string[]; onConfi
               onClick={() => toggle(opt)}
               className="px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150 active:scale-95"
               style={{
-                borderColor: isSelected ? '#10F48B' : '#10F48B40',
-                background: isSelected ? '#10F48B25' : '#10F48B10',
-                color: isSelected ? '#10F48B' : '#F4F4FC',
+                borderColor: isSelected ? '#10F48B' : 'var(--oc-btn-border)',
+                background: isSelected ? 'rgba(16,244,139,0.2)' : 'var(--oc-btn-bg)',
+                color: isSelected ? '#10F48B' : 'var(--oc-text)',
                 boxShadow: isSelected ? '0 0 8px rgba(16,244,139,0.2)' : 'none',
               }}
             >
@@ -92,10 +91,7 @@ function MultiSelectOptions({ options, onConfirm }: { options: string[]; onConfi
         <button
           onClick={() => onConfirm(Array.from(selected))}
           className="px-4 py-2 text-xs font-bold rounded-full transition-all duration-150 active:scale-95"
-          style={{
-            background: '#10F48B',
-            color: '#050314',
-          }}
+          style={{ background: '#10F48B', color: '#050314' }}
         >
           Confirm ({selected.size}) →
         </button>
@@ -112,17 +108,11 @@ function SingleSelectOptions({ options, onSelect }: { options: string[]; onSelec
         <button
           key={i}
           onClick={() => onSelect(opt)}
-          className="px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150 active:scale-95"
+          className="px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150 active:scale-95 hover:opacity-80"
           style={{
-            borderColor: '#10F48B40',
-            background: '#10F48B10',
-            color: '#F4F4FC',
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = '#10F48B25';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = '#10F48B10';
+            borderColor: 'var(--oc-btn-border)',
+            background: 'var(--oc-btn-bg)',
+            color: 'var(--oc-text)',
           }}
         >
           {opt}
@@ -135,7 +125,6 @@ function SingleSelectOptions({ options, onSelect }: { options: string[]; onSelec
 // ── User message ──────────────────────────────────────────────────
 function UserMessage({ message }: { message: ChatMessage }) {
   if (message.content.startsWith('[[')) return null;
-
   return (
     <div className="flex flex-col items-end space-y-1">
       <div
@@ -150,59 +139,47 @@ function UserMessage({ message }: { message: ChatMessage }) {
 
 // ── AVA message ───────────────────────────────────────────────────
 export function ChatMessageComponent({
-  message,
-  isLatest,
-  onOptionClick,
-  onBusinessTypeSelect,
+  message, isLatest, onOptionClick, onBusinessTypeSelect,
 }: ChatMessageProps) {
   const isUser = message.role === 'user';
   if (isUser) return <UserMessage message={message} />;
 
   const showBusinessPicker =
     isLatest && Boolean(message.metadata?.showBusinessTypePicker) && Boolean(onBusinessTypeSelect);
-
   const options = isLatest && !showBusinessPicker ? extractOptions(message.content) : null;
   const multiSelect = options && isMultiSelect(message.content);
 
   return (
     <div className="flex items-start space-x-3 max-w-sm">
-      {/* AVA avatar */}
       <div
         className="w-8 h-8 rounded-full shrink-0 mt-1 flex items-center justify-center text-xs font-bold border"
         style={{
-          background: 'linear-gradient(135deg, #10F48B20, #10F48B40)',
-          borderColor: '#10F48B40',
+          background: 'rgba(16,244,139,0.1)',
+          borderColor: 'rgba(16,244,139,0.25)',
           color: '#10F48B',
         }}
       >
         AVA
       </div>
-
       <div className="space-y-2 flex-1">
-        {/* Message bubble */}
         <div
           className="rounded-2xl rounded-tl-none px-4 py-3 text-sm leading-relaxed"
           style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.10)',
-            color: '#F4F4FC',
+            background: 'var(--oc-bubble-bg)',
+            border: '1px solid var(--oc-bubble-border)',
+            color: 'var(--oc-text)',
           }}
         >
           <p className="whitespace-pre-wrap">{message.content}</p>
         </div>
 
-        {/* Business type picker */}
         {showBusinessPicker && onBusinessTypeSelect && (
           <BusinessTypePicker onSelect={onBusinessTypeSelect} />
         )}
 
-        {/* Option buttons — multi or single select */}
         {options && onOptionClick && (
           multiSelect ? (
-            <MultiSelectOptions
-              options={options}
-              onConfirm={(selected) => onOptionClick(selected.join(', '))}
-            />
+            <MultiSelectOptions options={options} onConfirm={(selected) => onOptionClick(selected.join(', '))} />
           ) : (
             <SingleSelectOptions options={options} onSelect={onOptionClick} />
           )
@@ -229,8 +206,8 @@ export function TypingIndicator() {
       <div
         className="rounded-2xl rounded-tl-none px-4 py-4 flex items-center space-x-1.5"
         style={{
-          background: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.10)',
+          background: 'var(--oc-bubble-bg)',
+          border: '1px solid var(--oc-bubble-border)',
         }}
       >
         {[0, 160, 320].map((delay) => (

@@ -52,26 +52,16 @@ export function OnboardingChat() {
 
   const progress = Math.min(Math.round((exchangeCount / 6) * 100), 100);
 
-  // Theme colors
-  const theme = isDark
-    ? {
-        bg: '#050314',
-        cardBg: 'rgba(255,255,255,0.03)',
-        border: 'rgba(255,255,255,0.07)',
-        headerBg: '#050314',
-        text: '#F4F4FC',
-        textMuted: 'rgba(244,244,252,0.4)',
-        inputBg: 'rgba(255,255,255,0.05)',
-      }
-    : {
-        bg: '#FFFFFF',
-        cardBg: '#F8F9FA',
-        border: '#E5E7EB',
-        headerBg: '#FFFFFF',
-        text: '#111827',
-        textMuted: '#6B7280',
-        inputBg: '#F3F4F6',
-      };
+  // Theme uses CSS variables from globals.css (auto light/dark via prefers-color-scheme)
+  const theme = {
+    bg: 'var(--oc-bg)',
+    cardBg: 'var(--oc-card-bg)',
+    border: 'var(--oc-border)',
+    headerBg: 'var(--oc-bg)',
+    text: 'var(--oc-text)',
+    textMuted: 'var(--oc-text-muted)',
+    inputBg: 'var(--oc-input-bg)',
+  };
 
   return (
     <div
@@ -129,7 +119,7 @@ export function OnboardingChat() {
 
             {/* Progress bar (header right) */}
             <div className="hidden sm:flex items-center gap-2 text-xs shrink-0" style={{ color: theme.textMuted }}>
-              <div className="w-20 md:w-24 h-1 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB' }}>
+              <div className="w-20 md:w-24 h-1 rounded-full overflow-hidden" style={{ background: 'var(--oc-border)' }}>
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{ width: `${progress}%`, background: '#10F48B' }}
@@ -140,7 +130,7 @@ export function OnboardingChat() {
           </header>
 
           {/* Mobile progress bar */}
-          <div className="sm:hidden h-1 w-full shrink-0" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB' }}>
+          <div className="sm:hidden h-1 w-full shrink-0" style={{ background: 'var(--oc-border)' }}>
             <div
               className="h-full transition-all duration-500"
               style={{ width: `${progress}%`, background: '#10F48B' }}
@@ -188,7 +178,7 @@ export function OnboardingChat() {
                 style={{ background: 'rgba(16,244,139,0.08)', color: '#10F48B', border: '1px solid rgba(16,244,139,0.2)' }}
               >
                 <span className="animate-spin">⟳</span>
-                Generating your logo...
+                Generating your cover page...
               </div>
             )}
 
