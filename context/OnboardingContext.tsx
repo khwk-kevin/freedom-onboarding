@@ -290,6 +290,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                   vibe: scrapeData.vibe,
                   category: scrapeData.category,
                   source: scrapeData.source,
+                  address: scrapeData.address,
+                  rating: scrapeData.followerCount,
                 })}]]`;
                 // Send as a system message to AVA
                 await sendMessage(contextMsg);

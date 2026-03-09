@@ -9,7 +9,7 @@ const anthropic = new Anthropic({
 });
 
 export interface ScrapedBrandContext {
-  source: 'instagram' | 'facebook' | 'website' | 'unknown';
+  source: 'instagram' | 'facebook' | 'website' | 'google_maps' | 'unknown';
   url: string;
   businessName?: string;
   bio?: string;
@@ -20,6 +20,7 @@ export interface ScrapedBrandContext {
   imageUrls?: string[];
   followerCount?: string;
   category?: string;
+  address?: string;
   error?: string;
 }
 
@@ -201,7 +202,7 @@ export async function scrapeBrandContext(rawUrl: string): Promise<ScrapedBrandCo
         return { source: 'unknown', url, error: placeData.error };
       }
       return {
-        source: 'website', // Treat as website for downstream compatibility
+        source: 'google_maps',
         url,
         businessName: placeData.businessName,
         bio: placeData.description,
@@ -211,6 +212,7 @@ export async function scrapeBrandContext(rawUrl: string): Promise<ScrapedBrandCo
         imageUrls: placeData.imageUrls,
         category: placeData.category,
         followerCount: placeData.rating ? `${placeData.rating}★ (${placeData.reviewCount || ''} reviews)` : undefined,
+        address: placeData.address,
       };
     } catch (err) {
       console.error('[scraper] Google Maps scrape failed:', err);
