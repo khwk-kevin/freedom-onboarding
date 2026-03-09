@@ -264,6 +264,30 @@ export function ChatMessageComponent({
     );
   }
 
+  if (cardType === 'mission_board' && cardData && onCardAction) {
+    const { MissionBoardCard } = require('./cards/MissionBoardCard');
+    return (
+      <div className="flex items-start space-x-3 max-w-sm">
+        <AvaAvatar />
+        <div className="space-y-2 flex-1">
+          {message.content && (
+            <div className="rounded-2xl rounded-tl-none px-4 py-3 text-sm leading-relaxed"
+              style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)', color: 'var(--oc-text)' }}>
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            </div>
+          )}
+          <MissionBoardCard
+            businessName={cardData.businessName as string}
+            businessType={cardData.businessType as string}
+            primaryColor={cardData.primaryColor as string}
+            onAccept={() => onCardAction('mission_accept', cardData)}
+            onCustomize={() => onCardAction('mission_customize', cardData)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (cardType === 'brand_description' && cardData && onCardAction) {
     return (
       <div className="flex items-start space-x-3 max-w-sm">

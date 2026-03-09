@@ -644,6 +644,27 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       sendMessage("Not quite — let me fill in the details myself");
     } else if (action === 'rewards_accept') {
       sendMessage("Love these reward ideas! Let's use them ✨");
+      
+      // Show the mission board card after a delay
+      setTimeout(() => {
+        setMessages((prev) => [...prev, {
+          role: 'assistant',
+          content: "Here's what your customers will see — their mission board! 🎮 This is the hook that keeps them coming back:",
+          timestamp: new Date(),
+          metadata: {
+            cardType: 'mission_board',
+            cardData: {
+              businessName: communityData.name || 'Your Business',
+              businessType: communityData.businessType || 'default',
+              primaryColor: communityData.primaryColor || '#10F48B',
+            },
+          },
+        }]);
+      }, 2000);
+    } else if (action === 'mission_accept') {
+      sendMessage("The mission board looks amazing! My customers will love this 🎮");
+    } else if (action === 'mission_customize') {
+      sendMessage("Let me customize the missions a bit");
     } else if (action === 'description_accept') {
       sendMessage("That description is perfect!");
     } else if (action === 'description_edit') {
