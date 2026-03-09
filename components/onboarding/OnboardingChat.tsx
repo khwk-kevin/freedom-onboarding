@@ -70,15 +70,7 @@ export function OnboardingChat() {
       className="h-[100dvh] w-screen flex items-center justify-center overflow-hidden"
       style={{ background: theme.bg }}
     >
-      {/* Signup Wall Overlay */}
-      {showSignupWall && (
-        <SignupWall
-          businessName={communityData.name}
-          logoUrl={communityData.logo}
-          onSignupSuccess={onSignupSuccess}
-          onContinueWithoutSaving={dismissSignupWall}
-        />
-      )}
+      {/* Signup wall moved inline — see below chat area */}
 
       {/* Main Container */}
       <main
@@ -203,11 +195,21 @@ export function OnboardingChat() {
             )}
           </div>
 
+          {/* Signup banner — inline above chat input, non-blocking */}
+          {showSignupWall && (
+            <SignupWall
+              businessName={communityData.name}
+              logoUrl={communityData.logo}
+              onSignupSuccess={onSignupSuccess}
+              onContinueWithoutSaving={dismissSignupWall}
+            />
+          )}
+
           {/* Chat Input */}
           <ChatInput
             onSendMessage={sendMessage}
             onUploadImage={(url, type) => updateCommunityData({ [type]: url })}
-            disabled={isLoading || showSignupWall}
+            disabled={isLoading}
           />
         </section>
 
