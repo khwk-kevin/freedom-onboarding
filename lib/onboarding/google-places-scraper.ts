@@ -25,6 +25,8 @@ export interface GooglePlaceData {
   products?: string[];
   vibe?: string;
   error?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 // Detect if URL is a Google Maps link
@@ -183,7 +185,7 @@ async function tryPlacesApi(query: string): Promise<GooglePlaceData | null> {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.types,places.editorialSummary,places.photos,places.primaryType,places.websiteUri,places.googleMapsUri,places.rating,places.userRatingCount,places.priceLevel,places.nationalPhoneNumber',
+        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.location,places.types,places.editorialSummary,places.photos,places.primaryType,places.websiteUri,places.googleMapsUri,places.rating,places.userRatingCount,places.priceLevel,places.nationalPhoneNumber',
       },
       body: JSON.stringify({ textQuery: query, languageCode: 'en' }),
       signal: AbortSignal.timeout(10000),
@@ -222,6 +224,9 @@ async function tryPlacesApi(query: string): Promise<GooglePlaceData | null> {
       description: place.editorialSummary?.text,
       priceLevel: mapPriceLevel(place.priceLevel),
       imageUrls,
+      // Location coordinates for POI creation
+      latitude: place.location?.latitude,
+      longitude: place.location?.longitude,
     };
   } catch (err) {
     console.log('[google-places] API error:', err);

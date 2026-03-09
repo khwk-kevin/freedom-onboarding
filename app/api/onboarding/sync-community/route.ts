@@ -283,7 +283,62 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── 6. Log event ────────────────────────────────────────────
+    // ── 6. Create POI (business location) if we have coordinates ──
+    if (orgId && communityId && accessToken && communityData.location) {
+      try {
+        const loc = communityData.location;
+        // loc should have: { latitude, longitude, name, address, images? }
+        if (loc.latitude && loc.longitude) {
+          // Upload location images first if any
+          const poiImages: string[] = [];
+          const locationPhotos = loc.images || communityData.scrapedImages || [];
+          for (const imgUrl of locationPhotos.slice(0, 5)) {
+            try {
+              const imgBlob = await urlToBlob(imgUrl, 'poi-image');
+              if (imgBlob) {
+                const uploadForm = new FormData();
+                uploadForm.append('file', imgBlob.blob, imgBlob.name);
+                const uploadRes = await fetch(
+                  `${FW_API_BASE}/organizations/${orgId}/community/${communityId}/poi/requests/image-upload`,
+                  { method: 'POST', headers: authHeaders, body: uploadForm },
+                );
+                const uploadResult = await uploadRes.json().catch(() => null);
+                if (uploadResult?.data?.link) {
+                  poiImages.push(uploadResult.data.link);
+                }
+              }
+            } catch (imgErr) {
+              console.error('[sync] POI image upload failed:', imgErr);
+            }
+          }
+
+          // Create POI request
+          const poiBody = {
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            name: loc.name || communityData.name || 'Business Location',
+            address: loc.address || loc.formattedAddress || '',
+            images: poiImages,
+          };
+
+          console.log('[sync] Creating POI request:', poiBody.name, poiBody.address);
+          const poiRes = await fetch(
+            `${FW_API_BASE}/organizations/${orgId}/community/${communityId}/poi/requests`,
+            {
+              method: 'POST',
+              headers: { ...authHeaders, 'Content-Type': 'application/json' },
+              body: JSON.stringify(poiBody),
+            },
+          );
+          const poiResult = await poiRes.json().catch(() => ({ status: poiRes.status }));
+          console.log('[sync] POI result:', JSON.stringify(poiResult).slice(0, 200));
+        }
+      } catch (poiErr) {
+        console.error('[sync] POI creation failed:', poiErr);
+      }
+    }
+
+    // ── 7. Log event ────────────────────────────────────────────
     try {
       await supabase.from('events').insert({
         merchant_id: merchantId,

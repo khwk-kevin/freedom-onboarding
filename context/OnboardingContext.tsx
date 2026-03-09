@@ -20,6 +20,13 @@ interface MerchantOnboardingData extends Partial<CommunityData> {
   step?: string;
   scrapedImages?: string[];
   scrapedUrl?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+    name: string;
+    address: string;
+    images?: string[];
+  };
 }
 
 interface OnboardingContextType {
@@ -326,6 +333,16 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                 if (scrapeData.description) scrapeUpdates.description = scrapeData.description;
                 if (scrapeData.imageUrls) scrapeUpdates.scrapedImages = scrapeData.imageUrls;
                 if (scrapeData.category) scrapeUpdates.businessType = scrapeData.category;
+                // Store location data from Google Places for POI creation
+                if (scrapeData.latitude && scrapeData.longitude) {
+                  scrapeUpdates.location = {
+                    latitude: scrapeData.latitude,
+                    longitude: scrapeData.longitude,
+                    name: scrapeData.businessName || '',
+                    address: scrapeData.address || scrapeData.formattedAddress || '',
+                    images: scrapeData.imageUrls || [],
+                  };
+                }
                 setCommunityData((prev) => ({ ...prev, ...scrapeUpdates }));
 
                 // Replace scraping indicator with the appropriate interactive card
@@ -537,6 +554,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
               audiencePersona: communityData.audiencePersona,
               scrapedUrl: communityData.scrapedUrl,
               scrapedImages: communityData.scrapedImages,
+              // Location from Google Places scrape (for POI creation)
+              location: communityData.location,
               email,
             },
           }),
