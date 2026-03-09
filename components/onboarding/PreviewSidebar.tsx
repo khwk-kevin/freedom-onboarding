@@ -47,12 +47,12 @@ export function PreviewSidebar({
   };
 
   // Theme
-  const bg = isDark ? '#0D0B1E' : '#F8F9FA';
-  const border = isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB';
-  const cardBg = isDark ? 'rgba(255,255,255,0.04)' : '#FFFFFF';
+  const bg = isDark ? '#0D0B1E' : '#EEF2F6';
+  const border = isDark ? 'rgba(255,255,255,0.08)' : '#D6DCE4';
+  const cardBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.7)';
   const text = isDark ? '#F4F4FC' : '#111827';
-  const textMuted = isDark ? 'rgba(244,244,252,0.5)' : '#6B7280';
-  const labelColor = isDark ? 'rgba(244,244,252,0.35)' : '#9CA3AF';
+  const textMuted = isDark ? 'rgba(244,244,252,0.5)' : '#5B6578';
+  const labelColor = isDark ? 'rgba(244,244,252,0.35)' : '#7C879A';
 
   return (
     <section
