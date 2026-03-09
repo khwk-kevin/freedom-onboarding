@@ -30,7 +30,7 @@ export interface GooglePlaceData {
 // Detect if URL is a Google Maps link
 export function isGoogleMapsUrl(url: string): boolean {
   const lower = url.toLowerCase();
-  return lower.includes('google.com/maps') || lower.includes('maps.google') || lower.includes('goo.gl/maps');
+  return lower.includes('google.com/maps') || lower.includes('maps.google') || lower.includes('goo.gl/maps') || lower.includes('maps.app.goo.gl');
 }
 
 // Build Google Maps search URL
@@ -247,6 +247,41 @@ function mapPriceLevel(level?: string): string | undefined {
   return map[level];
 }
 
+// Resolve shortened Google Maps URLs (maps.app.goo.gl, goo.gl/maps) to full URLs
+async function resolveShortUrl(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, {
+      method: 'HEAD',
+      redirect: 'follow',
+      signal: AbortSignal.timeout(8000),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+      },
+    });
+    return res.url || url;
+  } catch {
+    // Try GET if HEAD fails
+    try {
+      const res = await fetch(url, {
+        redirect: 'follow',
+        signal: AbortSignal.timeout(8000),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        },
+      });
+      return res.url || url;
+    } catch {
+      return url;
+    }
+  }
+}
+
+// Check if URL is a shortened Google Maps link that needs resolving
+function isShortGoogleMapsUrl(url: string): boolean {
+  const lower = url.toLowerCase();
+  return lower.includes('maps.app.goo.gl') || lower.includes('goo.gl/maps');
+}
+
 // Main function: scrape Google Maps for a business
 export async function scrapeGooglePlace(input: string): Promise<GooglePlaceData> {
   let url: string;
@@ -254,7 +289,15 @@ export async function scrapeGooglePlace(input: string): Promise<GooglePlaceData>
 
   if (isGoogleMapsUrl(input)) {
     url = input;
-    searchQuery = extractSearchQuery(input) || input;
+    
+    // Resolve short URLs to get the full Google Maps URL with place name
+    if (isShortGoogleMapsUrl(url)) {
+      console.log('[google-places] Resolving short URL:', url);
+      url = await resolveShortUrl(url);
+      console.log('[google-places] Resolved to:', url);
+    }
+    
+    searchQuery = extractSearchQuery(url) || input;
   } else {
     searchQuery = input;
     url = buildSearchUrl(input);
