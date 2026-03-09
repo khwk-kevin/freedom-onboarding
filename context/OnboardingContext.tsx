@@ -234,7 +234,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         // Use extractions from the API (sent as separate SSE events)
         const tagUpdates: Partial<MerchantOnboardingData> = {};
         if (extractions.products) {
-          tagUpdates.products = extractions.products.split(',').map((p: string) => p.trim()).filter(Boolean);
+          // Products can come as array or comma-separated string
+          tagUpdates.products = Array.isArray(extractions.products) 
+            ? extractions.products 
+            : String(extractions.products).split(',').map((p: string) => p.trim()).filter(Boolean);
         }
         if (extractions.audience) {
           tagUpdates.targetAudience = extractions.audience;
