@@ -123,17 +123,30 @@ export function PreviewSidebar({
                 </span>
               </div>
             )}
-            {/* Upload button */}
+            {/* Upload + Remove buttons */}
             {!isGeneratingBanner && (
-              <button
-                onClick={(e) => { e.stopPropagation(); bannerInputRef.current?.click(); }}
-                className="absolute top-2 right-2 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ background: 'rgba(0,0,0,0.5)', color: '#fff' }}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-              </button>
+              <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={(e) => { e.stopPropagation(); bannerInputRef.current?.click(); }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ background: 'rgba(0,0,0,0.5)', color: '#fff' }}
+                  title="Upload cover"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                </button>
+                {hasBanner && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onUpdate({ banner: undefined }); }}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ background: 'rgba(239,68,68,0.7)', color: '#fff' }}
+                    title="Remove cover"
+                  >
+                    <span className="text-xs font-bold">✕</span>
+                  </button>
+                )}
+              </div>
             )}
             <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload('banner')} />
           </div>
@@ -161,13 +174,23 @@ export function PreviewSidebar({
                   <p className="text-xs font-medium truncate" style={{ color: text }}>Logo uploaded ✓</p>
                   <p className="text-[10px] mt-0.5" style={{ color: textMuted }}>Used for cover page generation</p>
                 </div>
-                <button
-                  onClick={() => logoInputRef.current?.click()}
-                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all hover:scale-105"
-                  style={{ background: `${primaryColor}15`, color: primaryColor, border: `1px solid ${primaryColor}25` }}
-                >
-                  Replace
-                </button>
+                <div className="flex gap-1.5 shrink-0">
+                  <button
+                    onClick={() => logoInputRef.current?.click()}
+                    className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all hover:scale-105"
+                    style={{ background: `${primaryColor}15`, color: primaryColor, border: `1px solid ${primaryColor}25` }}
+                  >
+                    Replace
+                  </button>
+                  <button
+                    onClick={() => onUpdate({ logo: undefined })}
+                    className="px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all hover:scale-105"
+                    style={{ background: isDark ? 'rgba(239,68,68,0.1)' : 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}
+                    title="Remove logo"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             ) : (
               <div
