@@ -101,7 +101,7 @@ export function OnboardingChat() {
               <img
                 src={isDark ? '/svgs/freedom-logo-light.svg' : '/svgs/freedom-logo-dark.svg'}
                 alt="Freedom World"
-                className="h-7 md:h-9 w-auto shrink-0"
+                className="h-8 md:h-10 w-auto shrink-0"
               />
               <div className="w-px h-5 md:h-6 shrink-0" style={{ background: theme.border }} />
               <div className="min-w-0">
@@ -141,8 +141,10 @@ export function OnboardingChat() {
             <MobilePreviewCard
               businessName={communityData.name}
               logoUrl={communityData.logo}
+              bannerUrl={communityData.banner}
               primaryColor={communityData.primaryColor}
               isGeneratingLogo={isGeneratingLogo}
+              isGeneratingBanner={isGeneratingBanner}
               isDark={isDark}
             />
           </div>

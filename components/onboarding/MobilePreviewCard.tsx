@@ -5,147 +5,157 @@ import { useState } from 'react';
 interface MobilePreviewCardProps {
   businessName?: string;
   logoUrl?: string;
+  bannerUrl?: string;
   primaryColor?: string;
   isGeneratingLogo?: boolean;
+  isGeneratingBanner?: boolean;
   isDark: boolean;
 }
 
 export function MobilePreviewCard({
   businessName,
   logoUrl,
+  bannerUrl,
   primaryColor = '#10F48B',
   isGeneratingLogo = false,
+  isGeneratingBanner = false,
   isDark,
 }: MobilePreviewCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true); // Start expanded to showcase
 
-  const cardBg = isDark ? 'rgba(255,255,255,0.04)' : '#F3F4F6';
-  const border = isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB';
-  const text = isDark ? '#F4F4FC' : '#111827';
-  const textMuted = isDark ? 'rgba(244,244,252,0.5)' : '#6B7280';
-  const expandedBg = isDark ? 'rgba(255,255,255,0.02)' : '#FAFAFA';
+  const isGenerating = isGeneratingLogo || isGeneratingBanner;
+  const hasCover = Boolean(bannerUrl);
 
   return (
     <div
-      className="mx-3 mt-2 mb-1 rounded-xl overflow-hidden transition-all duration-300"
+      className="mx-3 mt-2 mb-1 rounded-2xl overflow-hidden transition-all duration-300"
       style={{
-        background: cardBg,
-        border: `1px solid ${border}`,
+        background: isDark ? 'rgba(255,255,255,0.04)' : '#F3F4F6',
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB'}`,
       }}
     >
-      {/* Compact View — always visible, tappable */}
+      {/* Tappable header */}
       <div
-        className="flex items-center gap-3 px-3 py-2.5 cursor-pointer select-none"
-        style={{ minHeight: '72px' }}
-        onClick={() => setIsExpanded((v) => !v)}
+        className="flex items-center gap-3 px-3 py-2 cursor-pointer select-none"
+        onClick={() => setIsExpanded(v => !v)}
       >
-        {/* Logo or animated placeholder */}
-        <div
-          className="w-14 h-14 rounded-xl shrink-0 flex items-center justify-center overflow-hidden"
+        {/* Status dot + label */}
+        <span
+          className="w-2 h-2 rounded-full shrink-0"
           style={{
-            background: primaryColor + '18',
-            border: `2px solid ${primaryColor}40`,
+            background: isGenerating ? '#F59E0B' : hasCover ? '#10F48B' : primaryColor,
+            animation: isGenerating ? 'pulse 1.5s infinite' : 'none',
           }}
+        />
+        <span
+          className="text-xs font-medium flex-1"
+          style={{ color: isDark ? '#F4F4FC' : '#111827' }}
         >
-          {isGeneratingLogo ? (
-            <span
-              className="text-xl animate-spin inline-block"
-              style={{ color: primaryColor }}
-            >
-              ⟳
-            </span>
-          ) : logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-2xl opacity-40">🏪</span>
-          )}
-        </div>
-
-        {/* Business info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <span
-              className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0"
-              style={{ background: primaryColor }}
-            />
-            <span className="text-[10px] font-medium" style={{ color: primaryColor }}>
-              {isGeneratingLogo ? 'Generating logo...' : 'Building your community'}
-            </span>
-          </div>
-          <p className="text-sm font-semibold truncate" style={{ color: text }}>
-            {businessName || 'Your Community'}
-          </p>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <div
-              className="w-3 h-3 rounded-full shrink-0 border border-white/20"
-              style={{ background: primaryColor }}
-            />
-            <span className="text-[11px] font-mono truncate" style={{ color: textMuted }}>
-              {primaryColor}
-            </span>
-          </div>
-        </div>
-
-        {/* Expand chevron */}
-        <div
-          className="shrink-0 text-[10px] transition-transform duration-300 px-1"
+          {isGenerating
+            ? '✨ Generating your cover page...'
+            : hasCover
+              ? `${businessName || 'Your Community'} — Cover Ready!`
+              : `${businessName || 'Your Community'}`}
+        </span>
+        <span
+          className="text-[10px] transition-transform duration-300"
           style={{
-            color: textMuted,
+            color: isDark ? 'rgba(244,244,252,0.4)' : '#9CA3AF',
             transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
           }}
         >
           ▼
-        </div>
+        </span>
       </div>
 
-      {/* Expanded content — slides down */}
+      {/* Cover page showcase — the hero */}
       <div
-        className="overflow-hidden transition-all duration-300"
+        className="overflow-hidden transition-all duration-500 ease-out"
         style={{
-          maxHeight: isExpanded ? '200px' : '0px',
+          maxHeight: isExpanded ? '300px' : '0px',
           opacity: isExpanded ? 1 : 0,
         }}
       >
+        {/* Cover image area */}
         <div
-          className="px-4 py-3 border-t"
-          style={{ borderColor: border, background: expandedBg }}
+          className="mx-3 mb-3 rounded-xl overflow-hidden relative"
+          style={{
+            aspectRatio: '16/9',
+            background: hasCover
+              ? 'transparent'
+              : `linear-gradient(135deg, ${primaryColor}30, ${primaryColor}10)`,
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : '#E5E7EB'}`,
+          }}
         >
-          <p className="text-xs font-medium mb-2" style={{ color: textMuted }}>
-            Brand Colour
-          </p>
-          <div
-            className="w-full h-8 rounded-lg mb-3"
-            style={{
-              background: `linear-gradient(135deg, ${primaryColor}66, ${primaryColor})`,
-            }}
-          />
-
-          {isGeneratingLogo && (
-            <div
-              className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg"
-              style={{
-                background: primaryColor + '12',
-                color: primaryColor,
-                border: `1px solid ${primaryColor}28`,
-              }}
-            >
-              <span className="animate-spin inline-block">⟳</span>
-              Generating your unique logo — sit tight ✨
+          {isGenerating ? (
+            /* Generating animation */
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+              <div
+                className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
+                style={{ borderColor: `${primaryColor}40`, borderTopColor: 'transparent' }}
+              />
+              <span className="text-xs font-medium" style={{ color: primaryColor }}>
+                Creating your cover...
+              </span>
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  background: `linear-gradient(135deg, ${primaryColor}40, transparent 60%)`,
+                  animation: 'pulse 2s infinite',
+                }}
+              />
+            </div>
+          ) : hasCover ? (
+            /* Generated cover */
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={bannerUrl}
+              alt="Community cover"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            /* Placeholder */
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="Logo" className="w-12 h-12 rounded-xl object-cover" />
+              ) : (
+                <span className="text-3xl opacity-30">🎨</span>
+              )}
+              <span
+                className="text-[11px] font-medium"
+                style={{ color: isDark ? 'rgba(244,244,252,0.3)' : '#9CA3AF' }}
+              >
+                Cover page will appear here
+              </span>
             </div>
           )}
+        </div>
 
-          {!isGeneratingLogo && logoUrl && (
-            <p className="text-xs" style={{ color: textMuted }}>
-              ✓ Logo ready — tap to collapse and see the full preview on desktop
-            </p>
-          )}
-
-          {!isGeneratingLogo && !logoUrl && (
-            <p className="text-xs" style={{ color: textMuted }}>
-              Your logo will appear here once generated ✨
-            </p>
-          )}
+        {/* Business name bar */}
+        <div
+          className="mx-3 mb-3 px-3 py-2 rounded-lg flex items-center gap-2"
+          style={{
+            background: isDark ? 'rgba(255,255,255,0.03)' : '#FAFAFA',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : '#F3F4F6'}`,
+          }}
+        >
+          <div
+            className="w-3 h-3 rounded-full shrink-0"
+            style={{ background: primaryColor }}
+          />
+          <span
+            className="text-xs font-semibold truncate"
+            style={{ color: isDark ? '#F4F4FC' : '#111827' }}
+          >
+            {businessName || 'Your Community'}
+          </span>
+          <span
+            className="text-[10px] font-mono ml-auto shrink-0"
+            style={{ color: isDark ? 'rgba(244,244,252,0.3)' : '#9CA3AF' }}
+          >
+            {primaryColor}
+          </span>
         </div>
       </div>
     </div>
