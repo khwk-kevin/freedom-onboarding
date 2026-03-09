@@ -175,6 +175,7 @@ async function tryPlacesApi(query: string): Promise<GooglePlaceData | null> {
   if (!apiKey) return null;
 
   try {
+    console.log('[google-places] tryPlacesApi query:', query, 'keyPrefix:', apiKey.slice(0, 10));
     const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
       method: 'POST',
       headers: {
@@ -187,11 +188,13 @@ async function tryPlacesApi(query: string): Promise<GooglePlaceData | null> {
     });
 
     if (!res.ok) {
-      console.log('[google-places] API returned', res.status);
+      const errText = await res.text().catch(() => '');
+      console.log('[google-places] API returned', res.status, errText.slice(0, 200));
       return null;
     }
 
     const data = await res.json();
+    console.log('[google-places] API response places count:', data.places?.length || 0);
     const place = data.places?.[0];
     if (!place) return null;
 
@@ -298,6 +301,7 @@ export async function scrapeGooglePlace(input: string): Promise<GooglePlaceData>
     }
     
     searchQuery = extractSearchQuery(url) || input;
+    console.log('[google-places] extracted searchQuery:', searchQuery, 'from url:', url.slice(0, 80));
   } else {
     searchQuery = input;
     url = buildSearchUrl(input);
