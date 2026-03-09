@@ -616,7 +616,7 @@ export async function generateMerchantGreeting(businessType?: string): Promise<s
   }
 
   const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-20250514',
+    model: 'claude-3-haiku-20240307',
     max_tokens: 150,
     system: MERCHANT_SYSTEM_PROMPT,
     messages: [

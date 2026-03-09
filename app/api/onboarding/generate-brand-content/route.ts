@@ -78,7 +78,7 @@ Return a JSON object with the requested fields:
 Return ONLY valid JSON.`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-20250514',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 1000,
       messages: [{ role: 'user', content: prompt }],
     });

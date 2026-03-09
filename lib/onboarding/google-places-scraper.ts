@@ -134,7 +134,7 @@ async function analyzeWithClaude(html: string, query: string): Promise<Partial<G
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-20250514',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 600,
       messages: [{
         role: 'user',
