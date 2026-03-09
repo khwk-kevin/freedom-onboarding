@@ -202,13 +202,31 @@ async function tryPlacesApi(query: string): Promise<GooglePlaceData | null> {
     const place = data.places?.[0];
     if (!place) return null;
 
-    // Get photo URLs
+    // Get photo URLs — fetch each photo's media endpoint to get the real googleusercontent URL
     const imageUrls: string[] = [];
     if (place.photos?.length) {
-      for (const photo of place.photos.slice(0, 4)) {
-        // Photo reference → URL via Places Photo API
-        imageUrls.push(`https://places.googleapis.com/v1/${photo.name}/media?maxWidthPx=800&key=${apiKey}`);
+      const photoPromises = place.photos.slice(0, 4).map(async (photo: { name: string }) => {
+        try {
+          const mediaUrl = `https://places.googleapis.com/v1/${photo.name}/media?maxWidthPx=800&key=${apiKey}`;
+          const photoRes = await fetch(mediaUrl, { method: 'GET', redirect: 'manual' });
+          // The API returns JSON with photoUri, or redirects to the image
+          if (photoRes.status === 200) {
+            const photoData = await photoRes.json().catch(() => null);
+            if (photoData?.photoUri) return photoData.photoUri;
+          }
+          // If it redirects, use the Location header
+          const location = photoRes.headers.get('location');
+          if (location) return location;
+          return null;
+        } catch {
+          return null;
+        }
+      });
+      const resolvedUrls = await Promise.all(photoPromises);
+      for (const url of resolvedUrls) {
+        if (url) imageUrls.push(url);
       }
+      console.log(`[google-places] Resolved ${imageUrls.length} photo URLs`);
     }
 
     return {
