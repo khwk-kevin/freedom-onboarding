@@ -3,6 +3,7 @@ import { Kanit, Encode_Sans_Expanded } from 'next/font/google'
 import './globals.css'
 import { PHProvider, PostHogPageview } from '@/lib/posthog/provider'
 import { GTMProvider } from '@/lib/gtm/provider'
+import { TranslationProvider } from '@/context/TranslationContext'
 
 const kanit = Kanit({
   subsets: ['thai', 'latin'],
@@ -31,7 +32,9 @@ export default function RootLayout({
         <PHProvider>
           <GTMProvider />
           <PostHogPageview />
-          {children}
+          <TranslationProvider>
+            {children}
+          </TranslationProvider>
         </PHProvider>
       </body>
     </html>
