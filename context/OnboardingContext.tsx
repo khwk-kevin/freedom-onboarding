@@ -331,7 +331,19 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                 if (scrapeData.products) scrapeUpdates.products = scrapeData.products;
                 if (scrapeData.brandColors?.[0]) scrapeUpdates.primaryColor = scrapeData.brandColors[0];
                 if (scrapeData.description) scrapeUpdates.description = scrapeData.description;
-                if (scrapeData.imageUrls) scrapeUpdates.scrapedImages = scrapeData.imageUrls;
+                if (scrapeData.imageUrls) {
+                  scrapeUpdates.scrapedImages = scrapeData.imageUrls;
+                  // Auto-populate logo with first scraped photo (best photo from Google)
+                  if (scrapeData.imageUrls[0]) {
+                    scrapeUpdates.logo = scrapeData.imageUrls[0];
+                  }
+                  // Auto-populate banner/cover with second photo (or first if only one)
+                  if (scrapeData.imageUrls[1]) {
+                    scrapeUpdates.banner = scrapeData.imageUrls[1];
+                  } else if (scrapeData.imageUrls[0]) {
+                    scrapeUpdates.banner = scrapeData.imageUrls[0];
+                  }
+                }
                 if (scrapeData.category) scrapeUpdates.businessType = scrapeData.category;
                 // Store location data from Google Places for POI creation
                 if (scrapeData.latitude && scrapeData.longitude) {

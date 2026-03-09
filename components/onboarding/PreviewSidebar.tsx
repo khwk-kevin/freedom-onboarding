@@ -7,7 +7,7 @@ import { DEFAULT_PRIMARY_COLORS } from '@/types/onboarding';
 import { getTemplateById } from '@/lib/onboarding/templates';
 
 interface PreviewSidebarProps {
-  communityData: Partial<CommunityData> & { businessType?: string; vibe?: string; brandStyle?: string };
+  communityData: Partial<CommunityData> & { businessType?: string; vibe?: string; brandStyle?: string; scrapedImages?: string[] };
   onUpdate: (data: Partial<CommunityData>) => void;
   onGenerateImage?: (type: 'logo' | 'banner') => Promise<void>;
   isGeneratingLogo?: boolean;
@@ -291,6 +291,58 @@ export function PreviewSidebar({
             )}
           </div>
         </div>
+
+        {/* ── Business Photos (from Google Maps) ──────────────── */}
+        {communityData.scrapedImages && communityData.scrapedImages.length > 0 && (
+          <div>
+            <label className="text-[10px] font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
+              Business Photos
+            </label>
+            <div
+              className="rounded-xl p-3 space-y-2"
+              style={{ background: cardBg, border: `1px solid ${border}` }}
+            >
+              <div className="grid grid-cols-2 gap-2">
+                {communityData.scrapedImages.slice(0, 4).map((imgUrl, idx) => (
+                  <div
+                    key={idx}
+                    className="relative rounded-lg overflow-hidden cursor-pointer group"
+                    style={{ aspectRatio: '4/3' }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imgUrl}
+                      alt={`Business photo ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Click to use as logo or cover */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={() => onUpdate({ logo: imgUrl })}
+                        className="px-2 py-1 rounded text-[9px] font-semibold text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: 'rgba(0,0,0,0.6)' }}
+                        title="Use as logo"
+                      >
+                        Logo
+                      </button>
+                      <button
+                        onClick={() => onUpdate({ banner: imgUrl })}
+                        className="px-2 py-1 rounded text-[9px] font-semibold text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: 'rgba(0,0,0,0.6)' }}
+                        title="Use as cover"
+                      >
+                        Cover
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-center" style={{ color: textMuted }}>
+                📍 From Google Maps · Hover to use as logo or cover
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ── Primary Color ──────────────────────────────────── */}
         <div>
