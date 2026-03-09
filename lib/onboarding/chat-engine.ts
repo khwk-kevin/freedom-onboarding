@@ -461,6 +461,8 @@ export interface MerchantExtractions {
   products?: string[];
   rewards?: string;
   step?: string;
+  style?: string;
+  audience?: string;
 }
 
 export interface MerchantChatResult {
@@ -498,19 +500,32 @@ export async function processMerchantMessage(
       ? response.content[0].text
       : "I'm having a little trouble — could you repeat that? 😊";
 
-  // Extract tags
+  // Extract tags from LLM response
   const nameMatch = rawReply.match(/\[\[NAME:([^\]]+)\]\]/i);
   const vibeMatch = rawReply.match(/\[\[VIBE:([^\]]+)\]\]/i);
   const productsMatch = rawReply.match(/\[\[PRODUCTS:([^\]]+)\]\]/i);
   const rewardsMatch = rawReply.match(/\[\[REWARDS:([^\]]+)\]\]/i);
+  const styleMatch = rawReply.match(/\[\[STYLE:([^\]]+)\]\]/i);
   const stepMatch = rawReply.match(/\[\[STEP:([^\]]+)\]\]/i);
+  const audienceMatch = rawReply.match(/\[\[AUDIENCE:([^\]]+)\]\]/i);
+
+  // Determine step deterministically: use LLM tag if present, otherwise infer from exchange count
+  // Exchange 1 = after business type (step 2), 2 = after vibe (step 3), etc.
+  let step = stepMatch?.[1].trim();
+  if (!step && context?.exchangeCount) {
+    // Fallback: exchange count maps to step number
+    // exchange 1 → step 2, exchange 2 → step 3, etc.
+    step = String(Math.min(context.exchangeCount + 1, 6));
+  }
 
   const extractions: MerchantExtractions = {
     businessName: nameMatch?.[1].trim(),
     vibe: vibeMatch?.[1].trim(),
     products: productsMatch?.[1].trim().split(',').map((s) => s.trim()).filter(Boolean),
     rewards: rewardsMatch?.[1].trim(),
-    step: stepMatch?.[1].trim(),
+    step,
+    style: styleMatch?.[1].trim(),
+    audience: audienceMatch?.[1].trim(),
   };
 
   // Strip all [[TAGS]] before display
