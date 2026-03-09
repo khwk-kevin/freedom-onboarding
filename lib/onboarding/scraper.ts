@@ -21,6 +21,8 @@ export interface ScrapedBrandContext {
   followerCount?: string;
   category?: string;
   address?: string;
+  latitude?: number;
+  longitude?: number;
   error?: string;
 }
 
@@ -242,10 +244,12 @@ export async function scrapeBrandContext(rawUrl: string): Promise<ScrapedBrandCo
         description: placeData.description,
         products: placeData.products,
         vibe: placeData.vibe,
-        imageUrls: placeData.imageUrls,
+        imageUrls: placeData.imageUrls || [],
         category: placeData.category,
         followerCount: placeData.rating ? `${placeData.rating}★ (${placeData.reviewCount || ''} reviews)` : undefined,
         address: placeData.address,
+        latitude: placeData.latitude,
+        longitude: placeData.longitude,
       };
     } catch (err) {
       console.error('[scraper] Google Maps scrape failed:', err);
