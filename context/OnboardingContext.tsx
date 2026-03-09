@@ -14,7 +14,9 @@ interface MerchantOnboardingData extends Partial<CommunityData> {
   vibe?: string;
   products?: string[];
   brandStyle?: string;
-  rewards?: string;
+  rewards?: { emoji: string; title: string; description: string; type: string }[];
+  welcomePost?: string;
+  audiencePersona?: string;
   step?: string;
   scrapedImages?: string[];
   scrapedUrl?: string;
@@ -412,10 +414,14 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
               console.log('[onboarding] brand content generated:', content);
 
               if (content.success) {
-                // Update community data with AI-generated description
-                if (content.description) {
-                  setCommunityData((prev) => ({ ...prev, description: content.description }));
-                }
+                // Update community data with ALL AI-generated content
+                setCommunityData((prev) => ({
+                  ...prev,
+                  ...(content.description ? { description: content.description } : {}),
+                  ...(content.rewards ? { rewards: content.rewards } : {}),
+                  ...(content.welcomePost ? { welcomePost: content.welcomePost } : {}),
+                  ...(content.audiencePersona ? { audiencePersona: content.audiencePersona } : {}),
+                }));
 
                 // Add reward suggestions card to chat
                 if (content.rewards?.length) {
@@ -494,7 +500,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       setIsAnonymous(false);
       setShowSignupWall(false);
 
-      // Link anonymous session to merchant
+      // 1. Link anonymous session to merchant
       try {
         await fetch('/api/onboarding/link-session', {
           method: 'POST',
@@ -502,17 +508,46 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           body: JSON.stringify({
             anonymousSessionId,
             merchantId,
-            communityData: {
-              ...communityData,
-              email,
-            },
+            communityData: { ...communityData, email },
           }),
         });
       } catch (err) {
         console.error('Failed to link session:', err);
       }
 
-      // Clear the anonymous session ID so a fresh one is generated next time
+      // 2. Sync ALL collected data to Supabase + Freedom World backend
+      try {
+        const syncRes = await fetch('/api/onboarding/sync-community', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            merchantId,
+            communityData: {
+              name: communityData.name,
+              description: communityData.description,
+              businessType: communityData.businessType,
+              vibe: communityData.vibe,
+              products: communityData.products,
+              brandStyle: communityData.brandStyle,
+              primaryColor: communityData.primaryColor,
+              logo: communityData.logo,
+              banner: communityData.banner,
+              rewards: communityData.rewards,
+              welcomePost: communityData.welcomePost,
+              audiencePersona: communityData.audiencePersona,
+              scrapedUrl: communityData.scrapedUrl,
+              scrapedImages: communityData.scrapedImages,
+              email,
+            },
+          }),
+        });
+        const syncResult = await syncRes.json();
+        console.log('[onboarding] sync result:', syncResult);
+      } catch (err) {
+        console.error('Failed to sync community:', err);
+      }
+
+      // Clear the anonymous session ID
       if (typeof window !== 'undefined') {
         localStorage.removeItem(ANON_SESSION_KEY);
       }
