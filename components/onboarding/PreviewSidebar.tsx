@@ -139,6 +139,61 @@ export function PreviewSidebar({
           </div>
         </div>
 
+        {/* ── Logo / Brand Upload ─────────────────────────────── */}
+        <div>
+          <label className="text-[10px] font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
+            Your Logo
+          </label>
+          <div
+            className="rounded-xl overflow-hidden relative group"
+            style={{ background: cardBg, border: `1px solid ${border}` }}
+          >
+            {hasLogo ? (
+              <div className="flex items-center gap-3 p-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={communityData.logo}
+                  alt="Logo"
+                  className="w-14 h-14 rounded-xl object-cover shrink-0"
+                  style={{ border: `1px solid ${border}` }}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate" style={{ color: text }}>Logo uploaded ✓</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: textMuted }}>Used for cover page generation</p>
+                </div>
+                <button
+                  onClick={() => logoInputRef.current?.click()}
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all hover:scale-105"
+                  style={{ background: `${primaryColor}15`, color: primaryColor, border: `1px solid ${primaryColor}25` }}
+                >
+                  Replace
+                </button>
+              </div>
+            ) : (
+              <div
+                className="p-5 flex flex-col items-center gap-2 cursor-pointer transition-all hover:opacity-80"
+                onClick={() => logoInputRef.current?.click()}
+              >
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{ background: `${primaryColor}10`, border: `2px dashed ${primaryColor}30` }}
+                >
+                  <svg className="w-5 h-5" style={{ color: primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs font-medium" style={{ color: text }}>Upload your logo</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: textMuted }}>
+                    Helps AVA create a better cover page
+                  </p>
+                </div>
+              </div>
+            )}
+            <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload('logo')} />
+          </div>
+        </div>
+
         {/* ── Brand Identity ─────────────────────────────────── */}
         <div>
           <label className="text-[10px] font-semibold uppercase tracking-wider mb-3 block" style={{ color: labelColor }}>
