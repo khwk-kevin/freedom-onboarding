@@ -2,6 +2,7 @@
 // Scrapes public pages and extracts: colors, images, bio, products, vibe
 
 import Anthropic from '@anthropic-ai/sdk';
+import { isGoogleMapsUrl, scrapeGooglePlace } from './google-places-scraper';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -191,6 +192,31 @@ Return ONLY the JSON object, no explanation.`;
 // Main scrape function
 export async function scrapeBrandContext(rawUrl: string): Promise<ScrapedBrandContext> {
   const url = normalizeUrl(rawUrl);
+  
+  // Check if it's a Google Maps URL first
+  if (isGoogleMapsUrl(url)) {
+    try {
+      const placeData = await scrapeGooglePlace(url);
+      if (placeData.error) {
+        return { source: 'unknown', url, error: placeData.error };
+      }
+      return {
+        source: 'website', // Treat as website for downstream compatibility
+        url,
+        businessName: placeData.businessName,
+        bio: placeData.description,
+        description: placeData.description,
+        products: placeData.products,
+        vibe: placeData.vibe,
+        imageUrls: placeData.imageUrls,
+        category: placeData.category,
+        followerCount: placeData.rating ? `${placeData.rating}★ (${placeData.reviewCount || ''} reviews)` : undefined,
+      };
+    } catch (err) {
+      console.error('[scraper] Google Maps scrape failed:', err);
+    }
+  }
+
   const platform = detectPlatform(url);
 
   try {
