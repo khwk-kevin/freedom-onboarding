@@ -133,21 +133,23 @@ function buildBannerPrompt(data: MerchantCommunityData): string {
   const audience = data.targetAudience || 'local customers';
   const brandStyle = data.brandStyle || 'modern and clean';
 
-  return `Create a wide marketing banner (16:5 ratio, 1920x600px) for "${name}" — a ${businessType} business.
+  return `Create a community cover page image (2:1 ratio, 1440x690px) for "${name}" — a ${businessType}.
 
-Business details:
-- Products/services: ${products}
-- Target customers: ${audience}
-- Brand vibe: ${vibe}
+Business context:
+- What they offer: ${products}
+- Their customers: ${audience}
+- Brand personality: ${vibe}
 - Visual style: ${brandStyle}
 
-Requirements:
-- Visually striking banner that captures the essence of "${name}"
-- Prominently feature the business name "${name}"
-- Colours and mood that match the "${vibe}" aesthetic and "${brandStyle}" style
-- Wide horizontal composition (panoramic / cinematic)
-- Professional quality, suitable for a loyalty app community header
-- Warm, inviting atmosphere that resonates with ${audience}
+Design brief:
+- This is the HERO COVER IMAGE for a loyalty community app (like a Facebook group cover photo)
+- Create an atmospheric, immersive visual that makes people FEEL the brand
+- NO TEXT, NO WORDS, NO LETTERS — the app overlays the business name separately
+- Use photography-style composition: depth of field, warm lighting, natural textures
+- Colours and mood should evoke "${vibe}" + "${brandStyle}"
+- Wide horizontal format (2:1 panoramic)
+- Think: premium, editorial, magazine-quality imagery
+- Capture the EXPERIENCE of visiting this ${businessType} — the ambiance, the feeling
 
-Do NOT include: random stock imagery, clipart, or elements unrelated to this specific business. Keep it authentic and on-brand.`.trim();
+Do NOT include: text, words, logos, watermarks, stock photo clichés, clipart, UI elements. Pure visual storytelling only.`.trim();
 }

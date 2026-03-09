@@ -80,7 +80,7 @@ export function MobilePreviewCard({
         <div
           className="mx-3 mb-3 rounded-xl overflow-hidden relative"
           style={{
-            aspectRatio: '16/9',
+            aspectRatio: '1440/690',
             background: hasCover
               ? 'transparent'
               : `linear-gradient(135deg, ${primaryColor}30, ${primaryColor}10)`,
