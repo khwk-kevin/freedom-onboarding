@@ -5,25 +5,28 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * Freedom World API base URLs (production)
- * - BACKEND_URL = gateway.freedom.world/api/fdw-console/v1
- * - FREEDOM_WORLD_ENDPOINT = gateway.freedom.world/api/fdw-console/v1
+ * Freedom World API (from web-micro-console-enterprise)
  * 
- * Community endpoints:
- * - POST /organizations (create community, FormData: name, country, logo, product, token)
- * - PUT  /organizations/{orgId}/community/{communityId} (update, FormData: name, slug, descriptions, color, logo, coverImage, category, publishConfirmed)
- * - POST /organizations/{orgId}/community/banner/{communityId} (upload banner, FormData)
+ * Create community (V2): POST /organizations/v2
+ *   FormData: name, description, logoImage, bannerImage, communityType, 
+ *             communityCategory, targetAudience, color, isPrivate
+ * 
+ * Update community: PUT /organizations/{orgId}/community/{communityId}
+ *   FormData: name, descriptions (JSON {en:"..."}), color, logo, coverImage, 
+ *             category, slug, publishConfirmed
+ * 
+ * Upload banner: POST /organizations/{orgId}/community/banner/{communityId}
+ *   FormData: file
+ * 
+ * Base: https://gateway.freedom.world/api/fdw-console/v1
+ * Auth: Bearer <cognito_access_token>
  */
 
 const FW_API_BASE = process.env.FREEDOM_API_BASE_URL || 'https://gateway.freedom.world/api/fdw-console/v1';
 
-/**
- * Convert a data URL or remote URL to a File-like Blob for FormData
- */
 async function urlToBlob(url: string, filename: string): Promise<{ blob: Blob; name: string } | null> {
   try {
     if (url.startsWith('data:')) {
-      // data:image/png;base64,...
       const [header, b64] = url.split(',');
       const mimeMatch = header.match(/data:([^;]+)/);
       const mime = mimeMatch ? mimeMatch[1] : 'image/png';
@@ -39,15 +42,29 @@ async function urlToBlob(url: string, filename: string): Promise<{ blob: Blob; n
       return { blob: new Blob([buffer], { type: contentType }), name: `${filename}.${ext}` };
     }
   } catch (err) {
-    console.error('[sync] Failed to convert URL to blob:', err);
+    console.error('[sync] urlToBlob failed:', err);
   }
   return null;
+}
+
+// Map our business types to FW community categories
+function mapBusinessTypeToCategory(type?: string): string {
+  const map: Record<string, string> = {
+    restaurant: 'Food & Beverage',
+    cafe: 'Food & Beverage',
+    bar: 'Food & Beverage',
+    salon: 'Beauty & Wellness',
+    fitness: 'Health & Fitness',
+    retail: 'Shopping',
+    clinic: 'Health & Fitness',
+    other: 'Others',
+  };
+  return map[type || ''] || type || 'Others';
 }
 
 export async function POST(req: NextRequest) {
   try {
     const { merchantId, communityData } = await req.json();
-
     if (!merchantId) {
       return NextResponse.json({ error: 'merchantId required' }, { status: 400 });
     }
@@ -59,13 +76,13 @@ export async function POST(req: NextRequest) {
       onboarding_status: 'community_created',
       onboarding_completed_at: new Date().toISOString(),
     };
-
     if (communityData.name) merchantUpdate.business_name = communityData.name;
     if (communityData.businessType) merchantUpdate.business_type = communityData.businessType;
     if (communityData.primaryColor) merchantUpdate.primary_color = communityData.primaryColor;
     if (communityData.description) merchantUpdate.description = communityData.description;
+    if (communityData.logo) merchantUpdate.logo_url = communityData.logo;
+    if (communityData.banner) merchantUpdate.banner_url = communityData.banner;
 
-    // Full onboarding data in JSONB
     merchantUpdate.onboarding_data = {
       name: communityData.name,
       description: communityData.description,
@@ -81,135 +98,143 @@ export async function POST(req: NextRequest) {
       completedAt: new Date().toISOString(),
     };
 
-    if (communityData.logo) merchantUpdate.logo_url = communityData.logo;
-    if (communityData.banner) merchantUpdate.banner_url = communityData.banner;
-
     const { error: dbError } = await supabase
       .from('merchants')
       .update(merchantUpdate)
       .eq('id', merchantId);
+    if (dbError) console.error('[sync] Supabase error:', dbError);
 
-    if (dbError) {
-      console.error('[sync] Supabase error:', dbError);
-    }
-
-    // ── 2. Sync to Freedom World backend ────────────────────────
-    let fwResult: Record<string, unknown> | null = null;
-
-    // Get merchant's FW credentials
+    // ── 2. Get merchant's Cognito access token ──────────────────
     const { data: merchant } = await supabase
       .from('merchants')
-      .select('cognito_user_id, cognito_access_token, freedom_org_id, freedom_community_id, email')
+      .select('cognito_user_id, cognito_access_token, freedom_org_id, freedom_community_id')
       .eq('id', merchantId)
       .single();
 
     const accessToken = merchant?.cognito_access_token;
-    const orgId = merchant?.freedom_org_id;
-    const communityId = merchant?.freedom_community_id;
+    let orgId = merchant?.freedom_org_id;
+    let communityId = merchant?.freedom_community_id;
+    let fwResult: Record<string, unknown> | null = null;
 
-    if (accessToken && orgId && communityId) {
+    if (!accessToken) {
+      return NextResponse.json({
+        success: true,
+        savedToDb: !dbError,
+        freedomWorldSync: { pending: true, reason: 'no_access_token' },
+      });
+    }
+
+    const authHeaders = { 'Authorization': `Bearer ${accessToken}` };
+
+    // ── 3. Create community if no orgId/communityId yet ─────────
+    if (!orgId || !communityId) {
       try {
-        // Build FormData for PUT /organizations/{orgId}/community/{communityId}
+        // POST /organizations/v2 (create community V2)
         const form = new FormData();
-        
-        if (communityData.name) {
-          form.append('name', communityData.name);
+        form.append('name', communityData.name || 'My Community');
+        form.append('description', communityData.description || '');
+        form.append('communityType', 'Public');
+        form.append('communityCategory', mapBusinessTypeToCategory(communityData.businessType));
+        form.append('targetAudience', communityData.audiencePersona || communityData.audience || '');
+        form.append('color', communityData.primaryColor || '#10F48B');
+        form.append('isPrivate', 'false');
+
+        // Attach logo
+        if (communityData.logo) {
+          const logoBlob = await urlToBlob(communityData.logo, 'logo');
+          if (logoBlob) form.append('logoImage', logoBlob.blob, logoBlob.name);
         }
-        
+
+        // Attach banner/cover
+        if (communityData.banner) {
+          const bannerBlob = await urlToBlob(communityData.banner, 'banner');
+          if (bannerBlob) form.append('bannerImage', bannerBlob.blob, bannerBlob.name);
+        }
+
+        console.log('[sync] Creating community V2:', { fields: [...form.keys()] });
+
+        const createRes = await fetch(`${FW_API_BASE}/organizations/v2`, {
+          method: 'POST',
+          headers: authHeaders,
+          body: form,
+        });
+
+        fwResult = await createRes.json().catch(() => ({ status: createRes.status }));
+        console.log('[sync] Create community response:', JSON.stringify(fwResult).slice(0, 300));
+
+        // Extract org/community IDs from response
+        if (fwResult && (fwResult.id || fwResult.orgId || fwResult.organizationId)) {
+          orgId = fwResult.orgId || fwResult.organizationId || fwResult.id;
+          communityId = fwResult.communityId || fwResult.id;
+
+          // Save IDs back to merchant record
+          await supabase
+            .from('merchants')
+            .update({
+              freedom_org_id: orgId,
+              freedom_community_id: communityId,
+              onboarding_status: 'live',
+            })
+            .eq('id', merchantId);
+        }
+      } catch (createErr) {
+        console.error('[sync] Create community failed:', createErr);
+        fwResult = { error: 'Community creation failed', details: String(createErr) };
+      }
+    } else {
+      // ── 4. Update existing community ──────────────────────────
+      try {
+        const form = new FormData();
+        if (communityData.name) form.append('name', communityData.name);
         if (communityData.description) {
           form.append('descriptions', JSON.stringify({ en: communityData.description }));
         }
-        
-        if (communityData.primaryColor) {
-          form.append('color', JSON.stringify(communityData.primaryColor));
-        }
-        
-        if (communityData.businessType) {
-          form.append('category', communityData.businessType);
-        }
-        
-        // Convert and attach logo
-        if (communityData.logo) {
-          const logoBlob = await urlToBlob(communityData.logo, 'logo');
-          if (logoBlob) {
-            form.append('logo', logoBlob.blob, logoBlob.name);
-          }
-        }
-        
-        // Convert and attach cover image
-        if (communityData.banner) {
-          const coverBlob = await urlToBlob(communityData.banner, 'cover');
-          if (coverBlob) {
-            form.append('coverImage', coverBlob.blob, coverBlob.name);
-          }
-        }
-        
+        if (communityData.primaryColor) form.append('color', JSON.stringify(communityData.primaryColor));
+        if (communityData.businessType) form.append('category', mapBusinessTypeToCategory(communityData.businessType));
         form.append('publishConfirmed', JSON.stringify(true));
 
-        console.log('[sync] PUT community update:', { orgId, communityId, fields: [...form.keys()] });
+        if (communityData.logo) {
+          const logoBlob = await urlToBlob(communityData.logo, 'logo');
+          if (logoBlob) form.append('logo', logoBlob.blob, logoBlob.name);
+        }
+        if (communityData.banner) {
+          const coverBlob = await urlToBlob(communityData.banner, 'cover');
+          if (coverBlob) form.append('coverImage', coverBlob.blob, coverBlob.name);
+        }
 
-        const fwRes = await fetch(
+        console.log('[sync] Updating community:', { orgId, communityId, fields: [...form.keys()] });
+
+        const updateRes = await fetch(
           `${FW_API_BASE}/organizations/${orgId}/community/${communityId}`,
-          {
-            method: 'PUT',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-            },
-            body: form,
-          }
+          { method: 'PUT', headers: authHeaders, body: form },
         );
+        fwResult = await updateRes.json().catch(() => ({ status: updateRes.status }));
+        console.log('[sync] Update response:', JSON.stringify(fwResult).slice(0, 300));
 
-        fwResult = await fwRes.json().catch(() => ({ status: fwRes.status }));
-        console.log('[sync] FW response:', JSON.stringify(fwResult).slice(0, 300));
-
-        // Also upload banner separately if we have one
+        // Also upload banner separately
         if (communityData.banner) {
           const bannerForm = new FormData();
           const bannerBlob = await urlToBlob(communityData.banner, 'banner');
           if (bannerBlob) {
             bannerForm.append('file', bannerBlob.blob, bannerBlob.name);
-            
-            try {
-              const bannerRes = await fetch(
-                `${FW_API_BASE}/organizations/${orgId}/community/banner/${communityId}`,
-                {
-                  method: 'POST',
-                  headers: { 'Authorization': `Bearer ${accessToken}` },
-                  body: bannerForm,
-                }
-              );
-              const bannerResult = await bannerRes.json().catch(() => ({}));
-              console.log('[sync] Banner upload result:', JSON.stringify(bannerResult).slice(0, 200));
-            } catch (bannerErr) {
-              console.error('[sync] Banner upload failed:', bannerErr);
-            }
+            await fetch(
+              `${FW_API_BASE}/organizations/${orgId}/community/banner/${communityId}`,
+              { method: 'POST', headers: authHeaders, body: bannerForm },
+            ).catch(e => console.error('[sync] Banner upload failed:', e));
           }
         }
 
-        // Update sync status
         await supabase
           .from('merchants')
           .update({ onboarding_status: 'live' })
           .eq('id', merchantId);
-
-      } catch (fwErr) {
-        console.error('[sync] FW API error:', fwErr);
-        fwResult = { error: 'Freedom World API call failed' };
+      } catch (updateErr) {
+        console.error('[sync] Update community failed:', updateErr);
+        fwResult = { error: 'Community update failed', details: String(updateErr) };
       }
-    } else {
-      console.log('[sync] Missing FW credentials:', {
-        hasToken: Boolean(accessToken),
-        orgId,
-        communityId,
-      });
-      fwResult = {
-        pending: true,
-        reason: !accessToken ? 'no_access_token' : !orgId ? 'no_org_id' : 'no_community_id',
-        message: 'Data saved to Supabase. FW sync will happen when org/community IDs are available.',
-      };
     }
 
-    // ── 3. Log event ────────────────────────────────────────────
+    // ── 5. Log event ────────────────────────────────────────────
     try {
       await supabase.from('events').insert({
         merchant_id: merchantId,
@@ -218,11 +243,9 @@ export async function POST(req: NextRequest) {
           hasBanner: Boolean(communityData.banner),
           hasLogo: Boolean(communityData.logo),
           hasDescription: Boolean(communityData.description),
-          hasRewards: Boolean(communityData.rewards?.length),
-          hasWelcomePost: Boolean(communityData.welcomePost),
-          fwSynced: Boolean(fwResult && !fwResult.error && !fwResult.pending),
           fwOrgId: orgId,
           fwCommunityId: communityId,
+          fwSynced: Boolean(fwResult && !fwResult.error),
         },
       });
     } catch { /* non-fatal */ }
@@ -231,6 +254,8 @@ export async function POST(req: NextRequest) {
       success: true,
       savedToDb: !dbError,
       freedomWorldSync: fwResult,
+      orgId,
+      communityId,
     });
   } catch (error) {
     console.error('[sync] Error:', error);
