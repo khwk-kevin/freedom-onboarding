@@ -16,7 +16,7 @@ export default function CloneFooter() {
 
           {/* Single CTA */}
           <Link
-            href="/onboarding"
+            href="/start"
             className="bg-[#10F48B] hover:bg-[#00dd77] text-black font-bold px-8 py-3 rounded-2xl text-base transition-all hover:shadow-[0_0_40px_rgba(16,244,139,0.3)] hover:scale-105"
           >
             {locale === 'th' ? 'เริ่มต้นสร้างชุมชน →' : 'Start Building Your Community →'}

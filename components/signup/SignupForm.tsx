@@ -46,7 +46,7 @@ function getUTMState(): string | undefined {
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/
 
-export default function SignupForm({ redirectTo = '/onboarding' }: SignupFormProps) {
+export default function SignupForm({ redirectTo = '/start' }: SignupFormProps) {
   const router = useRouter()
   const [showEmailForm, setShowEmailForm] = useState(false)
   const [email, setEmail] = useState('')

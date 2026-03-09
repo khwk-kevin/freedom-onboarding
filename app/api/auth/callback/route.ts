@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 6. Set tokens as httpOnly cookies and redirect to onboarding
-    const response = NextResponse.redirect(`${appUrl}/onboarding`)
+    const response = NextResponse.redirect(`${appUrl}/start`)
 
     response.cookies.set('cognito_access_token', tokens.access_token, {
       httpOnly: true,

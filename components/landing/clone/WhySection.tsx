@@ -46,7 +46,7 @@ function WhyCard({ why, t }: { why: WhyCard; t: (key: string) => string }) {
     >
       <a
         className="rounded-[31px] bg-[#120A2A]/90 backdrop-blur-md flex flex-col justify-start items-center h-auto md:h-[430px] relative w-full break-words p-3 md:p-6 overflow-hidden gap-[6px] sm:gap-[10px] md:gap-[16px]"
-        href="/onboarding"
+        href="/start"
         target="_blank"
         rel="noopener noreferrer"
       >

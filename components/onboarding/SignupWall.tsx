@@ -19,7 +19,7 @@ function getCallbackUrl() {
 }
 
 function buildSSOUrl(provider: string) {
-  const state = btoa(JSON.stringify({ returnTo: '/onboarding', continueOnboarding: true }))
+  const state = btoa(JSON.stringify({ returnTo: '/start', continueOnboarding: true }))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');

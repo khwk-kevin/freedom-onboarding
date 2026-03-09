@@ -12,7 +12,7 @@ export default function BottomCTA({
   headline = 'Ready to build your community?',
   subheadline = 'Join 30+ businesses growing with Freedom World. AI-powered setup. Live in 15 minutes.',
   ctaText = 'Create Your Community — Free',
-  ctaHref = '/onboarding',
+  ctaHref = '/start',
   location = 'bottom-cta',
 }: BottomCTAProps) {
   return (

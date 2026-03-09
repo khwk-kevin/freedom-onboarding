@@ -36,7 +36,7 @@ export default function SignupPage() {
         <p className="text-center text-sm text-fw-text-tertiary mt-6">
           มีบัญชีอยู่แล้ว?{' '}
           <Link
-            href="/onboarding"
+            href="/start"
             className="text-fw-green hover:underline font-medium"
           >
             ดำเนินการต่อ

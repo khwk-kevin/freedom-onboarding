@@ -146,7 +146,7 @@ export default function HeroClone() {
         </p>
 
         {/* CTA */}
-        <Link href="/onboarding" onClick={() => track.ctaClick('hero_clone', 'fw')}>
+        <Link href="/start" onClick={() => track.ctaClick('hero_clone', 'fw')}>
           <CTABtn label={t('footer_getstarted_title')} />
         </Link>
 

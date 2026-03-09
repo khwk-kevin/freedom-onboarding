@@ -52,7 +52,7 @@ export default function EngageSection() {
 
             <div className="relative pt-3 pb-0 md:py-0 md:pt-1 flex flex-col items-center md:items-start">
               <a
-                href="/onboarding"
+                href="/start"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm hover:scale-105 transition-transform"
@@ -65,7 +65,7 @@ export default function EngageSection() {
 
               {/* App store badges */}
               <div className="flex gap-2 sm:gap-[9px] pt-6 md:pt-10 flex-nowrap md:justify-start justify-center z-50">
-                <a href="/onboarding">
+                <a href="/start">
                   <Image
                     alt="Get it on Google Play"
                     src="/images/cdn/engage/google-play.png"
@@ -75,7 +75,7 @@ export default function EngageSection() {
                     unoptimized
                   />
                 </a>
-                <a href="/onboarding">
+                <a href="/start">
                   <Image
                     alt="Download on the App Store"
                     src="/images/cdn/engage/app-store.png"

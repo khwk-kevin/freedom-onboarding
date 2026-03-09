@@ -40,7 +40,7 @@ function CtaCard1({ t }: { t: (key: string) => string }) {
           </div>
           <div className="p-[24px] sm:p-[24px] md:p-[32px] flex justify-center">
             <a
-              href="/onboarding"
+              href="/start"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm hover:scale-105 transition-transform"
@@ -76,7 +76,7 @@ function CtaCard1({ t }: { t: (key: string) => string }) {
             />
             <div className="p-[24px]">
               <a
-                href="/onboarding"
+                href="/start"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm"
@@ -131,7 +131,7 @@ function CtaCard2({ t }: { t: (key: string) => string }) {
           </div>
           <div className="p-[24px] sm:p-[24px] md:p-[32px] flex justify-center">
             <a
-              href="/onboarding"
+              href="/start"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm hover:scale-105 transition-transform"
@@ -167,7 +167,7 @@ function CtaCard2({ t }: { t: (key: string) => string }) {
             />
             <div className="p-[24px]">
               <a
-                href="/onboarding"
+                href="/start"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm"

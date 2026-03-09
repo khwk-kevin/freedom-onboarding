@@ -118,7 +118,7 @@ export default function BlogsSection() {
             {t('community_insights_title2')}
           </h1>
           <a
-            href="/onboarding"
+            href="/start"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1248C8] font-black uppercase text-white text-sm mt-4 hover:scale-105 transition-transform"

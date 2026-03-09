@@ -27,7 +27,7 @@ export default function Hero() {
 
         {/* CTA */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <CTAButton href="/onboarding" location="hero-primary" size="lg">
+          <CTAButton href="/start" location="hero-primary" size="lg">
             Create Your Community — Free
           </CTAButton>
           <CTAButton

@@ -42,7 +42,7 @@ export default function CloneNavbar() {
 
           {/* CTA */}
           <Link
-            href="/onboarding"
+            href="/start"
             className="bg-[#10F48B] hover:bg-[#00dd77] text-black font-semibold px-5 py-2 rounded-xl text-sm transition-all hover:shadow-[0_0_20px_rgba(16,244,139,0.3)]"
           >
             {locale === 'th' ? 'เริ่มต้นเลย' : 'Get Started'}
