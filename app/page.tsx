@@ -1,25 +1,47 @@
-import Navbar from '@/components/landing/Navbar'
-import HeroDark from '@/components/landing/HeroDark'
-import FeaturesDark from '@/components/landing/FeaturesDark'
-import WhyFreedom from '@/components/landing/WhyFreedom'
-import SuccessStory from '@/components/landing/SuccessStory'
-import ExploreFeatures from '@/components/landing/ExploreFeatures'
-import BottomCTADark from '@/components/landing/BottomCTADark'
-import FooterDark from '@/components/landing/FooterDark'
+import CloneNavbar from '@/components/landing/clone/CloneNavbar'
+import CloneFooter from '@/components/landing/clone/CloneFooter'
+import HeroClone from '@/components/landing/HeroClone'
+
+import VideoSection from '@/components/landing/clone/VideoSection'
+import StatsSection from '@/components/landing/clone/StatsSection'
+import EngageSection from '@/components/landing/clone/EngageSection'
+import CrmSection from '@/components/landing/clone/CrmSection'
+import MapSection from '@/components/landing/clone/MapSection'
+import WhySection from '@/components/landing/clone/WhySection'
+import FeaturesSection from '@/components/landing/clone/FeaturesSection'
+import SuccessSection from '@/components/landing/clone/SuccessSection'
+import CtaSection from '@/components/landing/clone/CtaSection'
+import BlogsSection from '@/components/landing/clone/BlogsSection'
 import { LandingTracker } from '@/components/landing/LandingTracker'
+
+export const metadata = {
+  title: 'Freedom World — Your Business, Your World, Yours To Create',
+  description: 'Create, engage, and grow your community with Freedom World. Built for creators, managed for success.',
+}
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-fw-bg text-fw-text-primary overflow-x-hidden">
+    <main className="min-h-screen bg-[#050314] text-white overflow-x-hidden">
       <LandingTracker />
-      <Navbar />
-      <div id="hero"><HeroDark /></div>
-      <div id="features"><FeaturesDark /></div>
-      <div id="why-freedom"><WhyFreedom /></div>
-      <div id="success-story"><SuccessStory /></div>
-      <div id="explore-features"><ExploreFeatures /></div>
-      <div id="bottom-cta"><BottomCTADark /></div>
-      <div id="footer"><FooterDark /></div>
+      <CloneNavbar />
+
+      <div className="flex flex-col md:gap-[190px] gap-[120px]">
+        <div>
+          <VideoSection />
+          <HeroClone />
+        </div>
+        <StatsSection />
+        <EngageSection />
+        <CrmSection />
+        <MapSection />
+        <WhySection />
+        <FeaturesSection />
+        <SuccessSection />
+        <CtaSection />
+        <BlogsSection />
+      </div>
+
+      <CloneFooter />
     </main>
   )
 }
