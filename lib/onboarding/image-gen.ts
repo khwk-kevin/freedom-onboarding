@@ -132,6 +132,12 @@ function buildBannerPrompt(data: MerchantCommunityData): string {
     : data.description || 'products and services';
   const audience = data.targetAudience || 'local customers';
   const brandStyle = data.brandStyle || 'modern and clean';
+  const description = data.description || '';
+
+  // Add scraped context if available
+  const scrapedContext = (data as Record<string, unknown>).scrapedImages
+    ? `\nBrand reference: This business has an active online presence. Their bio: "${description}". Capture a similar aesthetic and energy.`
+    : '';
 
   return `Create a community cover page image (2:1 ratio, 1440x690px) for "${name}" — a ${businessType}.
 
@@ -139,7 +145,7 @@ Business context:
 - What they offer: ${products}
 - Their customers: ${audience}
 - Brand personality: ${vibe}
-- Visual style: ${brandStyle}
+- Visual style: ${brandStyle}${description ? `\n- About: ${description}` : ''}${scrapedContext}
 
 Design brief:
 - This is the HERO COVER IMAGE for a loyalty community app (like a Facebook group cover photo)

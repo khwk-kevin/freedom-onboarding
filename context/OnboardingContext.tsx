@@ -16,6 +16,8 @@ interface MerchantOnboardingData extends Partial<CommunityData> {
   brandStyle?: string;
   rewards?: string;
   step?: string;
+  scrapedImages?: string[];
+  scrapedUrl?: string;
 }
 
 interface OnboardingContextType {
@@ -255,7 +257,54 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           setCommunityData((prev) => ({ ...prev, ...tagUpdates }));
         }
 
-        // Auto-trigger logo generation when step reaches 6 (brand look collected)
+        // Handle scrape URL — auto-scrape their social/website
+        if (extractions.scrapeUrl) {
+          console.log('[onboarding] scraping:', extractions.scrapeUrl);
+          setTimeout(async () => {
+            try {
+              const scrapeRes = await fetch('/api/onboarding/scrape', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: extractions.scrapeUrl }),
+              });
+              const scrapeData = await scrapeRes.json();
+              console.log('[onboarding] scrape result:', scrapeData);
+
+              if (scrapeData.success) {
+                // Update community data with scraped info
+                const scrapeUpdates: Partial<MerchantOnboardingData> = {};
+                if (scrapeData.businessName) scrapeUpdates.name = scrapeData.businessName;
+                if (scrapeData.vibe) scrapeUpdates.vibe = scrapeData.vibe;
+                if (scrapeData.products) scrapeUpdates.products = scrapeData.products;
+                if (scrapeData.brandColors?.[0]) scrapeUpdates.primaryColor = scrapeData.brandColors[0];
+                if (scrapeData.description) scrapeUpdates.description = scrapeData.description;
+                if (scrapeData.imageUrls) scrapeUpdates.scrapedImages = scrapeData.imageUrls;
+                if (scrapeData.category) scrapeUpdates.businessType = scrapeData.category;
+                setCommunityData((prev) => ({ ...prev, ...scrapeUpdates }));
+
+                // Inject scraped context back into chat so AVA can present it
+                const contextMsg = `[[SCRAPED_CONTEXT:${JSON.stringify({
+                  businessName: scrapeData.businessName,
+                  bio: scrapeData.bio,
+                  products: scrapeData.products,
+                  vibe: scrapeData.vibe,
+                  category: scrapeData.category,
+                  source: scrapeData.source,
+                })}]]`;
+                // Send as a system message to AVA
+                await sendMessage(contextMsg);
+              } else {
+                // Scrape failed — tell AVA to continue with manual flow
+                await sendMessage('[[SCRAPE_FAILED]]');
+              }
+            } catch (err) {
+              console.error('[onboarding] scrape error:', err);
+              await sendMessage('[[SCRAPE_FAILED]]');
+            }
+          }, 500);
+        }
+
+        // Auto-trigger cover page generation when step reaches 6 (brand look collected)
         const currentStep = extractions.step;
         console.log('[onboarding] step:', currentStep, 'extractions:', extractions);
         
