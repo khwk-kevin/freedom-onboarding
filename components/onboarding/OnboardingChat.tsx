@@ -99,10 +99,9 @@ export function OnboardingChat() {
             <div className="flex items-center space-x-2 md:space-x-3 min-w-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/freedom-logo.svg"
+                src={isDark ? '/svgs/freedom-logo-light.svg' : '/svgs/freedom-logo-dark.svg'}
                 alt="Freedom World"
-                className="h-6 md:h-8 w-auto shrink-0"
-                style={isDark ? {} : { filter: 'brightness(0)' }}
+                className="h-7 md:h-9 w-auto shrink-0"
               />
               <div className="w-px h-5 md:h-6 shrink-0" style={{ background: theme.border }} />
               <div className="min-w-0">

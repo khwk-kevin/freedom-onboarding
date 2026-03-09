@@ -53,6 +53,8 @@ function BusinessTypePicker({ onSelect }: { onSelect: (typeId: string) => void }
 }
 
 // ── Multi-Select Options ──────────────────────────────────────────
+const NUM_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
+
 function MultiSelectOptions({ options, onConfirm }: { options: string[]; onConfirm: (selected: string[]) => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -82,7 +84,7 @@ function MultiSelectOptions({ options, onConfirm }: { options: string[]; onConfi
                 boxShadow: isSelected ? '0 0 8px rgba(16,244,139,0.2)' : 'none',
               }}
             >
-              {isSelected ? '✓ ' : ''}{opt}
+              {isSelected ? '✓ ' : `${NUM_EMOJIS[i] || ''} `}{opt}
             </button>
           );
         })}
@@ -115,7 +117,7 @@ function SingleSelectOptions({ options, onSelect }: { options: string[]; onSelec
             color: 'var(--oc-text)',
           }}
         >
-          {opt}
+          {NUM_EMOJIS[i] || ''} {opt}
         </button>
       ))}
     </div>
