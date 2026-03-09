@@ -165,7 +165,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           }),
         });
 
-        const reply = await streamResponse(res);
+        const { text: reply } = await streamResponse(res);
 
         setMessages((prev) => [
           ...prev,
@@ -221,7 +221,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           }),
         });
 
-        const replyText = await streamResponse(res);
+        const { text: replyText, extractions } = await streamResponse(res);
 
         const assistantMessage: ChatMessage = {
           role: 'assistant',
@@ -231,27 +231,30 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
         setMessages((prev) => [...prev, assistantMessage]);
 
-        // Parse structured tags from assistant reply to enrich communityData
+        // Use extractions from the API (sent as separate SSE events)
         const tagUpdates: Partial<MerchantOnboardingData> = {};
-        const productsMatch = replyText.match(/\[\[PRODUCTS:([^\]]+)\]\]/);
-        if (productsMatch) {
-          tagUpdates.products = productsMatch[1].split(',').map((p) => p.trim()).filter(Boolean);
+        if (extractions.products) {
+          tagUpdates.products = extractions.products.split(',').map((p: string) => p.trim()).filter(Boolean);
         }
-        const audienceMatch = replyText.match(/\[\[AUDIENCE:([^\]]+)\]\]/);
-        if (audienceMatch) {
-          tagUpdates.targetAudience = audienceMatch[1].trim();
+        if (extractions.audience) {
+          tagUpdates.targetAudience = extractions.audience;
         }
-        const styleMatch = replyText.match(/\[\[STYLE:([^\]]+)\]\]/);
-        if (styleMatch) {
-          tagUpdates.brandStyle = styleMatch[1].trim();
+        if (extractions.style) {
+          tagUpdates.brandStyle = extractions.style;
+        }
+        if (extractions.vibe) {
+          tagUpdates.vibe = extractions.vibe;
+        }
+        if (extractions.name || extractions.businessName) {
+          tagUpdates.name = extractions.name || extractions.businessName;
         }
         if (Object.keys(tagUpdates).length > 0) {
           setCommunityData((prev) => ({ ...prev, ...tagUpdates }));
         }
 
-        // Auto-trigger logo generation when AVA outputs [[STEP:6]] (brand look collected)
-        const stepMatch = replyText.match(/\[\[STEP:(\d+|complete)\]\]/);
-        const currentStep = stepMatch ? stepMatch[1] : null;
+        // Auto-trigger logo generation when step reaches 6 (brand look collected)
+        const currentStep = extractions.step;
+        console.log('[onboarding] step:', currentStep, 'extractions:', extractions);
         
         if (currentStep === '6' && communityData.businessType && !communityData.logo) {
           setTimeout(async () => {
@@ -430,12 +433,18 @@ export function useOnboarding() {
 }
 
 // ── SSE stream helper ──────────────────────────────────────────────
-async function streamResponse(res: Response): Promise<string> {
+interface StreamResult {
+  text: string;
+  extractions: Record<string, string>;
+}
+
+async function streamResponse(res: Response): Promise<StreamResult> {
   const reader = res.body?.getReader();
   const decoder = new TextDecoder();
   let text = '';
+  let extractions: Record<string, string> = {};
 
-  if (!reader) return text;
+  if (!reader) return { text, extractions };
 
   while (true) {
     const { done, value } = await reader.read();
@@ -452,6 +461,8 @@ async function streamResponse(res: Response): Promise<string> {
           const parsed = JSON.parse(raw);
           if (parsed.type === 'text') {
             text += parsed.content;
+          } else if (parsed.type === 'extractions' && parsed.extractions) {
+            extractions = { ...extractions, ...parsed.extractions };
           }
         } catch {
           // ignore parse errors
@@ -460,5 +471,5 @@ async function streamResponse(res: Response): Promise<string> {
     }
   }
 
-  return text;
+  return { text, extractions };
 }
