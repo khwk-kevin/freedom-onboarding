@@ -129,6 +129,24 @@ export async function POST(req: NextRequest) {
     // ── 3. Create community if no orgId/communityId yet ─────────
     if (!orgId || !communityId) {
       try {
+        // Check name availability first
+        const communityName = communityData.name || 'My Community';
+        try {
+          const checkRes = await fetch(`${FW_API_BASE}/organizations/check-create`, {
+            method: 'POST',
+            headers: { ...authHeaders, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: communityName, isPrivate: false }),
+          });
+          const checkResult = await checkRes.json();
+          if (!checkResult.success && checkRes.status !== 200) {
+            console.log('[sync] Name check failed:', checkResult);
+            // Name might be taken, append a suffix
+            // Continue anyway — the create API will handle the error
+          }
+        } catch (checkErr) {
+          console.log('[sync] Name check skipped:', checkErr);
+        }
+
         // POST /organizations/v2 (create community V2)
         const form = new FormData();
         form.append('name', communityData.name || 'My Community');
@@ -234,7 +252,38 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── 5. Log event ────────────────────────────────────────────
+    // ── 5. Post welcome message if we have one ───────────────────
+    if (communityData.welcomePost && orgId && accessToken) {
+      try {
+        const feedForm = new FormData();
+        feedForm.append('titles', JSON.stringify({ en: 'Welcome!', th: 'ยินดีต้อนรับ!' }));
+        feedForm.append('descriptions', JSON.stringify({
+          en: communityData.welcomePost,
+          th: communityData.welcomePost,
+        }));
+        feedForm.append('isDraft', 'false');
+
+        // Attach banner as feed image if available
+        if (communityData.banner) {
+          const feedImageBlob = await urlToBlob(communityData.banner, 'feed-image');
+          if (feedImageBlob) {
+            feedForm.append('image', feedImageBlob.blob, feedImageBlob.name);
+          }
+        }
+
+        console.log('[sync] Creating welcome post for org:', orgId);
+        await fetch(
+          `${FW_API_BASE}/organizations/${orgId}/feed`,
+          { method: 'POST', headers: authHeaders, body: feedForm },
+        ).then(r => r.json()).then(r => {
+          console.log('[sync] Welcome post result:', JSON.stringify(r).slice(0, 200));
+        });
+      } catch (feedErr) {
+        console.error('[sync] Welcome post failed:', feedErr);
+      }
+    }
+
+    // ── 6. Log event ────────────────────────────────────────────
     try {
       await supabase.from('events').insert({
         merchant_id: merchantId,
