@@ -193,8 +193,8 @@ Return ONLY the JSON object, no explanation.`;
 export async function scrapeBrandContext(rawUrl: string): Promise<ScrapedBrandContext> {
   const url = normalizeUrl(rawUrl);
   
-  // Check if it's a Google Maps URL first
-  if (isGoogleMapsUrl(url)) {
+  // Check if it's a Google Maps URL or search query
+  if (isGoogleMapsUrl(url) || isGoogleMapsUrl(rawUrl)) {
     try {
       const placeData = await scrapeGooglePlace(url);
       if (placeData.error) {

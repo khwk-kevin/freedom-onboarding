@@ -1,5 +1,6 @@
-// Google Maps Place Scraper — no API key needed
-// Uses server-side fetch + HTML parsing to extract business data
+// Google Maps Place Scraper
+// Uses Google Places API (New) for structured data, falls back to HTML scraping
+// Requires GOOGLE_PLACES_API_KEY or GEMINI_API_KEY with Places API enabled
 
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -168,6 +169,84 @@ Return ONLY the JSON object.`
   return {};
 }
 
+// Try Google Places API (New) — text search
+async function tryPlacesApi(query: string): Promise<GooglePlaceData | null> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.types,places.editorialSummary,places.photos,places.primaryType,places.websiteUri,places.googleMapsUri,places.rating,places.userRatingCount,places.priceLevel,places.nationalPhoneNumber',
+      },
+      body: JSON.stringify({ textQuery: query, languageCode: 'en' }),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) {
+      console.log('[google-places] API returned', res.status);
+      return null;
+    }
+
+    const data = await res.json();
+    const place = data.places?.[0];
+    if (!place) return null;
+
+    // Get photo URLs
+    const imageUrls: string[] = [];
+    if (place.photos?.length) {
+      for (const photo of place.photos.slice(0, 4)) {
+        // Photo reference → URL via Places Photo API
+        imageUrls.push(`https://places.googleapis.com/v1/${photo.name}/media?maxWidthPx=800&key=${apiKey}`);
+      }
+    }
+
+    return {
+      source: 'google_maps',
+      url: place.googleMapsUri || '',
+      businessName: place.displayName?.text,
+      category: mapGoogleType(place.primaryType || place.types?.[0]),
+      rating: place.rating?.toString(),
+      reviewCount: place.userRatingCount?.toString(),
+      address: place.formattedAddress,
+      phone: place.nationalPhoneNumber,
+      website: place.websiteUri,
+      description: place.editorialSummary?.text,
+      priceLevel: mapPriceLevel(place.priceLevel),
+      imageUrls,
+    };
+  } catch (err) {
+    console.log('[google-places] API error:', err);
+    return null;
+  }
+}
+
+function mapGoogleType(type?: string): string {
+  if (!type) return 'other';
+  const map: Record<string, string> = {
+    restaurant: 'restaurant', cafe: 'cafe', coffee_shop: 'cafe',
+    bar: 'bar', night_club: 'bar', hair_salon: 'salon', beauty_salon: 'salon',
+    spa: 'clinic', gym: 'fitness', store: 'retail', shopping_mall: 'retail',
+    hospital: 'clinic', dentist: 'clinic', doctor: 'clinic',
+  };
+  return map[type] || 'other';
+}
+
+function mapPriceLevel(level?: string): string | undefined {
+  if (!level) return undefined;
+  const map: Record<string, string> = {
+    PRICE_LEVEL_FREE: 'free',
+    PRICE_LEVEL_INEXPENSIVE: 'budget',
+    PRICE_LEVEL_MODERATE: 'mid-range',
+    PRICE_LEVEL_EXPENSIVE: 'upscale',
+    PRICE_LEVEL_VERY_EXPENSIVE: 'fine-dining',
+  };
+  return map[level];
+}
+
 // Main function: scrape Google Maps for a business
 export async function scrapeGooglePlace(input: string): Promise<GooglePlaceData> {
   let url: string;
@@ -177,19 +256,31 @@ export async function scrapeGooglePlace(input: string): Promise<GooglePlaceData>
     url = input;
     searchQuery = extractSearchQuery(input) || input;
   } else {
-    // Treat as a search query
     searchQuery = input;
     url = buildSearchUrl(input);
   }
 
+  // Try Places API first (structured, reliable)
+  const apiResult = await tryPlacesApi(searchQuery);
+  if (apiResult && apiResult.businessName) {
+    console.log('[google-places] API success:', apiResult.businessName);
+    // Enrich with Claude analysis for vibe/products
+    if (!apiResult.vibe || !apiResult.products) {
+      const enrichment = await analyzeWithClaude(
+        `Business: ${apiResult.businessName}\nCategory: ${apiResult.category}\nDescription: ${apiResult.description || ''}\nAddress: ${apiResult.address || ''}\nPrice: ${apiResult.priceLevel || ''}`,
+        searchQuery
+      );
+      if (enrichment.vibe) apiResult.vibe = enrichment.vibe;
+      if (enrichment.products) apiResult.products = enrichment.products;
+    }
+    return apiResult;
+  }
+
+  // Fallback: HTML scraping
   try {
-    console.log('[google-places] Fetching:', url);
+    console.log('[google-places] Falling back to HTML scrape:', url);
     const html = await fetchGoogleMapsPage(url);
-    
-    // Extract from HTML structure
     const htmlData = extractFromHtml(html);
-    
-    // Use Claude to analyze the text content
     const claudeData = await analyzeWithClaude(html, searchQuery);
 
     return {
