@@ -466,3 +466,262 @@ export function VibeSelector({ vibes, onSelect }: VibeSelectorProps) {
 }
 
 export { VIBE_PRESETS };
+
+// ── Reward Suggestions Card ──────────────────────────────────────
+interface RewardSuggestionsCardProps {
+  rewards: { emoji: string; title: string; description: string; type: string }[];
+  businessName: string;
+  onAccept: () => void;
+}
+
+export function RewardSuggestionsCard({ rewards, businessName, onAccept }: RewardSuggestionsCardProps) {
+  const typeColors: Record<string, string> = {
+    points: '#10F48B',
+    visits: '#3B82F6',
+    spending: '#F59E0B',
+    referral: '#A855F7',
+  };
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden max-w-xs animate-in"
+      style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)' }}
+    >
+      <div className="px-4 pt-4 pb-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--oc-text-muted)' }}>
+          Reward Ideas for {businessName}
+        </p>
+      </div>
+
+      <div className="px-4 pb-3 space-y-2">
+        {rewards.map((r, i) => {
+          const color = typeColors[r.type] || '#10F48B';
+          return (
+            <div
+              key={i}
+              className="flex items-start gap-3 p-3 rounded-xl transition-all"
+              style={{ background: `${color}08`, border: `1px solid ${color}15` }}
+            >
+              <span className="text-xl shrink-0 mt-0.5">{r.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-bold" style={{ color: 'var(--oc-text)' }}>{r.title}</p>
+                  <span
+                    className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase"
+                    style={{ background: `${color}15`, color }}
+                  >
+                    {r.type}
+                  </span>
+                </div>
+                <p className="text-[11px] mt-0.5" style={{ color: 'var(--oc-text-muted)' }}>{r.description}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="px-4 pb-4">
+        <button
+          onClick={onAccept}
+          className="w-full py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
+          style={{ background: '#10F48B', color: '#050314' }}
+        >
+          Love these! ✨
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Welcome Post Card ────────────────────────────────────────────
+interface WelcomePostCardProps {
+  post: string;
+  businessName: string;
+  logoUrl?: string;
+  onAccept: () => void;
+  onEdit: () => void;
+}
+
+export function WelcomePostCard({ post, businessName, logoUrl, onAccept, onEdit }: WelcomePostCardProps) {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden max-w-xs animate-in"
+      style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)' }}
+    >
+      <div className="px-4 pt-4 pb-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--oc-text-muted)' }}>
+          Your First Community Post
+        </p>
+      </div>
+
+      {/* Mock post UI */}
+      <div className="mx-4 mb-3 rounded-xl p-3" style={{ background: 'var(--oc-btn-bg)', border: '1px solid var(--oc-btn-border)' }}>
+        <div className="flex items-center gap-2 mb-2">
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
+          ) : (
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px]" style={{ background: 'rgba(16,244,139,0.1)', color: '#10F48B' }}>
+              {businessName[0]}
+            </div>
+          )}
+          <span className="text-xs font-semibold" style={{ color: 'var(--oc-text)' }}>{businessName}</span>
+          <span className="text-[10px]" style={{ color: 'var(--oc-text-muted)' }}>just now</span>
+        </div>
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--oc-text)' }}>{post}</p>
+        <div className="flex items-center gap-4 mt-2 pt-2" style={{ borderTop: '1px solid var(--oc-btn-border)' }}>
+          <span className="text-[10px]" style={{ color: 'var(--oc-text-muted)' }}>❤️ 0</span>
+          <span className="text-[10px]" style={{ color: 'var(--oc-text-muted)' }}>💬 0</span>
+        </div>
+      </div>
+
+      <div className="px-4 pb-4 flex gap-2">
+        <button
+          onClick={onAccept}
+          className="flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
+          style={{ background: '#10F48B', color: '#050314' }}
+        >
+          Use this! ✨
+        </button>
+        <button
+          onClick={onEdit}
+          className="px-4 py-2 rounded-xl text-xs font-medium transition-all active:scale-95"
+          style={{ background: 'var(--oc-btn-bg)', color: 'var(--oc-text)', border: '1px solid var(--oc-btn-border)' }}
+        >
+          ✏️ Edit
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Cover Carousel Card ──────────────────────────────────────────
+interface CoverCarouselCardProps {
+  covers: string[];
+  businessName: string;
+  onSelect: (index: number) => void;
+}
+
+export function CoverCarouselCard({ covers, businessName, onSelect }: CoverCarouselCardProps) {
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden max-w-xs animate-in"
+      style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)' }}
+    >
+      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--oc-text-muted)' }}>
+          Cover Options for {businessName}
+        </p>
+        <span className="text-[10px]" style={{ color: 'var(--oc-text-muted)' }}>
+          {activeIdx + 1}/{covers.length}
+        </span>
+      </div>
+
+      {/* Cover display */}
+      <div className="px-4 pb-2">
+        <div className="rounded-xl overflow-hidden relative" style={{ aspectRatio: '1440/690' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={covers[activeIdx]}
+            alt={`Cover option ${activeIdx + 1}`}
+            className="w-full h-full object-cover transition-opacity duration-300"
+          />
+        </div>
+      </div>
+
+      {/* Thumbnails */}
+      {covers.length > 1 && (
+        <div className="px-4 pb-2 flex gap-2 justify-center">
+          {covers.map((cover, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveIdx(i)}
+              className="rounded-lg overflow-hidden transition-all"
+              style={{
+                width: '48px',
+                aspectRatio: '1440/690',
+                border: i === activeIdx ? '2px solid #10F48B' : '1px solid var(--oc-btn-border)',
+                opacity: i === activeIdx ? 1 : 0.5,
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={cover} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Select button */}
+      <div className="px-4 pb-4">
+        <button
+          onClick={() => onSelect(activeIdx)}
+          className="w-full py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
+          style={{ background: '#10F48B', color: '#050314' }}
+        >
+          Use this cover ✨
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Brand Description Card ───────────────────────────────────────
+interface BrandDescriptionCardProps {
+  description: string;
+  audiencePersona?: string;
+  onAccept: () => void;
+  onEdit: () => void;
+}
+
+export function BrandDescriptionCard({ description, audiencePersona, onAccept, onEdit }: BrandDescriptionCardProps) {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden max-w-xs animate-in"
+      style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)' }}
+    >
+      <div className="px-4 pt-4 pb-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--oc-text-muted)' }}>
+          AI-Generated Description
+        </p>
+      </div>
+
+      <div className="px-4 pb-3 space-y-3">
+        <div className="rounded-xl p-3" style={{ background: 'var(--oc-btn-bg)', border: '1px solid var(--oc-btn-border)' }}>
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--oc-text)' }}>
+            &ldquo;{description}&rdquo;
+          </p>
+        </div>
+
+        {audiencePersona && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--oc-text-muted)' }}>
+              Your Ideal Member
+            </p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--oc-text-muted)' }}>
+              🎯 {audiencePersona}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="px-4 pb-4 flex gap-2">
+        <button
+          onClick={onAccept}
+          className="flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
+          style={{ background: '#10F48B', color: '#050314' }}
+        >
+          Perfect! ✨
+        </button>
+        <button
+          onClick={onEdit}
+          className="px-4 py-2 rounded-xl text-xs font-medium transition-all active:scale-95"
+          style={{ background: 'var(--oc-btn-bg)', color: 'var(--oc-text)', border: '1px solid var(--oc-btn-border)' }}
+        >
+          ✏️ Tweak
+        </button>
+      </div>
+    </div>
+  );
+}

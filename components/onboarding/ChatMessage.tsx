@@ -8,6 +8,9 @@ import {
   BrandProfileCard,
   ScrapingIndicator,
   AICreationCard,
+  RewardSuggestionsCard,
+  WelcomePostCard,
+  BrandDescriptionCard,
 } from './InteractiveCards';
 
 interface ChatMessageProps {
@@ -236,6 +239,72 @@ export function ChatMessageComponent({
           vibe={cardData.vibe as string | undefined}
           style={cardData.style as string | undefined}
         />
+      </div>
+    );
+  }
+
+  if (cardType === 'rewards' && cardData && onCardAction) {
+    return (
+      <div className="flex items-start space-x-3 max-w-sm">
+        <AvaAvatar />
+        <div className="space-y-2 flex-1">
+          {message.content && (
+            <div className="rounded-2xl rounded-tl-none px-4 py-3 text-sm leading-relaxed"
+              style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)', color: 'var(--oc-text)' }}>
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            </div>
+          )}
+          <RewardSuggestionsCard
+            rewards={cardData.rewards as { emoji: string; title: string; description: string; type: string }[]}
+            businessName={cardData.businessName as string}
+            onAccept={() => onCardAction('rewards_accept', cardData)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (cardType === 'brand_description' && cardData && onCardAction) {
+    return (
+      <div className="flex items-start space-x-3 max-w-sm">
+        <AvaAvatar />
+        <div className="space-y-2 flex-1">
+          {message.content && (
+            <div className="rounded-2xl rounded-tl-none px-4 py-3 text-sm leading-relaxed"
+              style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)', color: 'var(--oc-text)' }}>
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            </div>
+          )}
+          <BrandDescriptionCard
+            description={cardData.description as string}
+            audiencePersona={cardData.audiencePersona as string | undefined}
+            onAccept={() => onCardAction('description_accept', cardData)}
+            onEdit={() => onCardAction('description_edit', cardData)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (cardType === 'welcome_post' && cardData && onCardAction) {
+    return (
+      <div className="flex items-start space-x-3 max-w-sm">
+        <AvaAvatar />
+        <div className="space-y-2 flex-1">
+          {message.content && (
+            <div className="rounded-2xl rounded-tl-none px-4 py-3 text-sm leading-relaxed"
+              style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)', color: 'var(--oc-text)' }}>
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            </div>
+          )}
+          <WelcomePostCard
+            post={cardData.post as string}
+            businessName={cardData.businessName as string}
+            logoUrl={cardData.logoUrl as string | undefined}
+            onAccept={() => onCardAction('welcome_accept', cardData)}
+            onEdit={() => onCardAction('welcome_edit', cardData)}
+          />
+        </div>
       </div>
     );
   }

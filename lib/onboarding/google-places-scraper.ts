@@ -135,27 +135,29 @@ async function analyzeWithClaude(html: string, query: string): Promise<Partial<G
   try {
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-20250514',
-      max_tokens: 500,
+      max_tokens: 600,
       messages: [{
         role: 'user',
-        content: `Extract business information from this Google Maps page for "${query}".
+        content: `You are analyzing a Google Maps business listing for "${query}". Extract and INFER as much as possible. Never return empty fields.
 
-Page text (first 4000 chars):
+Data available:
 ${textContent}
 
-Return a JSON object with:
+IMPORTANT: Even with limited data, you MUST infer reasonable values for every field. Use the business name, category, and any other clues to make intelligent guesses.
+
+Return a JSON object:
 {
   "businessName": "the business name in English",
-  "category": "restaurant/cafe/salon/retail/fitness/bar/clinic/other",
+  "category": "restaurant|cafe|salon|retail|fitness|bar|clinic|other",
   "rating": "4.5",
-  "address": "full address",
-  "description": "2-3 sentence description of what this business is",
-  "products": ["main product 1", "main product 2", "main product 3"],
-  "vibe": "one of: cozy, bold, classy, playful, modern, elegant, rustic, vibrant, minimal",
-  "priceLevel": "budget/mid-range/upscale/fine-dining"
+  "address": "full address if available",
+  "description": "2-3 compelling sentences about what this business offers and what makes it special. Be specific and enthusiastic.",
+  "products": ["main offering 1", "main offering 2", "main offering 3"] (for restaurants: cuisine/dishes, for salons: services, etc.),
+  "vibe": "cozy|bold|classy|playful|modern|elegant|rustic|vibrant|minimal",
+  "priceLevel": "budget|mid-range|upscale|fine-dining"
 }
 
-Return ONLY the JSON object.`
+Return ONLY valid JSON.`
       }],
     });
 
@@ -311,14 +313,15 @@ export async function scrapeGooglePlace(input: string): Promise<GooglePlaceData>
   const apiResult = await tryPlacesApi(searchQuery);
   if (apiResult && apiResult.businessName) {
     console.log('[google-places] API success:', apiResult.businessName);
-    // Enrich with Claude analysis for vibe/products
-    if (!apiResult.vibe || !apiResult.products) {
+    // Enrich with Claude analysis for vibe/products/description
+    if (!apiResult.vibe || !apiResult.products || !apiResult.description) {
       const enrichment = await analyzeWithClaude(
-        `Business: ${apiResult.businessName}\nCategory: ${apiResult.category}\nDescription: ${apiResult.description || ''}\nAddress: ${apiResult.address || ''}\nPrice: ${apiResult.priceLevel || ''}`,
+        `Business: ${apiResult.businessName}\nCategory: ${apiResult.category}\nDescription: ${apiResult.description || 'unknown'}\nAddress: ${apiResult.address || 'unknown'}\nPrice Level: ${apiResult.priceLevel || 'unknown'}\nRating: ${apiResult.rating || 'unknown'}\nWebsite: ${apiResult.website || 'unknown'}`,
         searchQuery
       );
       if (enrichment.vibe) apiResult.vibe = enrichment.vibe;
       if (enrichment.products) apiResult.products = enrichment.products;
+      if (enrichment.description && !apiResult.description) apiResult.description = enrichment.description;
     }
     return apiResult;
   }

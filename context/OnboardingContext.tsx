@@ -378,21 +378,102 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         console.log('[onboarding] step:', currentStep, 'extractions:', extractions);
         
         if (currentStep === '6' && communityData.businessType && !communityData.banner) {
+          const enrichedData = { ...communityData, ...tagUpdates };
+
+          // 1. Trigger cover generation
           setTimeout(async () => {
             try {
               setIsGeneratingLogo(true);
-              // Build enriched data snapshot with ALL collected context
-              const enrichedData = {
-                ...communityData,
-                ...tagUpdates,
-              };
               await generateImageInternal('banner', enrichedData);
             } catch {
-              // Logo generation failure is non-fatal
+              // Cover generation failure is non-fatal
             } finally {
               setIsGeneratingLogo(false);
             }
-          }, 1500); // Give user time to see AVA's "generating..." message
+          }, 1500);
+
+          // 2. Simultaneously generate AI brand content (description, rewards, welcome post)
+          setTimeout(async () => {
+            try {
+              const res = await fetch('/api/onboarding/generate-brand-content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  businessName: enrichedData.name || 'Your Business',
+                  businessType: enrichedData.businessType,
+                  vibe: enrichedData.vibe,
+                  products: enrichedData.products,
+                  description: enrichedData.description,
+                  brandStyle: enrichedData.brandStyle,
+                  types: ['description', 'rewards', 'welcomePost', 'audiencePersona'],
+                }),
+              });
+              const content = await res.json();
+              console.log('[onboarding] brand content generated:', content);
+
+              if (content.success) {
+                // Update community data with AI-generated description
+                if (content.description) {
+                  setCommunityData((prev) => ({ ...prev, description: content.description }));
+                }
+
+                // Add reward suggestions card to chat
+                if (content.rewards?.length) {
+                  setMessages((prev) => [...prev, {
+                    role: 'assistant' as const,
+                    content: `I created some reward ideas tailored to ${enrichedData.name || 'your business'}! 🎁`,
+                    timestamp: new Date(),
+                    metadata: {
+                      cardType: 'rewards' as const,
+                      cardData: {
+                        rewards: content.rewards,
+                        businessName: enrichedData.name || 'Your Business',
+                      },
+                    },
+                  }]);
+                }
+
+                // Add AI description card
+                if (content.description) {
+                  setTimeout(() => {
+                    setMessages((prev) => [...prev, {
+                      role: 'assistant' as const,
+                      content: 'Here\'s an AI-crafted description for your community page:',
+                      timestamp: new Date(),
+                      metadata: {
+                        cardType: 'brand_description' as const,
+                        cardData: {
+                          description: content.description,
+                          audiencePersona: content.audiencePersona,
+                        },
+                      },
+                    }]);
+                  }, 2000);
+                }
+
+                // Add welcome post card
+                if (content.welcomePost) {
+                  setTimeout(() => {
+                    setMessages((prev) => [...prev, {
+                      role: 'assistant' as const,
+                      content: 'And I drafted your first community post! 📝',
+                      timestamp: new Date(),
+                      metadata: {
+                        cardType: 'welcome_post' as const,
+                        cardData: {
+                          post: content.welcomePost,
+                          businessName: enrichedData.name || 'Your Business',
+                          logoUrl: enrichedData.logo,
+                        },
+                      },
+                    }]);
+                  }, 4000);
+                }
+              }
+            } catch (err) {
+              console.error('[onboarding] brand content generation failed:', err);
+            }
+          }, 2000);
         }
 
         // Signup wall is triggered via generateImageInternal after logo completes — not here
@@ -495,6 +576,16 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       sendMessage("Close, but let me tweak a few things");
     } else if (action === 'brand_fresh') {
       sendMessage("Not quite — let me fill in the details myself");
+    } else if (action === 'rewards_accept') {
+      sendMessage("Love these reward ideas! Let's use them ✨");
+    } else if (action === 'description_accept') {
+      sendMessage("That description is perfect!");
+    } else if (action === 'description_edit') {
+      sendMessage("Let me tweak the description a bit");
+    } else if (action === 'welcome_accept') {
+      sendMessage("Great welcome post! Let's use it 📝");
+    } else if (action === 'welcome_edit') {
+      sendMessage("Let me edit the welcome post");
     }
   }, [sendMessage]);
 

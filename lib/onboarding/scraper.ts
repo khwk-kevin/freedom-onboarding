@@ -145,36 +145,69 @@ async function analyzeBrandContext(
   url: string,
   platform: string
 ): Promise<Partial<ScrapedBrandContext>> {
-  const prompt = `Analyze this ${platform} page and extract brand information for a local business.
+  // Extract meaningful text: keep headings, links, structured content
+  const cleanText = html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
+    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '')
+    .replace(/<(h[1-6])[^>]*>/gi, '\n## ')
+    .replace(/<li[^>]*>/gi, '\n• ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<p[^>]*>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\n\s+/g, '\n')
+    .trim()
+    .slice(0, 5000);
+
+  // Extract inline CSS colors
+  const cssColors: string[] = [];
+  const colorMatches = html.matchAll(/#([0-9a-fA-F]{6})\b/g);
+  for (const m of colorMatches) {
+    const hex = `#${m[1]}`;
+    if (!cssColors.includes(hex) && !['#000000', '#ffffff', '#FFFFFF', '#333333', '#666666', '#999999', '#cccccc'].includes(hex)) {
+      cssColors.push(hex);
+    }
+  }
+
+  const prompt = `You are analyzing a ${platform} page for a local business. Your job is to extract EVERYTHING you can about this brand, even if you need to infer from limited data. Be creative and thorough.
 
 URL: ${url}
 
 META TAGS:
-${Object.entries(meta).slice(0, 20).map(([k, v]) => `${k}: ${v}`).join('\n')}
+${Object.entries(meta).slice(0, 25).map(([k, v]) => `${k}: ${v}`).join('\n')}
 
-IMAGE URLs FOUND:
-${imageUrls.slice(0, 5).join('\n')}
+CSS COLORS FOUND: ${cssColors.slice(0, 10).join(', ') || 'none'}
 
-PAGE TEXT (first 3000 chars):
-${html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 3000)}
+PAGE CONTENT:
+${cleanText}
 
-Extract and return a JSON object with:
+IMPORTANT INSTRUCTIONS:
+- For "bio": Write a compelling 1-sentence tagline. If the page has one, use it. Otherwise, craft one from what you can tell about the business.
+- For "description": Write 2-3 sentences about what this business does and what makes it special. BE SPECIFIC — mention their actual offerings, style, or unique qualities.
+- For "products": List their main products/services. For restaurants, list cuisine types or signature dishes. For salons, list services. For retail, list product categories. Infer from ANY clue on the page.
+- For "vibe": Choose based on the page's tone, imagery, and language.
+- For "brandColors": Use the CSS colors found above, or infer from the business type and vibe.
+- NEVER return null or empty arrays. Always provide your best inference.
+
+Return a JSON object:
 {
-  "businessName": "the business name",
-  "bio": "their bio or tagline (1-2 sentences)",
-  "description": "what this business is about (2-3 sentences)",
+  "businessName": "exact business name",
+  "bio": "compelling one-line tagline",
+  "description": "2-3 sentences about what makes this business special",
   "products": ["product1", "product2", "product3"],
-  "vibe": "one of: cozy, bold, classy, playful, modern, elegant, rustic, vibrant, minimal",
-  "category": "restaurant/cafe/salon/retail/fitness/bar/clinic/other",
-  "brandColors": ["#hex1", "#hex2"] (infer from the page design or content if possible)
+  "vibe": "cozy|bold|classy|playful|modern|elegant|rustic|vibrant|minimal",
+  "category": "restaurant|cafe|salon|retail|fitness|bar|clinic|other",
+  "brandColors": ["#hex1", "#hex2"]
 }
 
-Return ONLY the JSON object, no explanation.`;
+Return ONLY valid JSON.`;
 
   try {
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-20250514',
-      max_tokens: 500,
+      max_tokens: 600,
       messages: [{ role: 'user', content: prompt }],
     });
 
