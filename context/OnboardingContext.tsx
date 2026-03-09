@@ -46,6 +46,7 @@ interface OnboardingContextType {
   generateImage: (type: 'logo' | 'banner') => Promise<void>;
   onSignupSuccess: (merchantId: string, email: string) => Promise<void>;
   dismissSignupWall: () => void;
+  handleCardAction: (action: string, cardData?: Record<string, unknown>) => void;
 }
 
 // ============================================================
@@ -259,16 +260,59 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
         // Handle scrape URL — auto-scrape their social/website
         if (extractions.scrapeUrl) {
-          console.log('[onboarding] scraping:', extractions.scrapeUrl);
+          const scrapeUrl = extractions.scrapeUrl;
+          console.log('[onboarding] scraping:', scrapeUrl);
+
+          // Show scraping indicator card in chat
+          const scrapingMsg: ChatMessage = {
+            role: 'assistant',
+            content: '',
+            timestamp: new Date(),
+            metadata: {
+              cardType: 'scraping',
+              cardData: { url: scrapeUrl, stage: 'fetching' },
+            },
+          };
+          setMessages((prev) => [...prev, scrapingMsg]);
+
           setTimeout(async () => {
+            // Update scraping stage to "analyzing"
+            setMessages((prev) => {
+              const updated = [...prev];
+              const lastIdx = updated.length - 1;
+              if (updated[lastIdx]?.metadata?.cardType === 'scraping') {
+                updated[lastIdx] = {
+                  ...updated[lastIdx],
+                  metadata: { cardType: 'scraping', cardData: { url: scrapeUrl, stage: 'analyzing' } },
+                };
+              }
+              return updated;
+            });
+
             try {
               const scrapeRes = await fetch('/api/onboarding/scrape', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: extractions.scrapeUrl }),
+                body: JSON.stringify({ url: scrapeUrl }),
               });
               const scrapeData = await scrapeRes.json();
               console.log('[onboarding] scrape result:', scrapeData);
+
+              // Update to "extracting" stage
+              setMessages((prev) => {
+                const updated = [...prev];
+                const lastIdx = updated.length - 1;
+                if (updated[lastIdx]?.metadata?.cardType === 'scraping') {
+                  updated[lastIdx] = {
+                    ...updated[lastIdx],
+                    metadata: { cardType: 'scraping', cardData: { url: scrapeUrl, stage: 'extracting' } },
+                  };
+                }
+                return updated;
+              });
+
+              // Brief pause to show extracting stage
+              await new Promise(r => setTimeout(r, 800));
 
               if (scrapeData.success) {
                 // Update community data with scraped info
@@ -282,25 +326,48 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                 if (scrapeData.category) scrapeUpdates.businessType = scrapeData.category;
                 setCommunityData((prev) => ({ ...prev, ...scrapeUpdates }));
 
-                // Inject scraped context back into chat so AVA can present it
-                const contextMsg = `[[SCRAPED_CONTEXT:${JSON.stringify({
-                  businessName: scrapeData.businessName,
-                  bio: scrapeData.bio,
-                  products: scrapeData.products,
-                  vibe: scrapeData.vibe,
-                  category: scrapeData.category,
-                  source: scrapeData.source,
-                  address: scrapeData.address,
-                  rating: scrapeData.followerCount,
-                })}]]`;
-                // Send as a system message to AVA
-                await sendMessage(contextMsg);
+                // Replace scraping indicator with the appropriate interactive card
+                const isGoogleMaps = scrapeData.source === 'google_maps';
+                const cardType = isGoogleMaps ? 'place_confirm' as const : 'brand_profile' as const;
+
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  const lastIdx = updated.length - 1;
+                  if (updated[lastIdx]?.metadata?.cardType === 'scraping') {
+                    updated[lastIdx] = {
+                      role: 'assistant',
+                      content: isGoogleMaps
+                        ? 'I found a place on Google Maps! Is this your business? 📍'
+                        : 'I checked out your page! Here\'s what I found: ✨',
+                      timestamp: new Date(),
+                      metadata: {
+                        cardType,
+                        cardData: {
+                          name: scrapeData.businessName || 'Unknown',
+                          bio: scrapeData.bio,
+                          address: scrapeData.address,
+                          rating: scrapeData.followerCount,
+                          vibe: scrapeData.vibe,
+                          products: scrapeData.products,
+                          category: scrapeData.category,
+                          imageUrl: scrapeData.imageUrls?.[0],
+                          source: scrapeData.source,
+                          // Store full scrape data for confirmation
+                          _scrapeData: scrapeData,
+                        },
+                      },
+                    };
+                  }
+                  return updated;
+                });
               } else {
-                // Scrape failed — tell AVA to continue with manual flow
+                // Remove scraping indicator and tell AVA to continue with manual flow
+                setMessages((prev) => prev.filter(m => m.metadata?.cardType !== 'scraping'));
                 await sendMessage('[[SCRAPE_FAILED]]');
               }
             } catch (err) {
               console.error('[onboarding] scrape error:', err);
+              setMessages((prev) => prev.filter(m => m.metadata?.cardType !== 'scraping'));
               await sendMessage('[[SCRAPE_FAILED]]');
             }
           }, 500);
@@ -385,6 +452,51 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     setShowSignupWall(false);
     setGraceUsed(true);
   }, []);
+
+  // ── Handle interactive card actions ─────────────────────────────
+  const handleCardAction = useCallback((action: string, cardData?: Record<string, unknown>) => {
+    const scrapeData = cardData?._scrapeData as Record<string, unknown> | undefined;
+
+    if (action === 'place_confirm') {
+      // User confirmed the Google Maps place — now inject scraped context
+      if (scrapeData) {
+        const contextMsg = `[[SCRAPED_CONTEXT:${JSON.stringify({
+          businessName: scrapeData.businessName,
+          bio: scrapeData.bio,
+          products: scrapeData.products,
+          vibe: scrapeData.vibe,
+          category: scrapeData.category,
+          source: scrapeData.source,
+          address: scrapeData.address,
+          rating: scrapeData.followerCount,
+        })}]]`;
+        sendMessage(contextMsg);
+      }
+    } else if (action === 'place_reject') {
+      // Wrong place — go to manual flow
+      sendMessage("That's not my place — let me fill in the details myself");
+    } else if (action === 'brand_confirm') {
+      // User confirmed scraped brand data
+      if (scrapeData) {
+        const contextMsg = `[[SCRAPED_CONTEXT:${JSON.stringify({
+          businessName: scrapeData.businessName,
+          bio: scrapeData.bio,
+          products: scrapeData.products,
+          vibe: scrapeData.vibe,
+          category: scrapeData.category,
+          source: scrapeData.source,
+          address: scrapeData.address,
+          rating: scrapeData.followerCount,
+          confirmed: true,
+        })}]]`;
+        sendMessage(contextMsg);
+      }
+    } else if (action === 'brand_tweak') {
+      sendMessage("Close, but let me tweak a few things");
+    } else if (action === 'brand_fresh') {
+      sendMessage("Not quite — let me fill in the details myself");
+    }
+  }, [sendMessage]);
 
   // ── Internal image generation helper ───────────────────────────
   const generateImageInternal = async (
@@ -473,6 +585,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     generateImage,
     onSignupSuccess,
     dismissSignupWall,
+    handleCardAction,
   };
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;

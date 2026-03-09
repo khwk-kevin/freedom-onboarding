@@ -3,12 +3,19 @@
 import React, { useState } from 'react';
 import type { ChatMessage } from '@/types/onboarding';
 import { BUSINESS_TEMPLATES } from '@/lib/onboarding/templates';
+import {
+  PlaceConfirmCard,
+  BrandProfileCard,
+  ScrapingIndicator,
+  AICreationCard,
+} from './InteractiveCards';
 
 interface ChatMessageProps {
-  message: ChatMessage & { metadata?: Record<string, unknown> };
+  message: ChatMessage;
   isLatest?: boolean;
   onOptionClick?: (option: string) => void;
   onBusinessTypeSelect?: (typeId: string) => void;
+  onCardAction?: (action: string, cardData?: Record<string, unknown>) => void;
 }
 
 function isMultiSelect(text: string): boolean {
@@ -141,11 +148,99 @@ function UserMessage({ message }: { message: ChatMessage }) {
 
 // ── AVA message ───────────────────────────────────────────────────
 export function ChatMessageComponent({
-  message, isLatest, onOptionClick, onBusinessTypeSelect,
+  message, isLatest, onOptionClick, onBusinessTypeSelect, onCardAction,
 }: ChatMessageProps) {
   const isUser = message.role === 'user';
   if (isUser) return <UserMessage message={message} />;
 
+  const cardType = message.metadata?.cardType;
+  const cardData = message.metadata?.cardData as Record<string, unknown> | undefined;
+
+  // ── Render interactive card messages ─────────────────────────
+  if (cardType === 'scraping' && cardData) {
+    return (
+      <div className="flex items-start space-x-3 max-w-sm">
+        <AvaAvatar />
+        <ScrapingIndicator
+          url={cardData.url as string}
+          stage={cardData.stage as 'fetching' | 'analyzing' | 'extracting' | 'done'}
+        />
+      </div>
+    );
+  }
+
+  if (cardType === 'place_confirm' && cardData && onCardAction) {
+    return (
+      <div className="flex items-start space-x-3 max-w-sm">
+        <AvaAvatar />
+        <div className="space-y-2 flex-1">
+          {message.content && (
+            <div
+              className="rounded-2xl rounded-tl-none px-4 py-3 text-sm leading-relaxed"
+              style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)', color: 'var(--oc-text)' }}
+            >
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            </div>
+          )}
+          <PlaceConfirmCard
+            name={cardData.name as string}
+            address={cardData.address as string | undefined}
+            rating={cardData.rating as string | undefined}
+            imageUrl={cardData.imageUrl as string | undefined}
+            category={cardData.category as string | undefined}
+            onConfirm={() => onCardAction('place_confirm', cardData)}
+            onReject={() => onCardAction('place_reject', cardData)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (cardType === 'brand_profile' && cardData && onCardAction) {
+    return (
+      <div className="flex items-start space-x-3 max-w-sm">
+        <AvaAvatar />
+        <div className="space-y-2 flex-1">
+          {message.content && (
+            <div
+              className="rounded-2xl rounded-tl-none px-4 py-3 text-sm leading-relaxed"
+              style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)', color: 'var(--oc-text)' }}
+            >
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            </div>
+          )}
+          <BrandProfileCard
+            name={cardData.name as string}
+            bio={cardData.bio as string | undefined}
+            vibe={cardData.vibe as string | undefined}
+            products={cardData.products as string[] | undefined}
+            category={cardData.category as string | undefined}
+            imageUrl={cardData.imageUrl as string | undefined}
+            rating={cardData.rating as string | undefined}
+            onConfirm={() => onCardAction('brand_confirm', cardData)}
+            onTweak={() => onCardAction('brand_tweak', cardData)}
+            onStartFresh={() => onCardAction('brand_fresh', cardData)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (cardType === 'ai_creating' && cardData) {
+    return (
+      <div className="flex items-start space-x-3 max-w-sm">
+        <AvaAvatar />
+        <AICreationCard
+          type={cardData.type as 'cover' | 'banner'}
+          businessName={cardData.businessName as string | undefined}
+          vibe={cardData.vibe as string | undefined}
+          style={cardData.style as string | undefined}
+        />
+      </div>
+    );
+  }
+
+  // ── Regular text messages ────────────────────────────────────
   const showBusinessPicker =
     isLatest && Boolean(message.metadata?.showBusinessTypePicker) && Boolean(onBusinessTypeSelect);
   const options = isLatest && !showBusinessPicker ? extractOptions(message.content) : null;
@@ -153,16 +248,7 @@ export function ChatMessageComponent({
 
   return (
     <div className="flex items-start space-x-3 max-w-sm">
-      <div
-        className="w-8 h-8 rounded-full shrink-0 mt-1 flex items-center justify-center text-xs font-bold border"
-        style={{
-          background: 'rgba(16,244,139,0.1)',
-          borderColor: 'rgba(16,244,139,0.25)',
-          color: '#10F48B',
-        }}
-      >
-        AVA
-      </div>
+      <AvaAvatar />
       <div className="space-y-2 flex-1">
         <div
           className="rounded-2xl rounded-tl-none px-4 py-3 text-sm leading-relaxed"
@@ -191,20 +277,27 @@ export function ChatMessageComponent({
   );
 }
 
+// ── Reusable AVA avatar ───────────────────────────────────────────
+function AvaAvatar() {
+  return (
+    <div
+      className="w-8 h-8 rounded-full shrink-0 mt-1 flex items-center justify-center text-xs font-bold border"
+      style={{
+        background: 'rgba(16,244,139,0.1)',
+        borderColor: 'rgba(16,244,139,0.25)',
+        color: '#10F48B',
+      }}
+    >
+      AVA
+    </div>
+  );
+}
+
 // ── Typing indicator ──────────────────────────────────────────────
 export function TypingIndicator() {
   return (
     <div className="flex items-start space-x-3 max-w-sm">
-      <div
-        className="w-8 h-8 rounded-full shrink-0 mt-1 flex items-center justify-center text-xs font-bold border"
-        style={{
-          background: 'rgba(16,244,139,0.1)',
-          borderColor: 'rgba(16,244,139,0.25)',
-          color: '#10F48B',
-        }}
-      >
-        AVA
-      </div>
+      <AvaAvatar />
       <div
         className="rounded-2xl rounded-tl-none px-4 py-4 flex items-center space-x-1.5"
         style={{

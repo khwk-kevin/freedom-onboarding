@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { ChatMessageComponent, TypingIndicator } from './ChatMessage';
+import { AICreationCard } from './InteractiveCards';
 import { ChatInput } from './ChatInput';
 import { PreviewSidebar } from './PreviewSidebar';
 import { MobilePreviewCard } from './MobilePreviewCard';
@@ -26,6 +27,7 @@ export function OnboardingChat() {
     generateImage,
     onSignupSuccess,
     dismissSignupWall,
+    handleCardAction,
   } = useOnboarding();
 
   const conversationAreaRef = useRef<HTMLDivElement>(null);
@@ -163,10 +165,11 @@ export function OnboardingChat() {
               return (
                 <ChatMessageComponent
                   key={index}
-                  message={message as Parameters<typeof ChatMessageComponent>[0]['message']}
+                  message={message}
                   isLatest={isLatestAssistant}
                   onOptionClick={canInteract ? (opt) => sendMessage(opt) : undefined}
                   onBusinessTypeSelect={canInteract ? selectBusinessType : undefined}
+                  onCardAction={handleCardAction}
                 />
               );
             })}
@@ -174,12 +177,19 @@ export function OnboardingChat() {
             {isLoading && <TypingIndicator />}
 
             {isGeneratingLogo && (
-              <div
-                className="flex items-center gap-2 text-xs px-3 py-2 rounded-xl w-fit"
-                style={{ background: 'rgba(16,244,139,0.08)', color: '#10F48B', border: '1px solid rgba(16,244,139,0.2)' }}
-              >
-                <span className="animate-spin">⟳</span>
-                Generating your cover page...
+              <div className="flex items-start space-x-3 max-w-sm">
+                <div
+                  className="w-8 h-8 rounded-full shrink-0 mt-1 flex items-center justify-center text-xs font-bold border"
+                  style={{ background: 'rgba(16,244,139,0.1)', borderColor: 'rgba(16,244,139,0.25)', color: '#10F48B' }}
+                >
+                  AVA
+                </div>
+                <AICreationCard
+                  type="cover"
+                  businessName={communityData.name}
+                  vibe={communityData.vibe}
+                  style={communityData.brandStyle}
+                />
               </div>
             )}
 

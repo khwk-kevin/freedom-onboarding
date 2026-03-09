@@ -104,6 +104,12 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  metadata?: {
+    showBusinessTypePicker?: boolean;
+    // Interactive card types
+    cardType?: 'place_confirm' | 'brand_profile' | 'scraping' | 'ai_creating' | 'vibe_select';
+    cardData?: Record<string, unknown>;
+  };
 }
 
 export interface CommunityCreationRequest {
