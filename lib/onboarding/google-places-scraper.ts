@@ -285,85 +285,38 @@ function extractQueryFromUrl(urlStr: string): string | null {
   return null;
 }
 
-// Resolve share.google URLs — follows redirect chain manually to avoid serverless fetch issues
+// Resolve share.google URLs via the Edge Runtime resolver endpoint
+// (Node.js serverless IPs are blocked by Google, but Edge/Cloudflare works)
 async function resolveShareGoogleUrl(url: string): Promise<string> {
-  console.log('[google-places] resolveShareGoogleUrl:', url);
+  console.log('[google-places] resolveShareGoogleUrl via Edge:', url);
   
-  // Strategy 1: Manual redirect following (don't let fetch auto-follow)
+  // Call our Edge Runtime resolver endpoint
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  
   try {
-    let currentUrl = url;
-    for (let i = 0; i < 5; i++) {
-      const res = await fetch(currentUrl, {
-        method: 'GET',
-        redirect: 'manual',
-        signal: AbortSignal.timeout(8000),
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml',
-        },
-      });
-      
-      console.log(`[google-places] redirect hop ${i}: ${res.status} → ${res.headers.get('location')?.slice(0, 100) || '(no location)'}`);
-      
-      // Check for redirect
-      const location = res.headers.get('location');
-      if (location && (res.status === 301 || res.status === 302 || res.status === 303 || res.status === 307)) {
-        // Check if redirect URL contains the business name
-        const query = extractQueryFromUrl(location.startsWith('/') ? `https://www.google.com${location}` : location);
-        if (query) {
-          console.log('[google-places] Found business name in redirect:', query);
-          return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
-        }
-        currentUrl = location.startsWith('/') ? `https://www.google.com${location}` : location;
-        continue;
-      }
-      
-      // If we got a 200, check the final URL and body
-      if (res.status === 200) {
-        // Check URL itself
-        const query = extractQueryFromUrl(currentUrl);
-        if (query) {
-          console.log('[google-places] Found business name in final URL:', query);
-          return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
-        }
-        
-        // Parse HTML body for search query
-        const html = await res.text().catch(() => '');
-        console.log('[google-places] share.google HTML length:', html.length);
-        
-        // Look for q= in any URL in the HTML
-        const patterns = [
-          /[?&]q=([^&"'\s]+)/g,
-          /\/search\?[^"]*q=([^&"]+)/g,
-          /kgmid=([^&"]+)/g,
-        ];
-        
-        for (const pattern of patterns) {
-          const matches = [...html.matchAll(pattern)];
-          for (const match of matches) {
-            const value = decodeURIComponent(match[1].replace(/\+/g, ' '));
-            // Skip short/garbage values, URL-like values, and encoded URLs
-            if (value.length > 3 && !value.startsWith('http') && !value.startsWith('/') && !value.match(/^[a-f0-9-]+$/i)) {
-              console.log('[google-places] Found business name in HTML:', value);
-              return `https://www.google.com/maps/search/${encodeURIComponent(value)}`;
-            }
-            // If we found a kgmid, use it for Places API lookup
-            if (pattern.source.includes('kgmid') && value.startsWith('/g/')) {
-              console.log('[google-places] Found kgmid:', value);
-              // kgmid can be used as a search query in Places API
-              return `https://www.google.com/maps/search/${encodeURIComponent(value)}`;
-            }
-          }
-        }
-      }
-      
-      break;
+    const res = await fetch(`${baseUrl}/api/onboarding/resolve-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+      signal: AbortSignal.timeout(15000),
+    });
+    
+    const data = await res.json();
+    console.log('[google-places] Edge resolver result:', data);
+    
+    if (data.success && data.resolvedUrl && data.resolvedUrl !== url) {
+      return data.resolvedUrl;
+    }
+    if (data.businessName) {
+      return `https://www.google.com/maps/search/${encodeURIComponent(data.businessName)}`;
     }
   } catch (err) {
-    console.log('[google-places] Manual redirect failed:', err);
+    console.log('[google-places] Edge resolver failed:', err);
   }
   
-  // Strategy 2: Auto-follow redirect with GET
+  // Fallback: try direct resolve from Node.js (might work in some environments)
   try {
     const res = await fetch(url, {
       method: 'GET',
@@ -376,14 +329,14 @@ async function resolveShareGoogleUrl(url: string): Promise<string> {
     const finalUrl = res.url || url;
     const query = extractQueryFromUrl(finalUrl);
     if (query) {
-      console.log('[google-places] Auto-follow found business name:', query);
+      console.log('[google-places] Direct resolve found business name:', query);
       return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
     }
   } catch (err) {
-    console.log('[google-places] Auto-follow failed:', err);
+    console.log('[google-places] Direct resolve failed:', err);
   }
   
-  console.log('[google-places] WARNING: Could not resolve share.google URL, returning as-is');
+  console.log('[google-places] WARNING: Could not resolve share.google URL');
   return url;
 }
 
