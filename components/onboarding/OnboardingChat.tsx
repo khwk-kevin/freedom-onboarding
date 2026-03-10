@@ -9,6 +9,14 @@ import { PreviewSidebar } from './PreviewSidebar';
 import { MobilePreviewCard } from './MobilePreviewCard';
 import { SignupWall } from './SignupWall';
 
+function hexToRgb(hex: string): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16) || 16;
+  const g = parseInt(h.substring(2, 4), 16) || 244;
+  const b = parseInt(h.substring(4, 6), 16) || 139;
+  return `${r},${g},${b}`;
+}
+
 export function OnboardingChat() {
   const {
     messages,
@@ -66,10 +74,12 @@ export function OnboardingChat() {
     inputBg: 'var(--oc-input-bg)',
   };
 
+  const primaryColor = communityData.primaryColor || '#10F48B';
+
   return (
     <div
       className="h-[100dvh] w-screen flex items-center justify-center overflow-hidden"
-      style={{ background: theme.bg }}
+      style={{ background: theme.bg, '--oc-primary': primaryColor, '--oc-primary-rgb': hexToRgb(primaryColor) } as React.CSSProperties}
     >
       {/* Signup wall moved inline — see below chat area */}
 
@@ -117,10 +127,10 @@ export function OnboardingChat() {
                 <div className="w-20 md:w-24 h-1 rounded-full overflow-hidden" style={{ background: 'var(--oc-border)' }}>
                   <div
                     className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${progress}%`, background: '#10F48B' }}
+                    style={{ width: `${progress}%`, background: primaryColor }}
                   />
                 </div>
-                <span style={{ color: '#10F48B' }}>{progress}%</span>
+                <span style={{ color: primaryColor }}>{progress}%</span>
               </div>
               {exchangeCount > 0 && (
                 <button
@@ -139,7 +149,7 @@ export function OnboardingChat() {
           <div className="sm:hidden h-1 w-full shrink-0" style={{ background: 'var(--oc-border)' }}>
             <div
               className="h-full transition-all duration-500"
-              style={{ width: `${progress}%`, background: '#10F48B' }}
+              style={{ width: `${progress}%`, background: primaryColor }}
             />
           </div>
 
@@ -185,7 +195,7 @@ export function OnboardingChat() {
               <div className="flex items-start space-x-3 max-w-sm">
                 <div
                   className="w-8 h-8 rounded-full shrink-0 mt-1 flex items-center justify-center text-xs font-bold border"
-                  style={{ background: 'rgba(16,244,139,0.1)', borderColor: 'rgba(16,244,139,0.25)', color: '#10F48B' }}
+                  style={{ background: `rgba(${hexToRgb(primaryColor)},0.1)`, borderColor: `rgba(${hexToRgb(primaryColor)},0.25)`, color: primaryColor }}
                 >
                   AVA
                 </div>

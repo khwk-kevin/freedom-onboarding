@@ -106,7 +106,7 @@ export function SignupWall({
         className="mx-3 mb-2 rounded-2xl overflow-hidden animate-in"
         style={{
           background: 'linear-gradient(135deg, rgba(5,3,20,0.95) 0%, rgba(16,20,40,0.95) 100%)',
-          border: '1px solid rgba(16,244,139,0.2)',
+          border: '1px solid rgba(var(--oc-primary-rgb, 16,244,139),0.2)',
           boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
         }}
       >
@@ -114,7 +114,7 @@ export function SignupWall({
           {/* Icon */}
           <div
             className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center"
-            style={{ background: 'rgba(16,244,139,0.1)' }}
+            style={{ background: 'rgba(var(--oc-primary-rgb, 16,244,139),0.1)' }}
           >
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -138,7 +138,7 @@ export function SignupWall({
           <button
             onClick={() => setExpanded(true)}
             className="px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all active:scale-95"
-            style={{ background: '#10F48B', color: '#050314' }}
+            style={{ background: 'var(--oc-primary, #10F48B)', color: '#050314' }}
           >
             Save →
           </button>
@@ -160,7 +160,7 @@ export function SignupWall({
   return (
     <div className="mx-3 mb-2 rounded-2xl overflow-hidden animate-in" style={{
       background: 'linear-gradient(135deg, rgba(5,3,20,0.97) 0%, rgba(16,20,40,0.97) 100%)',
-      border: '1px solid rgba(16,244,139,0.15)',
+      border: '1px solid rgba(var(--oc-primary-rgb, 16,244,139),0.15)',
       boxShadow: '0 -8px 30px rgba(0,0,0,0.2)',
     }}>
       {/* Header */}
@@ -264,7 +264,7 @@ export function SignupWall({
               type="submit"
               disabled={loading}
               className="w-full py-2.5 rounded-xl text-xs font-semibold text-gray-900 transition-all disabled:opacity-50"
-              style={{ background: loading ? '#10F48B80' : '#10F48B' }}
+              style={{ background: loading ? 'rgba(var(--oc-primary-rgb, 16,244,139),0.5)' : 'var(--oc-primary, #10F48B)' }}
             >
               {loading ? 'Creating...' : 'Create Account & Save'}
             </button>

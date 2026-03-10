@@ -88,10 +88,10 @@ function MultiSelectOptions({ options, onConfirm }: { options: string[]; onConfi
               onClick={() => toggle(opt)}
               className="px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150 active:scale-95"
               style={{
-                borderColor: isSelected ? '#10F48B' : 'var(--oc-btn-border)',
-                background: isSelected ? 'rgba(16,244,139,0.2)' : 'var(--oc-btn-bg)',
-                color: isSelected ? '#10F48B' : 'var(--oc-text)',
-                boxShadow: isSelected ? '0 0 8px rgba(16,244,139,0.2)' : 'none',
+                borderColor: isSelected ? 'var(--oc-primary, #10F48B)' : 'var(--oc-btn-border)',
+                background: isSelected ? 'rgba(var(--oc-primary-rgb, 16,244,139),0.2)' : 'var(--oc-btn-bg)',
+                color: isSelected ? 'var(--oc-primary, #10F48B)' : 'var(--oc-text)',
+                boxShadow: isSelected ? '0 0 8px rgba(var(--oc-primary-rgb, 16,244,139),0.2)' : 'none',
               }}
             >
               {isSelected ? '✓ ' : `${NUM_EMOJIS[i] || ''} `}{opt}
@@ -103,7 +103,7 @@ function MultiSelectOptions({ options, onConfirm }: { options: string[]; onConfi
         <button
           onClick={() => onConfirm(Array.from(selected))}
           className="px-4 py-2 text-xs font-bold rounded-full transition-all duration-150 active:scale-95"
-          style={{ background: '#10F48B', color: '#050314' }}
+          style={{ background: 'var(--oc-primary, #10F48B)', color: '#050314' }}
         >
           Confirm ({selected.size}) →
         </button>
@@ -141,7 +141,7 @@ function UserMessage({ message }: { message: ChatMessage }) {
     <div className="flex flex-col items-end space-y-1">
       <div
         className="rounded-2xl rounded-tr-none px-5 py-3 shadow-lg text-sm leading-relaxed max-w-xs"
-        style={{ background: 'linear-gradient(135deg, #10F48B 0%, #0bd977 100%)', color: '#050314' }}
+        style={{ background: 'var(--oc-primary, #10F48B)', color: '#050314' }}
       >
         <p>{message.content}</p>
       </div>
@@ -407,9 +407,9 @@ function AvaAvatar() {
     <div
       className="w-8 h-8 rounded-full shrink-0 mt-1 flex items-center justify-center text-xs font-bold border"
       style={{
-        background: 'rgba(16,244,139,0.1)',
-        borderColor: 'rgba(16,244,139,0.25)',
-        color: '#10F48B',
+        background: 'rgba(var(--oc-primary-rgb, 16,244,139),0.1)',
+        borderColor: 'rgba(var(--oc-primary-rgb, 16,244,139),0.25)',
+        color: 'var(--oc-primary, #10F48B)',
       }}
     >
       AVA
@@ -433,7 +433,7 @@ export function TypingIndicator() {
           <div
             key={delay}
             className="w-2 h-2 rounded-full animate-bounce"
-            style={{ backgroundColor: '#10F48B', animationDelay: `${delay}ms` }}
+            style={{ backgroundColor: 'var(--oc-primary, #10F48B)', animationDelay: `${delay}ms` }}
           />
         ))}
       </div>

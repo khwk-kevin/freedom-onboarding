@@ -31,7 +31,7 @@ export function PlaceConfirmCard({
         <div className="relative w-full aspect-video bg-black/20 overflow-hidden">
           {!imgLoaded && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'rgba(16,244,139,0.3)', borderTopColor: 'transparent' }} />
+              <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'rgba(var(--oc-primary-rgb, 16,244,139),0.3)', borderTopColor: 'transparent' }} />
             </div>
           )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -68,10 +68,10 @@ export function PlaceConfirmCard({
           {rating && (
             <div
               className="flex items-center gap-1 px-2 py-1 rounded-lg shrink-0"
-              style={{ background: 'rgba(16,244,139,0.1)' }}
+              style={{ background: 'rgba(var(--oc-primary-rgb, 16,244,139),0.1)' }}
             >
               <span className="text-xs">⭐</span>
-              <span className="text-xs font-bold" style={{ color: '#10F48B' }}>{rating}</span>
+              <span className="text-xs font-bold" style={{ color: 'var(--oc-primary, #10F48B)' }}>{rating}</span>
             </div>
           )}
         </div>
@@ -81,7 +81,7 @@ export function PlaceConfirmCard({
           <button
             onClick={onConfirm}
             className="flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
-            style={{ background: '#10F48B', color: '#050314' }}
+            style={{ background: 'var(--oc-primary, #10F48B)', color: '#050314' }}
           >
             ✅ That&apos;s me!
           </button>
@@ -142,7 +142,7 @@ export function BrandProfileCard({
             {category && (
               <span
                 className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium"
-                style={{ background: 'rgba(16,244,139,0.1)', color: '#10F48B' }}
+                style={{ background: 'rgba(var(--oc-primary-rgb, 16,244,139),0.1)', color: 'var(--oc-primary, #10F48B)' }}
               >
                 {category}
               </span>
@@ -167,7 +167,7 @@ export function BrandProfileCard({
             <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--oc-text-muted)' }}>Vibe</span>
             <span
               className="px-2 py-0.5 rounded-full text-[11px] font-medium"
-              style={{ background: 'rgba(16,244,139,0.08)', color: '#10F48B', border: '1px solid rgba(16,244,139,0.15)' }}
+              style={{ background: 'rgba(var(--oc-primary-rgb, 16,244,139),0.08)', color: 'var(--oc-primary, #10F48B)', border: '1px solid rgba(var(--oc-primary-rgb, 16,244,139),0.15)' }}
             >
               {vibe}
             </span>
@@ -204,7 +204,7 @@ export function BrandProfileCard({
         <button
           onClick={onConfirm}
           className="w-full py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
-          style={{ background: '#10F48B', color: '#050314' }}
+          style={{ background: 'var(--oc-primary, #10F48B)', color: '#050314' }}
         >
           ✨ Looks perfect!
         </button>
@@ -260,7 +260,7 @@ export function ScrapingIndicator({ url, stage }: ScrapingIndicatorProps) {
         {/* URL being scraped */}
         <div className="flex items-center gap-2">
           <span className="text-xs">🔗</span>
-          <span className="text-xs font-mono truncate" style={{ color: '#10F48B' }}>{displayUrl}</span>
+          <span className="text-xs font-mono truncate" style={{ color: 'var(--oc-primary, #10F48B)' }}>{displayUrl}</span>
         </div>
 
         {/* Progress steps */}
@@ -281,12 +281,12 @@ export function ScrapingIndicator({ url, stage }: ScrapingIndicatorProps) {
                 </span>
                 <span
                   className="text-[11px] font-medium"
-                  style={{ color: isActive ? '#10F48B' : isDone ? 'var(--oc-text-muted)' : 'var(--oc-text-muted)' }}
+                  style={{ color: isActive ? 'var(--oc-primary, #10F48B)' : isDone ? 'var(--oc-text-muted)' : 'var(--oc-text-muted)' }}
                 >
                   {s.label}
                 </span>
                 {isActive && (
-                  <div className="w-3 h-3 border border-t-transparent rounded-full animate-spin ml-auto" style={{ borderColor: 'rgba(16,244,139,0.3)', borderTopColor: 'transparent' }} />
+                  <div className="w-3 h-3 border border-t-transparent rounded-full animate-spin ml-auto" style={{ borderColor: 'rgba(var(--oc-primary-rgb, 16,244,139),0.3)', borderTopColor: 'transparent' }} />
                 )}
               </div>
             );
@@ -299,7 +299,7 @@ export function ScrapingIndicator({ url, stage }: ScrapingIndicatorProps) {
             className="h-full rounded-full transition-all duration-700 ease-out"
             style={{
               width: `${((stageIdx + 1) / SCRAPE_STAGES.length) * 100}%`,
-              background: 'linear-gradient(90deg, #10F48B, #0bd977)',
+              background: 'linear-gradient(90deg, var(--oc-primary, #10F48B), #0bd977)',
             }}
           />
         </div>
@@ -338,14 +338,14 @@ export function AICreationCard({ type, businessName, vibe, style }: AICreationCa
       className="rounded-2xl overflow-hidden max-w-xs animate-in slide-in-from-bottom-2 duration-300"
       style={{
         background: 'var(--oc-bubble-bg)',
-        border: '1px solid rgba(16,244,139,0.2)',
+        border: '1px solid rgba(var(--oc-primary-rgb, 16,244,139),0.2)',
       }}
     >
       {/* Animated gradient header */}
       <div
         className="h-24 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(16,244,139,0.15) 0%, rgba(11,217,119,0.05) 100%)',
+          background: 'linear-gradient(135deg, rgba(var(--oc-primary-rgb, 16,244,139),0.15) 0%, rgba(11,217,119,0.05) 100%)',
         }}
       >
         {/* Animated particles */}
@@ -355,7 +355,7 @@ export function AICreationCard({ type, businessName, vibe, style }: AICreationCa
               key={i}
               className="absolute w-1 h-1 rounded-full"
               style={{
-                background: '#10F48B',
+                background: 'var(--oc-primary, #10F48B)',
                 opacity: 0.4,
                 left: `${15 + i * 15}%`,
                 top: `${20 + (i % 3) * 25}%`,
@@ -371,8 +371,8 @@ export function AICreationCard({ type, businessName, vibe, style }: AICreationCa
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center"
             style={{
-              background: 'rgba(16,244,139,0.15)',
-              border: '1px solid rgba(16,244,139,0.25)',
+              background: 'rgba(var(--oc-primary-rgb, 16,244,139),0.15)',
+              border: '1px solid rgba(var(--oc-primary-rgb, 16,244,139),0.25)',
               animation: 'pulse 2s infinite',
             }}
           >
@@ -389,17 +389,17 @@ export function AICreationCard({ type, businessName, vibe, style }: AICreationCa
         {/* Context tags */}
         <div className="flex flex-wrap gap-1">
           {businessName && (
-            <span className="px-2 py-0.5 rounded-full text-[10px]" style={{ background: 'rgba(16,244,139,0.08)', color: '#10F48B' }}>
+            <span className="px-2 py-0.5 rounded-full text-[10px]" style={{ background: 'rgba(var(--oc-primary-rgb, 16,244,139),0.08)', color: 'var(--oc-primary, #10F48B)' }}>
               {businessName}
             </span>
           )}
           {vibe && (
-            <span className="px-2 py-0.5 rounded-full text-[10px]" style={{ background: 'rgba(16,244,139,0.08)', color: '#10F48B' }}>
+            <span className="px-2 py-0.5 rounded-full text-[10px]" style={{ background: 'rgba(var(--oc-primary-rgb, 16,244,139),0.08)', color: 'var(--oc-primary, #10F48B)' }}>
               {vibe}
             </span>
           )}
           {style && (
-            <span className="px-2 py-0.5 rounded-full text-[10px]" style={{ background: 'rgba(16,244,139,0.08)', color: '#10F48B' }}>
+            <span className="px-2 py-0.5 rounded-full text-[10px]" style={{ background: 'rgba(var(--oc-primary-rgb, 16,244,139),0.08)', color: 'var(--oc-primary, #10F48B)' }}>
               {style}
             </span>
           )}
@@ -420,7 +420,7 @@ export function AICreationCard({ type, businessName, vibe, style }: AICreationCa
             className="h-full rounded-full transition-all duration-1000 ease-out"
             style={{
               width: `${((stepIdx + 1) / CREATION_STEPS.length) * 100}%`,
-              background: 'linear-gradient(90deg, #10F48B, #0bd977)',
+              background: 'linear-gradient(90deg, var(--oc-primary, #10F48B), #0bd977)',
             }}
           />
         </div>
@@ -476,7 +476,7 @@ interface RewardSuggestionsCardProps {
 
 export function RewardSuggestionsCard({ rewards, businessName, onAccept }: RewardSuggestionsCardProps) {
   const typeColors: Record<string, string> = {
-    points: '#10F48B',
+    points: 'var(--oc-primary, #10F48B)',
     visits: '#3B82F6',
     spending: '#F59E0B',
     referral: '#A855F7',
@@ -495,7 +495,7 @@ export function RewardSuggestionsCard({ rewards, businessName, onAccept }: Rewar
 
       <div className="px-4 pb-3 space-y-2">
         {rewards.map((r, i) => {
-          const color = typeColors[r.type] || '#10F48B';
+          const color = typeColors[r.type] || 'var(--oc-primary, #10F48B)';
           return (
             <div
               key={i}
@@ -524,7 +524,7 @@ export function RewardSuggestionsCard({ rewards, businessName, onAccept }: Rewar
         <button
           onClick={onAccept}
           className="w-full py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
-          style={{ background: '#10F48B', color: '#050314' }}
+          style={{ background: 'var(--oc-primary, #10F48B)', color: '#050314' }}
         >
           Love these! ✨
         </button>
@@ -561,7 +561,7 @@ export function WelcomePostCard({ post, businessName, logoUrl, onAccept, onEdit 
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logoUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
           ) : (
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px]" style={{ background: 'rgba(16,244,139,0.1)', color: '#10F48B' }}>
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px]" style={{ background: 'rgba(var(--oc-primary-rgb, 16,244,139),0.1)', color: 'var(--oc-primary, #10F48B)' }}>
               {businessName[0]}
             </div>
           )}
@@ -579,7 +579,7 @@ export function WelcomePostCard({ post, businessName, logoUrl, onAccept, onEdit 
         <button
           onClick={onAccept}
           className="flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
-          style={{ background: '#10F48B', color: '#050314' }}
+          style={{ background: 'var(--oc-primary, #10F48B)', color: '#050314' }}
         >
           Use this! ✨
         </button>
@@ -642,7 +642,7 @@ export function CoverCarouselCard({ covers, businessName, onSelect }: CoverCarou
               style={{
                 width: '48px',
                 aspectRatio: '1440/690',
-                border: i === activeIdx ? '2px solid #10F48B' : '1px solid var(--oc-btn-border)',
+                border: i === activeIdx ? '2px solid var(--oc-primary, #10F48B)' : '1px solid var(--oc-btn-border)',
                 opacity: i === activeIdx ? 1 : 0.5,
               }}
             >
@@ -658,7 +658,7 @@ export function CoverCarouselCard({ covers, businessName, onSelect }: CoverCarou
         <button
           onClick={() => onSelect(activeIdx)}
           className="w-full py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
-          style={{ background: '#10F48B', color: '#050314' }}
+          style={{ background: 'var(--oc-primary, #10F48B)', color: '#050314' }}
         >
           Use this cover ✨
         </button>
@@ -710,7 +710,7 @@ export function BrandDescriptionCard({ description, audiencePersona, onAccept, o
         <button
           onClick={onAccept}
           className="flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
-          style={{ background: '#10F48B', color: '#050314' }}
+          style={{ background: 'var(--oc-primary, #10F48B)', color: '#050314' }}
         >
           Perfect! ✨
         </button>
