@@ -275,63 +275,137 @@ function mapPriceLevel(level?: string): string | undefined {
   return map[level];
 }
 
-// Resolve shortened Google Maps URLs (maps.app.goo.gl, goo.gl/maps) to full URLs
-async function resolveShortUrl(url: string): Promise<string> {
+// Extract business name query from a URL (search URL or share URL)
+function extractQueryFromUrl(urlStr: string): string | null {
   try {
-    // For share.google URLs, use GET with redirect:follow and parse the final URL
-    // share.google → google.com/search?q=BusinessName (via 302 chain)
-    const isShareGoogle = url.includes('share.google');
+    const parsed = new URL(urlStr);
+    const q = parsed.searchParams.get('q');
+    if (q && q.length > 2) return q;
+  } catch { /* ignore */ }
+  return null;
+}
+
+// Resolve share.google URLs — follows redirect chain manually to avoid serverless fetch issues
+async function resolveShareGoogleUrl(url: string): Promise<string> {
+  console.log('[google-places] resolveShareGoogleUrl:', url);
+  
+  // Strategy 1: Manual redirect following (don't let fetch auto-follow)
+  try {
+    let currentUrl = url;
+    for (let i = 0; i < 5; i++) {
+      const res = await fetch(currentUrl, {
+        method: 'GET',
+        redirect: 'manual',
+        signal: AbortSignal.timeout(8000),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+      });
+      
+      console.log(`[google-places] redirect hop ${i}: ${res.status} → ${res.headers.get('location')?.slice(0, 100) || '(no location)'}`);
+      
+      // Check for redirect
+      const location = res.headers.get('location');
+      if (location && (res.status === 301 || res.status === 302 || res.status === 303 || res.status === 307)) {
+        // Check if redirect URL contains the business name
+        const query = extractQueryFromUrl(location.startsWith('/') ? `https://www.google.com${location}` : location);
+        if (query) {
+          console.log('[google-places] Found business name in redirect:', query);
+          return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
+        }
+        currentUrl = location.startsWith('/') ? `https://www.google.com${location}` : location;
+        continue;
+      }
+      
+      // If we got a 200, check the final URL and body
+      if (res.status === 200) {
+        // Check URL itself
+        const query = extractQueryFromUrl(currentUrl);
+        if (query) {
+          console.log('[google-places] Found business name in final URL:', query);
+          return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
+        }
+        
+        // Parse HTML body for search query
+        const html = await res.text().catch(() => '');
+        console.log('[google-places] share.google HTML length:', html.length);
+        
+        // Look for q= in any URL in the HTML
+        const patterns = [
+          /[?&]q=([^&"'\s]+)/g,
+          /\/search\?[^"]*q=([^&"]+)/g,
+          /kgmid=([^&"]+)/g,
+        ];
+        
+        for (const pattern of patterns) {
+          const matches = [...html.matchAll(pattern)];
+          for (const match of matches) {
+            const value = decodeURIComponent(match[1].replace(/\+/g, ' '));
+            // Skip short/garbage values, URL-like values, and encoded URLs
+            if (value.length > 3 && !value.startsWith('http') && !value.startsWith('/') && !value.match(/^[a-f0-9-]+$/i)) {
+              console.log('[google-places] Found business name in HTML:', value);
+              return `https://www.google.com/maps/search/${encodeURIComponent(value)}`;
+            }
+            // If we found a kgmid, use it for Places API lookup
+            if (pattern.source.includes('kgmid') && value.startsWith('/g/')) {
+              console.log('[google-places] Found kgmid:', value);
+              // kgmid can be used as a search query in Places API
+              return `https://www.google.com/maps/search/${encodeURIComponent(value)}`;
+            }
+          }
+        }
+      }
+      
+      break;
+    }
+  } catch (err) {
+    console.log('[google-places] Manual redirect failed:', err);
+  }
+  
+  // Strategy 2: Auto-follow redirect with GET
+  try {
     const res = await fetch(url, {
-      method: isShareGoogle ? 'GET' : 'HEAD',
+      method: 'GET',
       redirect: 'follow',
       signal: AbortSignal.timeout(10000),
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
     });
-    let resolved = res.url || url;
-    
-    // For share.google, also check the HTML for search links
-    if (isShareGoogle) {
-      const html = await res.text().catch(() => '');
-      
-      // Check the final URL first
-      if (resolved.includes('/search?') || resolved.includes('q=')) {
-        try {
-          const searchUrl = new URL(resolved);
-          const query = searchUrl.searchParams.get('q');
-          if (query) {
-            console.log('[google-places] share.google resolved to search query:', query);
-            return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
-          }
-        } catch { /* ignore */ }
-      }
-      
-      // Parse HTML for search links with business name
-      const searchMatch = html.match(/\/search\?[^"]*q=([^&"]+)/);
-      if (searchMatch) {
-        const query = decodeURIComponent(searchMatch[1].replace(/\+/g, ' '));
-        console.log('[google-places] Extracted business from share.google HTML:', query);
-        return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
-      }
-      
-      // Check for click-here link with business name
-      const hrefMatch = html.match(/href="([^"]*\/search\?[^"]*q=[^"]+)"/);
-      if (hrefMatch) {
-        try {
-          const hrefUrl = new URL(hrefMatch[1], 'https://www.google.com');
-          const query = hrefUrl.searchParams.get('q');
-          if (query) {
-            console.log('[google-places] Extracted business from share.google href:', query);
-            return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
-          }
-        } catch { /* ignore */ }
-      }
+    const finalUrl = res.url || url;
+    const query = extractQueryFromUrl(finalUrl);
+    if (query) {
+      console.log('[google-places] Auto-follow found business name:', query);
+      return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
     }
-    
-    return resolved;
+  } catch (err) {
+    console.log('[google-places] Auto-follow failed:', err);
+  }
+  
+  console.log('[google-places] WARNING: Could not resolve share.google URL, returning as-is');
+  return url;
+}
+
+// Resolve shortened Google Maps URLs (maps.app.goo.gl, goo.gl/maps) to full URLs
+async function resolveShortUrl(url: string): Promise<string> {
+  const isShareGoogle = url.includes('share.google');
+  
+  if (isShareGoogle) {
+    return resolveShareGoogleUrl(url);
+  }
+  
+  try {
+    const res = await fetch(url, {
+      method: 'HEAD',
+      redirect: 'follow',
+      signal: AbortSignal.timeout(10000),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+    });
+    return res.url || url;
   } catch {
-    // Try GET if HEAD fails
     try {
       const res = await fetch(url, {
         redirect: 'follow',
@@ -368,15 +442,20 @@ export async function scrapeGooglePlace(input: string): Promise<GooglePlaceData>
       console.log('[google-places] Resolved to:', url);
     }
     
-    searchQuery = extractSearchQuery(url) || input;
-    console.log('[google-places] extracted searchQuery:', searchQuery, 'from url:', url.slice(0, 80));
+    searchQuery = extractSearchQuery(url) || '';
+    // If extraction failed and the query looks like a URL or gibberish, skip
+    if (!searchQuery || searchQuery.startsWith('http') || searchQuery.includes('share.google')) {
+      console.log('[google-places] searchQuery looks invalid:', searchQuery?.slice(0, 50), '— skipping Places API');
+      searchQuery = '';
+    }
+    console.log('[google-places] extracted searchQuery:', searchQuery || '(empty)', 'from url:', url.slice(0, 80));
   } else {
     searchQuery = input;
     url = buildSearchUrl(input);
   }
 
-  // Try Places API first (structured, reliable)
-  const apiResult = await tryPlacesApi(searchQuery);
+  // Try Places API first (structured, reliable) — only if we have a valid search query
+  const apiResult = searchQuery ? await tryPlacesApi(searchQuery) : null;
   if (apiResult && apiResult.businessName) {
     console.log('[google-places] API success:', apiResult.businessName);
     // Enrich with Claude analysis for vibe/products/description
