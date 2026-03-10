@@ -32,7 +32,7 @@ export interface GooglePlaceData {
 // Detect if URL is a Google Maps link
 export function isGoogleMapsUrl(url: string): boolean {
   const lower = url.toLowerCase();
-  return lower.includes('google.com/maps') || lower.includes('maps.google') || lower.includes('goo.gl/maps') || lower.includes('maps.app.goo.gl');
+  return lower.includes('google.com/maps') || lower.includes('maps.google') || lower.includes('goo.gl/maps') || lower.includes('maps.app.goo.gl') || lower.includes('share.google');
 }
 
 // Build Google Maps search URL
@@ -307,7 +307,7 @@ async function resolveShortUrl(url: string): Promise<string> {
 // Check if URL is a shortened Google Maps link that needs resolving
 function isShortGoogleMapsUrl(url: string): boolean {
   const lower = url.toLowerCase();
-  return lower.includes('maps.app.goo.gl') || lower.includes('goo.gl/maps');
+  return lower.includes('maps.app.goo.gl') || lower.includes('goo.gl/maps') || lower.includes('share.google');
 }
 
 // Main function: scrape Google Maps for a business
