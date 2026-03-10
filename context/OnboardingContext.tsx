@@ -73,6 +73,67 @@ function generateUUID(): string {
 }
 
 const ANON_SESSION_KEY = 'fw_anon_session_id';
+const CACHE_KEY = 'fw_onboarding_state';
+const CACHE_VERSION = 1;
+
+interface CachedState {
+  version: number;
+  messages: ChatMessage[];
+  communityData: MerchantOnboardingData;
+  exchangeCount: number;
+  isAnonymous: boolean;
+  showSignupWall: boolean;
+  graceUsed: boolean;
+  timestamp: number;
+}
+
+function saveStateToCache(state: Partial<CachedState>) {
+  if (typeof window === 'undefined') return;
+  try {
+    const existing = loadStateFromCache();
+    const merged: CachedState = {
+      version: CACHE_VERSION,
+      messages: state.messages ?? existing?.messages ?? [],
+      communityData: state.communityData ?? existing?.communityData ?? { primaryColor: '#10F48B' },
+      exchangeCount: state.exchangeCount ?? existing?.exchangeCount ?? 0,
+      isAnonymous: state.isAnonymous ?? existing?.isAnonymous ?? true,
+      showSignupWall: state.showSignupWall ?? existing?.showSignupWall ?? false,
+      graceUsed: state.graceUsed ?? existing?.graceUsed ?? false,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(merged));
+  } catch { /* storage full or unavailable */ }
+}
+
+function loadStateFromCache(): CachedState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CachedState;
+    if (parsed.version !== CACHE_VERSION) return null;
+    // Expire cache after 24 hours
+    if (Date.now() - parsed.timestamp > 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    // Rehydrate Date objects in messages
+    if (parsed.messages) {
+      parsed.messages = parsed.messages.map(m => ({
+        ...m,
+        timestamp: new Date(m.timestamp),
+      }));
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function clearStateCache() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(CACHE_KEY);
+}
 
 // ============================================================
 // Provider
@@ -100,18 +161,34 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   const hasInitialized = useRef(false);
 
-  // Initialize anonymous session from localStorage
+  // Initialize: restore from cache OR start fresh
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    
+    // Always restore anonymous session ID
     let sessionId = localStorage.getItem(ANON_SESSION_KEY);
     if (!sessionId) {
       sessionId = generateUUID();
       localStorage.setItem(ANON_SESSION_KEY, sessionId);
     }
     setAnonymousSessionId(sessionId);
+
+    // Restore cached onboarding state if available
+    const cached = loadStateFromCache();
+    if (cached && cached.messages.length > 0) {
+      console.log('[onboarding] Restoring cached state:', cached.messages.length, 'messages');
+      setMessages(cached.messages);
+      setCommunityData(cached.communityData);
+      setExchangeCount(cached.exchangeCount);
+      setIsAnonymous(cached.isAnonymous);
+      setShowSignupWall(cached.showSignupWall);
+      setGraceUsed(cached.graceUsed);
+      hasInitialized.current = true;
+      return;
+    }
   }, []);
 
-  // Show initial greeting message (business type picker prompt)
+  // Show initial greeting message (business type picker prompt) — only if no cache
   useEffect(() => {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
@@ -128,6 +205,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       } as ChatMessage & { metadata: Record<string, unknown> },
     ]);
   }, []);
+
+  // Persist state to localStorage whenever it changes
+  useEffect(() => {
+    if (messages.length === 0) return;
+    saveStateToCache({ messages, communityData, exchangeCount, isAnonymous, showSignupWall, graceUsed });
+  }, [messages, communityData, exchangeCount, isAnonymous, showSignupWall, graceUsed]);
 
   // ── Select business type (tapping a button card) ─────────────────
   const selectBusinessType = useCallback(
@@ -578,9 +661,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         console.error('Failed to sync community:', err);
       }
 
-      // Clear the anonymous session ID
+      // Clear session data (no longer anonymous)
       if (typeof window !== 'undefined') {
         localStorage.removeItem(ANON_SESSION_KEY);
+        clearStateCache();
       }
 
       // Continue conversation with a "just signed up" message
@@ -770,6 +854,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     setExchangeCount(0);
     setShowSignupWall(false);
     setGraceUsed(false);
+    clearStateCache();
     hasInitialized.current = false;
   }, []);
 
