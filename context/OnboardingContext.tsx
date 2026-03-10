@@ -491,20 +491,27 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         const currentStep = extractions.step;
         console.log('[onboarding] step:', currentStep, 'extractions:', extractions);
         
-        if (currentStep === '6' && communityData.businessType && !communityData.banner) {
+        if (currentStep === '6' && communityData.businessType) {
           const enrichedData = { ...communityData, ...tagUpdates };
 
-          // 1. Trigger cover generation
-          setTimeout(async () => {
-            try {
-              setIsGeneratingLogo(true);
-              await generateImageInternal('banner', enrichedData);
-            } catch {
-              // Cover generation failure is non-fatal
-            } finally {
-              setIsGeneratingLogo(false);
+          // 1. Trigger cover generation ONLY if no banner exists (scraped photos skip this)
+          if (!communityData.banner) {
+            setTimeout(async () => {
+              try {
+                setIsGeneratingLogo(true);
+                await generateImageInternal('banner', enrichedData);
+              } catch {
+                // Cover generation failure is non-fatal
+              } finally {
+                setIsGeneratingLogo(false);
+              }
+            }, 1500);
+          } else {
+            // Banner already exists from scraping — show signup wall directly
+            if (isAnonymous) {
+              setTimeout(() => setShowSignupWall(true), 2000);
             }
-          }, 1500);
+          }
 
           // 2. Simultaneously generate AI brand content (description, rewards, welcome post)
           setTimeout(async () => {
