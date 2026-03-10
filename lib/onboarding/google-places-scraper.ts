@@ -278,48 +278,55 @@ function mapPriceLevel(level?: string): string | undefined {
 // Resolve shortened Google Maps URLs (maps.app.goo.gl, goo.gl/maps) to full URLs
 async function resolveShortUrl(url: string): Promise<string> {
   try {
-    // For share.google URLs, we need to follow the redirect chain
-    // share.google → google.com/share.google?q=xxx → Google Search with business name
+    // For share.google URLs, use GET with redirect:follow and parse the final URL
+    // share.google → google.com/search?q=BusinessName (via 302 chain)
+    const isShareGoogle = url.includes('share.google');
     const res = await fetch(url, {
-      method: 'HEAD',
+      method: isShareGoogle ? 'GET' : 'HEAD',
       redirect: 'follow',
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(10000),
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
     });
-    const resolved = res.url || url;
+    let resolved = res.url || url;
     
-    // If it resolved to a Google Search page, extract the query as the business name
-    if (resolved.includes('/search?') || resolved.includes('share.google?q=')) {
-      try {
-        const searchUrl = new URL(resolved);
-        const query = searchUrl.searchParams.get('q');
-        if (query) {
-          console.log('[google-places] share.google resolved to search query:', query);
-          // Return a synthetic Google Maps URL with the business name
-          return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
-        }
-      } catch { /* ignore parse errors */ }
-    }
-    
-    // For share.google that returns HTML with a search link, try GET and parse
-    if (url.includes('share.google') && resolved.includes('share.google')) {
-      try {
-        const getRes = await fetch(url, {
-          redirect: 'follow',
-          signal: AbortSignal.timeout(8000),
-          headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
-        });
-        const html = await getRes.text();
-        // Extract business name from search link in the HTML
-        const searchMatch = html.match(/\/search\?q=([^&"]+)/);
-        if (searchMatch) {
-          const query = decodeURIComponent(searchMatch[1].replace(/\+/g, ' '));
-          console.log('[google-places] Extracted business name from share.google HTML:', query);
-          return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
-        }
-      } catch { /* ignore */ }
+    // For share.google, also check the HTML for search links
+    if (isShareGoogle) {
+      const html = await res.text().catch(() => '');
+      
+      // Check the final URL first
+      if (resolved.includes('/search?') || resolved.includes('q=')) {
+        try {
+          const searchUrl = new URL(resolved);
+          const query = searchUrl.searchParams.get('q');
+          if (query) {
+            console.log('[google-places] share.google resolved to search query:', query);
+            return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
+          }
+        } catch { /* ignore */ }
+      }
+      
+      // Parse HTML for search links with business name
+      const searchMatch = html.match(/\/search\?[^"]*q=([^&"]+)/);
+      if (searchMatch) {
+        const query = decodeURIComponent(searchMatch[1].replace(/\+/g, ' '));
+        console.log('[google-places] Extracted business from share.google HTML:', query);
+        return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
+      }
+      
+      // Check for click-here link with business name
+      const hrefMatch = html.match(/href="([^"]*\/search\?[^"]*q=[^"]+)"/);
+      if (hrefMatch) {
+        try {
+          const hrefUrl = new URL(hrefMatch[1], 'https://www.google.com');
+          const query = hrefUrl.searchParams.get('q');
+          if (query) {
+            console.log('[google-places] Extracted business from share.google href:', query);
+            return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
+          }
+        } catch { /* ignore */ }
+      }
     }
     
     return resolved;
