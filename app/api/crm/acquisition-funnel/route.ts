@@ -114,9 +114,10 @@ export async function GET(request: Request) {
 
     const all = merchants || [];
 
-    // If no real data (no merchants and all event counts are zero), return placeholder
+    // If no meaningful data (no event tracking and no active/completed merchants), show placeholder
     const totalEvents = Object.values(phCounts).reduce((sum, v) => sum + v, 0);
-    if (all.length === 0 && totalEvents === 0) {
+    const hasActiveMerchants = all.some(m => m.status === 'active' || m.onboarding_status === 'completed');
+    if (totalEvents === 0 && !hasActiveMerchants) {
       return NextResponse.json(getPlaceholderData(period));
     }
 
