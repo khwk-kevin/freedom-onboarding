@@ -43,7 +43,7 @@ export function MobilePreviewCard({
         <span
           className="w-2 h-2 rounded-full shrink-0"
           style={{
-            background: isGenerating ? '#F59E0B' : hasCover ? primaryColor : primaryColor,
+            background: isGenerating ? '#F59E0B' : hasCover ? '#10F48B' : primaryColor,
             animation: isGenerating ? 'pulse 1.5s infinite' : 'none',
           }}
         />

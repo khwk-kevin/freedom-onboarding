@@ -79,7 +79,7 @@ export function ChatInput({ onSendMessage, onUploadImage, disabled, placeholder 
     >
       <div className="max-w-4xl mx-auto relative group">
         <div
-          className="relative flex items-end rounded-2xl shadow-sm transition-all duration-300 focus-within:ring-2 focus-within:ring-[var(--oc-primary,#10F48B)]/40"
+          className="relative flex items-end rounded-2xl shadow-sm transition-all duration-300 focus-within:ring-2 focus-within:ring-[#10F48B]/40"
           style={{
             background: 'var(--oc-input-bg)',
             border: '1px solid var(--oc-border)',
@@ -99,7 +99,7 @@ export function ChatInput({ onSendMessage, onUploadImage, disabled, placeholder 
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || isUploading}
             aria-label={isUploading ? 'Uploading image…' : 'Upload logo or banner image'}
-            className="p-3 pl-4 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--oc-primary,#10F48B)] rounded-lg"
+            className="p-3 pl-4 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#10F48B] rounded-lg"
             style={{ color: 'var(--oc-text-muted)' }}
             title="Upload image"
           >
@@ -129,7 +129,7 @@ export function ChatInput({ onSendMessage, onUploadImage, disabled, placeholder 
               disabled={disabled || !input.trim() || isUploading}
               aria-label="Send message"
               className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-              style={{ backgroundColor: 'var(--oc-primary, #10F48B)' }}
+              style={{ backgroundColor: '#10F48B' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="#050314" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -144,7 +144,7 @@ export function ChatInput({ onSendMessage, onUploadImage, disabled, placeholder 
               <span className="text-red-500">{uploadError}</span>
             ) : (
               <>
-                <span className="font-medium" style={{ color: 'var(--oc-primary, #10F48B)' }}>Tip:</span> You can upload your logo or banner using the image button.
+                <span className="font-medium" style={{ color: '#10F48B' }}>Tip:</span> You can upload your logo or banner using the image button.
               </>
             )}
           </p>
