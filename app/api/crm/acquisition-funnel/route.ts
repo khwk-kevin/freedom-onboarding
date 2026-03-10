@@ -114,8 +114,9 @@ export async function GET(request: Request) {
 
     const all = merchants || [];
 
-    // If no real data, return placeholder
-    if (all.length === 0 && Object.keys(phCounts).length === 0) {
+    // If no real data (no merchants and all event counts are zero), return placeholder
+    const totalEvents = Object.values(phCounts).reduce((sum, v) => sum + v, 0);
+    if (all.length === 0 && totalEvents === 0) {
       return NextResponse.json(getPlaceholderData(period));
     }
 
