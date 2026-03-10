@@ -65,13 +65,13 @@ export function PreviewSidebar({
         style={{ borderColor: border }}
       >
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#10F48B' }} />
+          <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: primaryColor }} />
           <span className="text-sm font-semibold" style={{ color: text }}>Live Preview</span>
         </div>
         {isAnonymous && (
           <span
             className="px-2 py-0.5 rounded text-[10px] font-semibold tracking-wider"
-            style={{ background: 'rgba(16,244,139,0.1)', color: '#10F48B' }}
+            style={{ background: `${primaryColor}18`, color: primaryColor }}
           >
             PREVIEW
           </span>
@@ -223,15 +223,19 @@ export function PreviewSidebar({
             Brand Identity
           </label>
           <div
-            className="rounded-xl p-4 space-y-3"
+            className="rounded-xl overflow-hidden space-y-0"
             style={{ background: cardBg, border: `1px solid ${border}` }}
           >
+            {/* Primary color accent bar */}
+            <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}80)` }} />
+            
+            <div className="p-4 space-y-3">
             {/* Logo + Name row */}
             <div className="flex items-center gap-3">
               {/* Logo */}
               <div
                 className="w-12 h-12 rounded-xl overflow-hidden shrink-0 flex items-center justify-center cursor-pointer group relative"
-                style={{ background: isDark ? 'rgba(255,255,255,0.06)' : '#F3F4F6', border: `1px solid ${border}` }}
+                style={{ background: isDark ? 'rgba(255,255,255,0.06)' : '#F3F4F6', border: `2px solid ${primaryColor}30` }}
                 onClick={() => logoInputRef.current?.click()}
               >
                 {hasLogo ? (
@@ -254,7 +258,7 @@ export function PreviewSidebar({
 
               {/* Name + Category */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-bold truncate" style={{ color: text }}>{displayName}</h3>
+                <h3 className="text-base font-bold truncate" style={{ color: primaryColor }}>{displayName}</h3>
                 {communityData.businessType && (
                   <span className="text-[11px] capitalize" style={{ color: textMuted }}>
                     {template?.name || communityData.businessType}
@@ -289,6 +293,7 @@ export function PreviewSidebar({
                 )}
               </div>
             )}
+            </div>{/* close p-4 wrapper */}
           </div>
         </div>
 
@@ -411,9 +416,9 @@ export function PreviewSidebar({
         {/* ── Status ─────────────────────────────────────────── */}
         <div
           className="rounded-xl p-4 text-center"
-          style={{ background: cardBg, border: `1px solid ${border}` }}
+          style={{ background: `${primaryColor}08`, border: `1px solid ${primaryColor}20` }}
         >
-          <p className="text-xs" style={{ color: textMuted }}>
+          <p className="text-xs" style={{ color: hasBanner ? primaryColor : textMuted }}>
             {hasBanner
               ? '✅ Cover page ready — continue chatting to refine'
               : isGeneratingBanner
