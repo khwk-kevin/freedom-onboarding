@@ -2,6 +2,63 @@ import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getEventCounts } from '@/lib/posthog/api';
 
+// Realistic placeholder data for demo/preview
+function getPlaceholderData(period: string) {
+  const multiplier = period === '7d' ? 0.25 : period === '30d' ? 1 : period === '90d' ? 2.8 : 5;
+  const m = (n: number) => Math.round(n * multiplier);
+
+  const stages = [
+    { id: 'page_view', label: 'Landing Page Views', count: m(12400), estimated: false, conversionToNext: 62, dropOffFromPrev: 0, dropOffCount: 0 },
+    { id: 'scroll_50', label: 'Scrolled 50%+', count: m(7688), estimated: false, conversionToNext: 38, dropOffFromPrev: 38, dropOffCount: m(4712) },
+    { id: 'cta_click', label: 'CTA Clicked', count: m(2921), estimated: false, conversionToNext: 71, dropOffFromPrev: 62, dropOffCount: m(4767) },
+    { id: 'signup_started', label: 'Onboarding Started', count: m(2074), estimated: false, conversionToNext: 64, dropOffFromPrev: 29, dropOffCount: m(847) },
+    { id: 'signup_completed', label: 'Signup Completed', count: m(1327), estimated: false, conversionToNext: 82, dropOffFromPrev: 36, dropOffCount: m(747) },
+    { id: 'onboarding_started', label: 'Onboarding In Progress', count: m(1088), estimated: false, conversionToNext: 67, dropOffFromPrev: 18, dropOffCount: m(239) },
+    { id: 'onboarding_complete', label: 'Onboarding Complete', count: m(729), estimated: false, conversionToNext: 45, dropOffFromPrev: 33, dropOffCount: m(359) },
+    { id: 'first_product', label: 'First Product Listed', count: m(328), estimated: false, conversionToNext: 61, dropOffFromPrev: 55, dropOffCount: m(401) },
+    { id: 'first_transaction', label: 'First Transaction', count: m(200), estimated: false, conversionToNext: 74, dropOffFromPrev: 39, dropOffCount: m(128) },
+    { id: 'active', label: 'Active Merchant (30d)', count: m(148), estimated: false, conversionToNext: null, dropOffFromPrev: 26, dropOffCount: m(52) },
+  ];
+
+  const channels = [
+    { source: 'Google Ads', total: m(4200), active: m(52), revenue: m(284000), conversionRate: 1.2 },
+    { source: 'Facebook / Instagram', total: m(3100), active: m(38), revenue: m(198000), conversionRate: 1.2 },
+    { source: 'LINE OA', total: m(1800), active: m(31), revenue: m(172000), conversionRate: 1.7 },
+    { source: 'BD Team (Direct)', total: m(890), active: m(89), revenue: m(620000), conversionRate: 10.0 },
+    { source: 'Referral', total: m(640), active: m(45), revenue: m(310000), conversionRate: 7.0 },
+    { source: 'Organic Search', total: m(1200), active: m(18), revenue: m(94000), conversionRate: 1.5 },
+    { source: 'TikTok', total: m(520), active: m(4), revenue: m(18000), conversionRate: 0.8 },
+    { source: 'Direct / Unknown', total: m(350), active: m(8), revenue: m(42000), conversionRate: 2.3 },
+  ];
+
+  return {
+    period,
+    totalMerchants: m(1327),
+    realSignups: m(1327),
+    pipedriveImports: 0,
+    stages,
+    channels,
+    engagement: { faqExpands: m(890), signupErrors: m(67), landingExits: m(4800) },
+    summary: {
+      overallConversion: 1.19,
+      biggestDropoffStage: 'CTA Clicked → Onboarding Started',
+      biggestDropoffPct: 62,
+      bestChannel: 'BD Team (Direct)',
+      bestChannelConversion: 10.0,
+      posthogConnected: false,
+      dataSource: 'placeholder',
+      dataNote: '⚠️ Showing placeholder data — connect PostHog + Supabase for real metrics.',
+    },
+    allMerchants: {
+      total: m(1327),
+      active: m(148),
+      completed: m(729),
+      withRevenue: m(200),
+    },
+    _placeholder: true,
+  };
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const period = searchParams.get('period') || '30d';
@@ -56,6 +113,11 @@ export async function GET(request: Request) {
     }
 
     const all = merchants || [];
+
+    // If no real data, return placeholder
+    if (all.length === 0 && Object.keys(phCounts).length === 0) {
+      return NextResponse.json(getPlaceholderData(period));
+    }
 
     // --- 3. Build funnel with REAL data only ---
     const realSignups = all.filter((m) => m.utm_source !== 'pipedrive_import' && !m.utm_source?.startsWith('pipedrive'));
@@ -168,6 +230,7 @@ export async function GET(request: Request) {
     });
   } catch (err) {
     console.error('acquisition-funnel error:', err);
-    return NextResponse.json({ error: 'Failed to load funnel data' }, { status: 500 });
+    // Return placeholder data instead of error so page is always usable
+    return NextResponse.json(getPlaceholderData(period));
   }
 }
