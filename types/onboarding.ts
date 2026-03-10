@@ -107,7 +107,7 @@ export interface ChatMessage {
   metadata?: {
     showBusinessTypePicker?: boolean;
     // Interactive card types
-    cardType?: 'place_confirm' | 'brand_profile' | 'scraping' | 'ai_creating' | 'vibe_select' | 'rewards' | 'brand_description' | 'welcome_post' | 'cover_carousel' | 'mission_board';
+    cardType?: 'place_confirm' | 'brand_profile' | 'scraping' | 'ai_creating' | 'vibe_select' | 'rewards' | 'brand_description' | 'welcome_post' | 'cover_carousel' | 'mission_board' | 'merchant_dashboard';
     cardData?: Record<string, unknown>;
   };
 }

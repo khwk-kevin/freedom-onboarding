@@ -671,6 +671,37 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       sendMessage("Let me tweak the description a bit");
     } else if (action === 'welcome_accept') {
       sendMessage("Great welcome post! Let's use it 📝");
+      
+      // Show the merchant dashboard card — the onboarding outro
+      setTimeout(() => {
+        setMessages((prev) => [...prev, {
+          role: 'assistant',
+          content: "Look at everything you've built! 🎉 Here's your community dashboard:",
+          timestamp: new Date(),
+          metadata: {
+            cardType: 'merchant_dashboard',
+            cardData: {
+              businessName: communityData.name || 'Your Business',
+              primaryColor: communityData.primaryColor || '#10F48B',
+              logoUrl: communityData.logo,
+              bannerUrl: communityData.banner,
+              hasLogo: Boolean(communityData.logo),
+              hasBanner: Boolean(communityData.banner),
+              hasDescription: Boolean(communityData.description),
+              hasLocation: Boolean(communityData.location),
+              hasRewards: Boolean(communityData.rewards && communityData.rewards.length > 0),
+              hasWelcomePost: true,
+            },
+          },
+        }]);
+      }, 2500);
+    } else if (action === 'dashboard_go_live') {
+      sendMessage("Let's go live! 🚀");
+    } else if (action === 'dashboard_console') {
+      // Open Freedom console in new tab
+      if (typeof window !== 'undefined') {
+        window.open('https://console.freedom.world', '_blank');
+      }
     } else if (action === 'welcome_edit') {
       sendMessage("Let me edit the welcome post");
     }

@@ -288,6 +288,37 @@ export function ChatMessageComponent({
     );
   }
 
+  if (cardType === 'merchant_dashboard' && cardData && onCardAction) {
+    const { MerchantDashboardCard } = require('./cards/MerchantDashboardCard');
+    return (
+      <div className="flex items-start space-x-3 max-w-sm sm:max-w-md">
+        <AvaAvatar />
+        <div className="space-y-2 flex-1">
+          {message.content && (
+            <div className="rounded-2xl rounded-tl-none px-4 py-3 text-sm leading-relaxed"
+              style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)', color: 'var(--oc-text)' }}>
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            </div>
+          )}
+          <MerchantDashboardCard
+            businessName={cardData.businessName as string}
+            primaryColor={cardData.primaryColor as string}
+            logoUrl={cardData.logoUrl as string | undefined}
+            bannerUrl={cardData.bannerUrl as string | undefined}
+            hasLogo={cardData.hasLogo as boolean}
+            hasBanner={cardData.hasBanner as boolean}
+            hasDescription={cardData.hasDescription as boolean}
+            hasLocation={cardData.hasLocation as boolean}
+            hasRewards={cardData.hasRewards as boolean}
+            hasWelcomePost={cardData.hasWelcomePost as boolean}
+            onGoLive={() => onCardAction('dashboard_go_live', cardData)}
+            onViewConsole={() => onCardAction('dashboard_console', cardData)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (cardType === 'brand_description' && cardData && onCardAction) {
     return (
       <div className="flex items-start space-x-3 max-w-sm">
