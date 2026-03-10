@@ -28,6 +28,7 @@ export function OnboardingChat() {
     onSignupSuccess,
     dismissSignupWall,
     handleCardAction,
+    resetSession,
   } = useOnboarding();
 
   const conversationAreaRef = useRef<HTMLDivElement>(null);
@@ -110,15 +111,27 @@ export function OnboardingChat() {
               </div>
             </div>
 
-            {/* Progress bar (header right) */}
-            <div className="hidden sm:flex items-center gap-2 text-xs shrink-0" style={{ color: theme.textMuted }}>
-              <div className="w-20 md:w-24 h-1 rounded-full overflow-hidden" style={{ background: 'var(--oc-border)' }}>
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${progress}%`, background: '#10F48B' }}
-                />
+            {/* Progress bar + Start Over (header right) */}
+            <div className="flex items-center gap-2 md:gap-3 text-xs shrink-0" style={{ color: theme.textMuted }}>
+              <div className="hidden sm:flex items-center gap-2">
+                <div className="w-20 md:w-24 h-1 rounded-full overflow-hidden" style={{ background: 'var(--oc-border)' }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${progress}%`, background: '#10F48B' }}
+                  />
+                </div>
+                <span style={{ color: '#10F48B' }}>{progress}%</span>
               </div>
-              <span style={{ color: '#10F48B' }}>{progress}%</span>
+              {exchangeCount > 0 && (
+                <button
+                  onClick={() => { if (confirm('Start over? This will clear your progress.')) { resetSession(); window.location.reload(); } }}
+                  className="text-[10px] md:text-xs px-2 py-1 rounded-md hover:opacity-80 transition-opacity"
+                  style={{ color: theme.textMuted, border: `1px solid ${theme.border}` }}
+                  title="Start over"
+                >
+                  ↺ Reset
+                </button>
+              )}
             </div>
           </header>
 

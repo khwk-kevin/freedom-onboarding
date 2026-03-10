@@ -74,7 +74,7 @@ function generateUUID(): string {
 
 const ANON_SESSION_KEY = 'fw_anon_session_id';
 const CACHE_KEY = 'fw_onboarding_state';
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2; // Bumped to invalidate old broken share.google cache
 
 interface CachedState {
   version: number;
