@@ -9,12 +9,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Allow auth pages through without session check
+  // Allow auth pages and demo-mode pages through without session check
   if (
     pathname === '/crm/login' ||
     pathname.startsWith('/crm/login/') ||
     pathname === '/crm/forgot-password' ||
-    pathname.startsWith('/crm/forgot-password/')
+    pathname.startsWith('/crm/forgot-password/') ||
+    pathname === '/crm/acquisition-funnel'
   ) {
     return NextResponse.next()
   }
