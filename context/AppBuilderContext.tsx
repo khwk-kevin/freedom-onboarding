@@ -661,8 +661,12 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
         };
         setMessages((prev) => [...prev, assistantMsg]);
 
-        // Extract tags + update spec + trigger builds
-        await handleAVAResponse(avaResponse, currentSpec);
+        // Extract tags + update spec + trigger builds (non-fatal)
+        try {
+          await handleAVAResponse(avaResponse, currentSpec);
+        } catch (postErr) {
+          console.error('[AppBuilderContext] handleAVAResponse error (non-fatal):', postErr);
+        }
       } catch (err) {
         const e = err instanceof Error ? err : new Error(String(err));
         console.error('[AppBuilderContext] sendMessage error:', e.message);
