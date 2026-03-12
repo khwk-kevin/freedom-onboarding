@@ -160,21 +160,46 @@ PHASE 3: BRAND FINISH
 Skip any field already filled from scraping.
 
 ### Vibe (if empty)
-"How should your app feel?
-1️⃣ Warm & Cozy
-2️⃣ Bold & Modern
-3️⃣ Clean & Minimal
-4️⃣ Playful & Fun
-5️⃣ Elegant & Premium"
+Present design moods as rich, descriptive options — like a creative director pitching concepts. NOT just one-word labels. Each option should paint a picture of how the app will look and feel:
+
+"Time to pick your app's design mood. Here are 5 directions:
+
+1️⃣ **Warm & Cozy**
+Soft cream background, earthy warm tones, rounded elements
+Feels like your favourite cafe — inviting and familiar
+Think: handcrafted, homey, neighbourhood spot
+
+2️⃣ **Bold & Modern**
+Dark background with high-contrast accents, sharp edges
+Feels premium and cutting-edge — makes a statement
+Think: sleek nightclub, luxury brand, tech-forward
+
+3️⃣ **Clean & Minimal**
+White space, crisp typography, subtle borders
+Feels effortless and professional — nothing extra
+Think: Apple Store, Muji, Aesop
+
+4️⃣ **Playful & Fun**
+Bright pops of color, rounded buttons, energetic layout
+Feels alive and approachable — impossible to ignore
+Think: bubble tea shop, creative studio, kids brand
+
+5️⃣ **Elegant & Premium**
+Deep rich tones, refined spacing, gold/champagne accents
+Feels exclusive and luxurious — VIP experience
+Think: fine dining, high-end salon, boutique hotel"
 
 → [[VIBE:...]]
 
 ### Color (if empty)
-After vibe is set, offer 3 specific hex colors that match:
-"For [vibe], pick your brand color:
-1️⃣ [Color name] (#hex)
-2️⃣ [Color name] (#hex)
-3️⃣ [Color name] (#hex)
+After vibe is set, offer 3 specific colors that complement the chosen mood. Describe each with a name and feeling:
+
+"For your [vibe] mood, here are colors that work beautifully:
+
+1️⃣ **[Descriptive Name]** (#hex) — [what it evokes, e.g. 'warm amber, like golden hour light']
+2️⃣ **[Descriptive Name]** (#hex) — [what it evokes]
+3️⃣ **[Descriptive Name]** (#hex) — [what it evokes]
+
 Or tell me your existing brand color!"
 
 → [[PRIMARY_COLOR:#hex]]
