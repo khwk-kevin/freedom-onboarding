@@ -27,6 +27,11 @@ interface MerchantOnboardingData extends Partial<CommunityData> {
     address: string;
     images?: string[];
   };
+  // Phase 2: Product requirements
+  heroFeature?: string;
+  userFlow?: string;
+  differentiator?: string;
+  primaryActions?: string[];
 }
 
 interface OnboardingContextType {
@@ -351,6 +356,20 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         }
         if (extractions.primaryColor) {
           tagUpdates.primaryColor = extractions.primaryColor;
+        }
+        // Phase 2 extractions
+        if (extractions.heroFeature) {
+          tagUpdates.heroFeature = extractions.heroFeature;
+        }
+        if (extractions.userFlow) {
+          tagUpdates.userFlow = extractions.userFlow;
+        }
+        if ((extractions as Record<string, unknown>).differentiator) {
+          tagUpdates.differentiator = String((extractions as Record<string, unknown>).differentiator);
+        }
+        if ((extractions as Record<string, unknown>).primaryActions) {
+          const pa = String((extractions as Record<string, unknown>).primaryActions);
+          tagUpdates.primaryActions = pa.split(',').map(s => s.trim()).filter(Boolean);
         }
         if (Object.keys(tagUpdates).length > 0) {
           setCommunityData((prev) => ({ ...prev, ...tagUpdates }));

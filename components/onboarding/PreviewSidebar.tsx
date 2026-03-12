@@ -11,6 +11,10 @@ interface PreviewSidebarProps {
     products?: string[];
     description?: string;
     audiencePersona?: string;
+    heroFeature?: string;
+    userFlow?: string;
+    differentiator?: string;
+    primaryActions?: string[];
   };
   onUpdate: (data: Partial<CommunityData>) => void;
   onGenerateImage?: (type: 'logo' | 'banner') => Promise<void>;
@@ -37,6 +41,10 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
   const type = communityData.businessType;
   const audience = communityData.audiencePersona;
   const images = communityData.scrapedImages;
+  const heroFeature = communityData.heroFeature;
+  const userFlow = communityData.userFlow;
+  const differentiator = communityData.differentiator;
+  const primaryActions = communityData.primaryActions;
 
   const bg = '#050314';
   const cardBg = '#0D0B1A';
@@ -48,9 +56,24 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
   const emojiSet = isFood ? foodEmoji : serviceEmoji;
 
   // Count filled fields for progress
-  const fields = [name, desc, type, color !== '#10F48B' ? color : null, vibe, products?.length ? 'y' : null, audience];
+  const fields = [name, desc, type, color !== '#10F48B' ? color : null, vibe, products?.length ? 'y' : null, audience, heroFeature, userFlow, differentiator];
   const filled = fields.filter(Boolean).length;
+  const total = 10;
   const hasAnything = filled > 0;
+
+  // Map primary actions to icons
+  const actionIcons: Record<string, { icon: string; label: string }> = {
+    ordering: { icon: '🛒', label: 'Order' },
+    booking: { icon: '📅', label: 'Book' },
+    gallery: { icon: '📸', label: 'Gallery' },
+    loyalty: { icon: '🏆', label: 'Rewards' },
+    community: { icon: '👥', label: 'Community' },
+    contact: { icon: '📍', label: 'Visit' },
+    delivery: { icon: '🚗', label: 'Deliver' },
+    messaging: { icon: '💬', label: 'Chat' },
+    events: { icon: '📅', label: 'Events' },
+    subscriptions: { icon: '💎', label: 'Subscribe' },
+  };
 
   return (
     <aside
@@ -64,7 +87,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
           <span className="text-xs font-semibold text-white">Live Preview</span>
           {hasAnything && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${color}22`, color }}>
-              {filled}/7
+              {filled}/{total}
             </span>
           )}
         </div>
@@ -145,15 +168,18 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
                 </div>
               )}
 
-              {/* Quick actions — appear when type is set */}
-              {type && (
+              {/* Quick actions — use user's primary actions if available */}
+              {(primaryActions?.length || type) && (
                 <div className="grid grid-cols-4 gap-2 px-3 mb-3 animate-fadeIn">
-                  {[
-                    { icon: '🛒', label: 'Order' },
-                    { icon: '📅', label: 'Book' },
-                    { icon: '📍', label: 'Visit' },
-                    { icon: '💬', label: 'Chat' },
-                  ].map((a) => (
+                  {(primaryActions?.length
+                    ? primaryActions.slice(0, 4).map(a => actionIcons[a] || { icon: '⚡', label: a })
+                    : [
+                        { icon: '🛒', label: 'Order' },
+                        { icon: '📅', label: 'Book' },
+                        { icon: '📍', label: 'Visit' },
+                        { icon: '💬', label: 'Chat' },
+                      ]
+                  ).map((a) => (
                     <div key={a.label} className="flex flex-col items-center gap-1 py-2 rounded-lg" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
                       <span className="text-base">{a.icon}</span>
                       <span className="text-[8px] font-medium" style={{ color: textMuted }}>{a.label}</span>
@@ -201,6 +227,37 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
                       <img key={i} src={img} alt="" className="w-20 h-20 rounded-lg object-cover" style={{ border: `1px solid ${cardBorder}` }} />
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Hero Feature — appears when defined */}
+              {heroFeature && (
+                <div className="mx-3 mb-3 p-3 rounded-lg animate-fadeIn" style={{ background: `linear-gradient(135deg, ${color}18, ${color}08)`, border: `1px solid ${color}22` }}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-sm">🎯</span>
+                    <p className="text-[10px] font-bold text-white">Core Feature</p>
+                  </div>
+                  <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{heroFeature}</p>
+                </div>
+              )}
+
+              {/* User Flow — appears when defined */}
+              {userFlow && (
+                <div className="mx-3 mb-3 p-3 rounded-lg animate-fadeIn" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-sm">🔄</span>
+                    <p className="text-[10px] font-bold text-white">User Journey</p>
+                  </div>
+                  <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{userFlow}</p>
+                </div>
+              )}
+
+              {/* Differentiator — appears when defined */}
+              {differentiator && (
+                <div className="mx-3 mb-3 p-3 rounded-lg text-center animate-fadeIn" style={{ background: `linear-gradient(135deg, ${color}12, ${color}06)`, border: `1px solid ${color}18` }}>
+                  <span className="text-lg mb-1 block">✨</span>
+                  <p className="text-[10px] font-bold text-white mb-0.5">What makes us different</p>
+                  <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{differentiator}</p>
                 </div>
               )}
 
@@ -254,9 +311,9 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
       <div className="px-4 py-2.5 border-t text-center" style={{ borderColor: cardBorder }}>
         <p className="text-[10px]" style={{ color: textMuted }}>
           {!hasAnything && 'Start chatting to build your app'}
-          {hasAnything && filled < 5 && `Building... ${filled}/7 sections`}
-          {filled >= 5 && filled < 7 && `Almost ready — ${filled}/7 sections`}
-          {filled >= 7 && '✨ Spec complete — ready to build!'}
+          {hasAnything && filled < 6 && `Building... ${filled}/${total} sections`}
+          {filled >= 6 && filled < total && `Almost ready — ${filled}/${total} sections`}
+          {filled >= total && '✨ Spec complete — ready to build!'}
         </p>
       </div>
     </aside>
