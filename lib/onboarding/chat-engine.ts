@@ -635,9 +635,10 @@ export async function processMerchantMessage(
     userFlow: userFlowMatch?.[1].trim(),
   };
 
-  // Strip all [[TAGS]] before display
+  // Strip all [[TAGS]] and their surrounding blank lines before display
   const reply = rawReply
     .replace(/\[\[[A-Z_]+:[^\]]*\]\]/g, '')
+    .replace(/\n{3,}/g, '\n\n')  // collapse 3+ newlines to 2
     .trim();
 
   return { reply, extractions };
@@ -659,7 +660,7 @@ export async function generateMerchantGreeting(businessType?: string): Promise<s
 
   const raw =
     response.content[0]?.type === 'text'
-      ? response.content[0].text.replace(/\[\[[A-Z_]+:[^\]]*\]\]/g, '').trim()
+      ? response.content[0].text.replace(/\[\[[A-Z_]+:[^\]]*\]\]/g, '').replace(/\n{3,}/g, '\n\n').trim()
       : `Love it — a ${businessType}! 🎉 Your template is live in the preview. What's the name of your ${businessType}? And in one word, what's the vibe — cozy, bold, classy, playful?`;
 
   return raw;
