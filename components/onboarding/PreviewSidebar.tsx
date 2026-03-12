@@ -192,7 +192,8 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
   };
 
   // Use scraped/vibe background if available, otherwise default dark theme
-  const bg = scrapedBg || '#050314';
+  // Default to light neutral bg (matches the onboarding page theme) until user picks a vibe/color
+  const bg = scrapedBg || '#F8F9FA';
   const isLight = isLightColor(bg);
   const textColor = isLight ? '#1A1A1A' : '#FFFFFF';
   const textMuted = isLight ? '#666666' : '#8B8A9A';
