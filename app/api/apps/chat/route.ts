@@ -84,10 +84,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // Ensure first message is from user
-  if (cleanedMessages[0]?.role !== 'user') {
+  // Ensure first message is from user (strip leading assistant messages)
+  while (cleanedMessages.length > 0 && cleanedMessages[0].role !== 'user') {
+    cleanedMessages.shift();
+  }
+  if (cleanedMessages.length === 0) {
     return NextResponse.json(
-      { error: 'First message must be from user' },
+      { error: 'No user messages found' },
       { status: 400 }
     );
   }
