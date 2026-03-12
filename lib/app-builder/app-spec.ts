@@ -32,6 +32,7 @@ export interface AppSpec {
     backgroundColor?: string;        // App background color (from scrape)
     secondaryColor?: string;         // Secondary brand color (from scrape)
     fontFamily?: string;             // Font family (from scrape, e.g. "Montserrat")
+    uiStyle?: string;                // UI design style: glass | bold | outlined | gradient | neumorphic
   };
 
   // ── Audience ──────────────────────────────────────────────

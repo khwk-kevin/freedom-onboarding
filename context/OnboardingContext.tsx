@@ -32,6 +32,8 @@ interface MerchantOnboardingData extends Partial<CommunityData> {
   userFlow?: string;
   differentiator?: string;
   primaryActions?: string[];
+  // UI design style choice
+  uiStyle?: string;
   // Brand theming from scrape
   backgroundColor?: string;
   fontFamily?: string;
@@ -415,6 +417,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         if ((extractions as Record<string, unknown>).primaryActions) {
           const pa = String((extractions as Record<string, unknown>).primaryActions);
           tagUpdates.primaryActions = pa.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        if ((extractions as Record<string, unknown>).uiStyle) {
+          tagUpdates.uiStyle = String((extractions as Record<string, unknown>).uiStyle);
         }
         if (Object.keys(tagUpdates).length > 0) {
           setCommunityData((prev) => ({ ...prev, ...tagUpdates }));

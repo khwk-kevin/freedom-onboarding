@@ -39,6 +39,7 @@ interface PreviewSidebarProps {
     userFlow?: string;
     differentiator?: string;
     primaryActions?: string[];
+    uiStyle?: string;
     backgroundColor?: string;
     fontFamily?: string;
     brandColors?: string[];
@@ -152,6 +153,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
   const userFlow = communityData.userFlow;
   const differentiator = communityData.differentiator;
   const primaryActions = communityData.primaryActions;
+  const uiStyle = communityData.uiStyle || 'bold'; // default
   // Brand theming from scrape
   const scrapedBg = communityData.backgroundColor;
   const scrapedFont = communityData.fontFamily;
@@ -181,6 +183,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
       userFlow: 'userFlow',
       differentiator: 'differentiator',
       audiencePersona: 'audience',
+      uiStyle: 'header',
     };
 
     for (const [field, section] of Object.entries(fieldToSection)) {
@@ -281,10 +284,38 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
 
   const isFood = type === 'restaurant' || type === 'cafe';
 
+  // ── UI Style system ────────────────────────────────────────────────────────
+  // Returns card styles based on the user's chosen design style
+  const cardStyle = ((): { bg: string; border: string; shadow: string; radius: string; backdrop: string } => {
+    switch (uiStyle) {
+      case 'glass':
+        return { bg: `${color}08`, border: `1px solid ${color}20`, shadow: 'none', radius: 'rounded-2xl', backdrop: 'backdrop-blur-md' };
+      case 'bold':
+        return { bg: cardBg, border: `1px solid ${cardBorder}`, shadow: `0 4px 12px ${color}15`, radius: 'rounded-xl', backdrop: '' };
+      case 'outlined':
+        return { bg: 'transparent', border: `1.5px solid ${cardBorder}`, shadow: 'none', radius: 'rounded-xl', backdrop: '' };
+      case 'gradient':
+        return { bg: `linear-gradient(135deg, ${color}12, ${color}04)`, border: `1px solid ${color}18`, shadow: 'none', radius: 'rounded-2xl', backdrop: '' };
+      case 'neumorphic':
+        return { bg: bg, border: 'none', shadow: isLight ? `4px 4px 8px ${adjustColor(bg, -20)}44, -4px -4px 8px #FFFFFF88` : `4px 4px 8px #00000044, -4px -4px 8px ${adjustColor(bg, 20)}22`, radius: 'rounded-2xl', backdrop: '' };
+      default:
+        return { bg: cardBg, border: `1px solid ${cardBorder}`, shadow: 'none', radius: 'rounded-xl', backdrop: '' };
+    }
+  })();
+
+  // Helper to apply card styles as inline props
+  const cardProps = (extra?: React.CSSProperties): React.CSSProperties => ({
+    backgroundColor: cardStyle.bg.startsWith('linear') ? undefined : cardStyle.bg,
+    background: cardStyle.bg.startsWith('linear') ? cardStyle.bg : undefined,
+    border: cardStyle.border,
+    boxShadow: cardStyle.shadow,
+    ...extra,
+  });
+
   // Count filled fields for progress
-  const fields = [name, desc, type, color !== '#10F48B' ? color : null, vibe, products?.length ? 'y' : null, audience, heroFeature, userFlow, differentiator];
+  const fields = [name, desc, type, color !== '#10F48B' ? color : null, vibe, uiStyle !== 'bold' ? uiStyle : null, products?.length ? 'y' : null, audience, heroFeature, userFlow, differentiator];
   const filled = fields.filter(Boolean).length;
-  const total = 10;
+  const total = 11;
   const hasAnything = filled > 0;
 
   // ── Entrance + glow tracking ──────────────────────────────────────────────

@@ -62,6 +62,7 @@ Output these on their own line when you capture data. Hidden from the user:
 - [[PRIMARY_ACTIONS:ordering,booking,gallery]]  ← ONLY actions user picked
 - [[USER_FLOW:exact flow user described or confirmed]]
 - [[DIFFERENTIATOR:exact differentiator user stated]]
+- [[UI_STYLE:glass|bold|outlined|gradient|neumorphic]]
 - [[SCRAPE_URL:url]]
 - [[STEP:6]]  ← ONLY when ALL required fields are filled and user confirms
 
@@ -209,6 +210,43 @@ Feels exclusive and luxurious — VIP experience
 Think: fine dining, high-end salon, boutique hotel"
 
 → [[VIBE:...]]
+
+### App Design Style (ALWAYS ASK — this is key for personalization)
+After vibe is set, present 5 UI component styles that change how the app physically looks and feels. This is NOT the same as vibe — vibe is mood, this is the actual card/button/layout design language:
+
+"Now let's pick your app's design style — this changes how every card, button, and section looks:
+
+1️⃣ **Glass & Blur**
+Frosted glass cards, soft blur backgrounds, floating feel
+Semi-transparent layers that let color shine through
+Think: iOS Control Center, Spotify Now Playing
+→ Best for: modern, premium, creative brands
+
+2️⃣ **Bold Cards**
+Solid filled cards, strong shadows, chunky buttons
+High contrast, punchy, impossible to miss
+Think: Uber, Deliveroo, Nike app
+→ Best for: action-heavy apps (ordering, booking)
+
+3️⃣ **Outlined & Clean**
+Thin borders, open white space, minimal fills
+Light and airy — content is the focus
+Think: Airbnb, Linear, Notion
+→ Best for: content-rich, professional, editorial
+
+4️⃣ **Gradient Flow**
+Gradient backgrounds on cards, colorful transitions
+Dynamic, eye-catching, energetic
+Think: Instagram, Figma, Discord
+→ Best for: creative, social, entertainment
+
+5️⃣ **Neumorphic Soft**
+Soft raised surfaces, subtle inset shadows
+Tactile, touchable — like real buttons you want to press
+Think: smart home apps, dashboards, wellness apps
+→ Best for: premium feel, fewer but bigger elements"
+
+→ [[UI_STYLE:glass|bold|outlined|gradient|neumorphic]]
 
 ### Color (if empty)
 After vibe is set, offer 5 specific colors that complement the chosen mood. Each should feel distinct — not 5 shades of the same color. Describe each with a name and feeling:
@@ -581,6 +619,7 @@ export interface MerchantExtractions {
   primaryColor?: string;
   heroFeature?: string;
   userFlow?: string;
+  uiStyle?: string;
 }
 
 export interface MerchantChatResult {
@@ -636,6 +675,7 @@ export async function processMerchantMessage(
   const categoryMatch = rawReply.match(/\[\[CATEGORY:([^\]]+)\]\]/i);
   const differentiatorMatch = rawReply.match(/\[\[DIFFERENTIATOR:([^\]]+)\]\]/i);
   const primaryActionsMatch = rawReply.match(/\[\[PRIMARY_ACTIONS:([^\]]+)\]\]/i);
+  const uiStyleMatch = rawReply.match(/\[\[UI_STYLE:([^\]]+)\]\]/i);
 
   // Only use step from LLM tag — never auto-advance based on exchange count
   const step = stepMatch?.[1].trim();
@@ -654,6 +694,7 @@ export async function processMerchantMessage(
     primaryColor: primaryColorMatch?.[1].trim(),
     heroFeature: heroFeatureMatch?.[1].trim(),
     userFlow: userFlowMatch?.[1].trim(),
+    uiStyle: uiStyleMatch?.[1].trim(),
   };
 
   // Strip all [[TAGS]] and their surrounding blank lines before display
