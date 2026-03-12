@@ -127,3 +127,71 @@ html {
 .section-highlight {
   animation: sectionHighlight 2s ease-out;
 }
+
+/* ── Premium Studio animations ────────────────────────────────────────────── */
+
+@keyframes gradient-rotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes ambient-pulse {
+  0%, 100% { opacity: 0.06; }
+  50% { opacity: 0.12; }
+}
+
+.animate-ambient-pulse {
+  animation: ambient-pulse 5s ease-in-out infinite;
+}
+
+/* Animated gradient header separator */
+.gradient-header-line {
+  background: linear-gradient(90deg, transparent 0%, rgba(124, 58, 237, 0.6) 30%, rgba(99, 102, 241, 0.6) 70%, transparent 100%);
+  background-size: 200% 100%;
+  animation: gradient-rotate 4s ease infinite;
+}
+
+/* Phone frame animated gradient border via conic-gradient + CSS @property */
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes spin-gradient {
+  to { --gradient-angle: 360deg; }
+}
+
+.gradient-border-phone {
+  border-radius: 2.25rem;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--gradient-angle),
+    #7C3AED 0deg,
+    #4F46E5 90deg,
+    #38BDF8 180deg,
+    #A855F7 270deg,
+    #7C3AED 360deg
+  );
+  animation: spin-gradient 8s linear infinite;
+  position: relative;
+}
+
+/* Subtle glow behind the phone frame */
+.gradient-border-phone::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 2.5rem;
+  background: conic-gradient(
+    from var(--gradient-angle),
+    rgba(124, 58, 237, 0.15) 0deg,
+    rgba(79, 70, 229, 0.1) 90deg,
+    rgba(56, 189, 248, 0.1) 180deg,
+    rgba(168, 85, 247, 0.15) 270deg,
+    rgba(124, 58, 237, 0.15) 360deg
+  );
+  filter: blur(12px);
+  z-index: -1;
+}

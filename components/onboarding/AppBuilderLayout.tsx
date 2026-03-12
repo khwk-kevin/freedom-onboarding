@@ -95,16 +95,54 @@ export function AppBuilderLayout({
   const formattedBalance = tokenBalance !== undefined ? tokenBalance.toLocaleString() : null;
 
   return (
-    <div className="flex flex-col w-full h-full bg-[#08061A] overflow-hidden">
+    <div
+      className="relative flex flex-col w-full h-full overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #08061A 0%, #0F0D2E 50%, #0A0820 100%)' }}
+    >
+      {/* ── Ambient light orbs ─────────────────────────────────── */}
+      {/* Top-right: violet/purple glow */}
+      <div
+        className="absolute top-0 right-0 w-[700px] h-[700px] rounded-full pointer-events-none z-0 animate-ambient-pulse"
+        style={{
+          background: 'radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 65%)',
+          transform: 'translate(25%, -25%)',
+        }}
+      />
+      {/* Bottom-left: blue/indigo glow */}
+      <div
+        className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full pointer-events-none z-0"
+        style={{
+          background: 'radial-gradient(circle, rgba(79,70,229,0.08) 0%, transparent 65%)',
+          transform: 'translate(-25%, 25%)',
+          opacity: 0.08,
+        }}
+      />
+      {/* Center: very subtle warm glow */}
+      <div
+        className="absolute top-1/2 left-1/2 w-[500px] h-[500px] rounded-full pointer-events-none z-0"
+        style={{
+          background: 'radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 70%)',
+          transform: 'translate(-50%, -50%)',
+        }}
+      />
 
       {/* ── Top bar ──────────────────────────────────────────── */}
-      <header className="flex items-center justify-between h-12 px-4 border-b border-white/8 shrink-0 bg-[#0D0B1E]/80 backdrop-blur-md">
+      <header className="relative flex items-center justify-between h-12 px-4 shrink-0 bg-white/[0.02] backdrop-blur-xl border-b border-white/[0.06] z-10">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-violet-600 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-md bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-900/50">
             <span className="text-white text-[10px] font-bold">F</span>
           </div>
-          <span className="text-sm font-semibold text-white/80">Freedom Builder</span>
+          <span
+            className="text-sm font-semibold"
+            style={{
+              background: 'linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.7) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            Freedom Builder
+          </span>
         </div>
 
         {/* Token counter — only visible after signup */}
@@ -122,17 +160,20 @@ export function AppBuilderLayout({
             )}
           </div>
         )}
+
+        {/* Animated gradient separator line at bottom of header */}
+        <div className="gradient-header-line absolute bottom-0 left-0 right-0 h-px" />
       </header>
 
       {/* ── Main split area ────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden min-w-0">
+      <div className="relative flex flex-1 overflow-hidden min-w-0 z-10">
 
         {/* ── Chat panel ───────────────────────────────────────── */}
         {/*
           Mobile: full-width, always visible. Preview is a bottom sheet overlay.
-          Desktop: 50% width, side-by-side with preview.
+          Desktop: 50% width, side-by-side with preview. Glassmorphic container.
         */}
-        <div className="relative flex flex-col w-full md:w-1/2 h-full overflow-hidden min-w-0">
+        <div className="relative flex flex-col w-full md:w-1/2 h-full overflow-hidden min-w-0 md:bg-white/[0.02] md:backdrop-blur-xl">
           {children}
 
           {/*
@@ -153,18 +194,21 @@ export function AppBuilderLayout({
         </div>
 
         {/* ── Divider (desktop only) ───────────────────────────── */}
-        <div className="hidden md:block w-px bg-white/8 shrink-0 self-stretch" />
+        <div
+          className="hidden md:block w-px shrink-0 self-stretch"
+          style={{ background: 'linear-gradient(to bottom, transparent, rgba(124,58,237,0.3), rgba(99,102,241,0.2), transparent)' }}
+        />
 
         {/* ── Right panel: Live Preview (desktop only) ─────────── */}
-        <div className="hidden md:flex flex-col h-full overflow-hidden w-1/2 min-w-[420px]">
+        <div className="hidden md:flex flex-col h-full overflow-hidden w-1/2 min-w-[420px] bg-white/[0.01]">
           {/* Preview header strip — URL bar + VM status */}
-          <div className="flex items-center justify-between h-9 px-3 border-b border-white/8 bg-[#0D0B1E]/60 shrink-0">
+          <div className="flex items-center justify-between h-9 px-3 border-b border-white/[0.06] bg-white/[0.02] backdrop-blur-md shrink-0">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
             </div>
-            <div className="flex-1 mx-3 h-5 rounded-md bg-white/5 flex items-center px-2 min-w-0">
+            <div className="flex-1 mx-3 h-5 rounded-md bg-white/[0.05] flex items-center px-2 min-w-0">
               {devUrl ? (
                 <span className="text-[10px] text-white/30 truncate">{devUrl}</span>
               ) : (

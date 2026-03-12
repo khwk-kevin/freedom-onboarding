@@ -259,13 +259,16 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
 
       {/* Phone frame */}
       <div className="flex-1 overflow-y-auto p-4">
+        {/* Animated gradient border wrapper */}
         <div
-          className="rounded-[2rem] overflow-hidden border-2 mx-auto"
+          className="gradient-border-phone mx-auto"
+          style={{ maxWidth: '324px' }}
+        >
+        <div
+          className="rounded-[1.9rem] overflow-hidden"
           style={{
-            maxWidth: '320px',
             minHeight: '580px',
             backgroundColor: bg,
-            borderColor: cardBorder,
             boxShadow: hasAnything ? `0 0 40px ${color}15` : 'none',
             transition: 'box-shadow 0.5s ease',
           }}
@@ -475,6 +478,8 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               )}
             </div>
           )}
+        </div>
+        {/* end gradient-border-phone wrapper */}
         </div>
       </div>
 
