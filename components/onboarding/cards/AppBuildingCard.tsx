@@ -39,6 +39,8 @@ const STEP_ICONS: Record<string, string> = {
   error: '❌',
 };
 
+const TEMPLATE_BASE_URL = 'https://fw-template.vercel.app';
+
 export function AppBuildingCard({
   merchantId,
   onboardingData,
@@ -50,8 +52,23 @@ export function AppBuildingCard({
   const [steps, setSteps] = useState<BuildProgress[]>([]);
   const [isBuilding, setIsBuilding] = useState(true);
   const [devUrl, setDevUrl] = useState<string | null>(null);
+  const [appSpec, setAppSpec] = useState<Record<string, unknown> | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const startedRef = useRef(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Send appSpec to iframe via postMessage once we have both
+  const sendSpecToIframe = (spec: Record<string, unknown>) => {
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: 'appSpec', spec }, '*');
+    }
+  };
+
+  const handleIframeLoad = () => {
+    if (appSpec) {
+      sendSpecToIframe(appSpec);
+    }
+  };
 
   useEffect(() => {
     if (startedRef.current) return;
@@ -87,6 +104,14 @@ export function AppBuildingCard({
 
                 if (data.devUrl) {
                   setDevUrl(data.devUrl);
+                }
+
+                if (data.appSpec) {
+                  setAppSpec(data.appSpec);
+                  // If iframe is already loaded, send spec immediately
+                  if (iframeRef.current?.contentWindow) {
+                    iframeRef.current.contentWindow.postMessage({ type: 'appSpec', spec: data.appSpec }, '*');
+                  }
                 }
 
                 if (data.event === 'complete' || data.step === 'done') {
@@ -157,26 +182,30 @@ export function AppBuildingCard({
       </div>
 
       {/* Live Preview */}
-      {showPreview && devUrl && (
+      {showPreview && (
         <div className="border-t border-gray-100">
           <div className="px-5 py-2 flex items-center justify-between">
             <span className="text-xs text-gray-500">Live Preview</span>
-            <a
-              href={devUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs font-medium hover:underline"
-              style={{ color: primaryColor }}
-            >
-              Open in new tab ↗
-            </a>
+            {devUrl && (
+              <a
+                href={devUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium hover:underline"
+                style={{ color: primaryColor }}
+              >
+                Open in new tab ↗
+              </a>
+            )}
           </div>
           <div className="relative w-full" style={{ paddingBottom: '177.78%' /* 9:16 mobile ratio */ }}>
             <iframe
-              src={devUrl}
+              ref={iframeRef}
+              src={TEMPLATE_BASE_URL}
               className="absolute inset-0 w-full h-full border-0"
               title={`${businessName} Preview`}
               sandbox="allow-scripts allow-same-origin allow-popups"
+              onLoad={handleIframeLoad}
             />
           </div>
         </div>

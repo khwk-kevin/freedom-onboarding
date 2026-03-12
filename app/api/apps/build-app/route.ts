@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
     { event: 'progress', step: 'building', message: `Applying ${appSpec.brand.vibe} design theme...` },
     { event: 'progress', step: 'build_done', message: 'Build complete ✓' },
     { event: 'progress', step: 'starting', message: 'Deploying to your custom domain...' },
-    { event: 'complete', step: 'done', message: `${businessName} is live! 🎉`, devUrl: demoUrl, projectId: merchantId, completeness },
+    { event: 'complete', step: 'done', message: `${businessName} is live! 🎉`, devUrl: demoUrl, appSpec, projectId: merchantId, completeness },
   ];
 
   const stream = new ReadableStream({
