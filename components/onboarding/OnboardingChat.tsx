@@ -123,7 +123,7 @@ export function OnboardingChat() {
       >
         {/* Chat Panel — full width on mobile */}
         <section
-          className="flex-1 h-full flex flex-col relative z-10 min-w-0"
+          className="flex-1 h-full flex flex-col relative z-10 min-w-0 md:max-w-[860px]"
           style={{ background: theme.bg }}
         >
           {/* Chat Header */}
