@@ -32,6 +32,10 @@ interface MerchantOnboardingData extends Partial<CommunityData> {
   userFlow?: string;
   differentiator?: string;
   primaryActions?: string[];
+  // Brand theming from scrape
+  backgroundColor?: string;
+  fontFamily?: string;
+  brandColors?: string[];
 }
 
 interface OnboardingContextType {
@@ -438,6 +442,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                 if (scrapeData.vibe) scrapeUpdates.vibe = scrapeData.vibe;
                 if (scrapeData.products) scrapeUpdates.products = scrapeData.products;
                 if (scrapeData.brandColors?.[0]) scrapeUpdates.primaryColor = scrapeData.brandColors[0];
+                if (scrapeData.brandColors) scrapeUpdates.brandColors = scrapeData.brandColors;
+                if (scrapeData.backgroundColor) scrapeUpdates.backgroundColor = scrapeData.backgroundColor;
+                if (scrapeData.fontFamily) scrapeUpdates.fontFamily = scrapeData.fontFamily;
                 if (scrapeData.description) scrapeUpdates.description = scrapeData.description;
                 if (scrapeData.imageUrls) {
                   scrapeUpdates.scrapedImages = scrapeData.imageUrls;

@@ -47,6 +47,11 @@ export async function POST(req: NextRequest) {
         logoUrl: data.logo ? String(data.logo) : undefined,
         bannerUrl: data.banner ? String(data.banner) : undefined,
         fontStyle: 'clean',
+        backgroundColor: data.backgroundColor ? String(data.backgroundColor) : undefined,
+        fontFamily: data.fontFamily ? String(data.fontFamily) : undefined,
+        secondaryColor: Array.isArray(data.brandColors) && (data.brandColors as string[])[1]
+          ? String((data.brandColors as string[])[1])
+          : undefined,
       },
       audience: {
         description: String(data.audiencePersona || ''),

@@ -17,6 +17,8 @@ export interface ScrapedBrandContext {
   products?: string[];
   vibe?: string;
   brandColors?: string[];
+  backgroundColor?: string;
+  fontFamily?: string;
   imageUrls?: string[];
   followerCount?: string;
   category?: string;
@@ -173,6 +175,23 @@ async function analyzeBrandContext(
     }
   }
 
+  // Extract font families from CSS
+  const cssFonts: string[] = [];
+  const fontMatches = html.matchAll(/font-family\s*:\s*["']?([^;"'}\n]+)/gi);
+  for (const m of fontMatches) {
+    const font = m[1].split(',')[0].trim().replace(/["']/g, '');
+    if (font && !cssFonts.includes(font) && !['inherit', 'initial', 'system-ui', '-apple-system', 'sans-serif', 'serif', 'monospace'].includes(font.toLowerCase())) {
+      cssFonts.push(font);
+    }
+  }
+
+  // Extract background colors
+  const bgColors: string[] = [];
+  const bgMatches = html.matchAll(/background(?:-color)?\s*:\s*#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/gi);
+  for (const m of bgMatches) {
+    bgColors.push(`#${m[1]}`);
+  }
+
   const prompt = `You are analyzing a ${platform} page for a local business. Your job is to extract EVERYTHING you can about this brand, even if you need to infer from limited data. Be creative and thorough.
 
 URL: ${url}
@@ -181,6 +200,8 @@ META TAGS:
 ${Object.entries(meta).slice(0, 25).map(([k, v]) => `${k}: ${v}`).join('\n')}
 
 CSS COLORS FOUND: ${cssColors.slice(0, 10).join(', ') || 'none'}
+BACKGROUND COLORS FOUND: ${bgColors.slice(0, 5).join(', ') || 'none'}
+FONT FAMILIES FOUND: ${cssFonts.slice(0, 5).join(', ') || 'none'}
 
 PAGE CONTENT:
 ${cleanText}
@@ -190,7 +211,9 @@ IMPORTANT INSTRUCTIONS:
 - For "description": Write 2-3 sentences about what this business does and what makes it special. BE SPECIFIC — mention their actual offerings, style, or unique qualities.
 - For "products": List their main products/services. For restaurants, list cuisine types or signature dishes. For salons, list services. For retail, list product categories. Infer from ANY clue on the page.
 - For "vibe": Choose based on the page's tone, imagery, and language.
-- For "brandColors": Use the CSS colors found above, or infer from the business type and vibe.
+- For "brandColors": Use the CSS colors found above, or infer from the business type and vibe. First color = primary brand color.
+- For "backgroundColor": Use the dominant background color found in CSS, or infer a fitting dark/light bg from the brand's vibe. If the brand is dark/luxury use a dark hex, if minimal/clean use near-white like #F8F7F5. Default dark if unsure.
+- For "fontFamily": Use the first meaningful font family found, or leave empty if none found.
 - NEVER return null or empty arrays. Always provide your best inference.
 
 Return a JSON object:
@@ -201,7 +224,9 @@ Return a JSON object:
   "products": ["product1", "product2", "product3"],
   "vibe": "cozy|bold|classy|playful|modern|elegant|rustic|vibrant|minimal",
   "category": "restaurant|cafe|salon|retail|fitness|bar|clinic|other",
-  "brandColors": ["#hex1", "#hex2"]
+  "brandColors": ["#hex1", "#hex2"],
+  "backgroundColor": "#hex",
+  "fontFamily": "Font Name or empty string"
 }
 
 Return ONLY valid JSON.`;
@@ -263,6 +288,20 @@ export async function scrapeBrandContext(rawUrl: string): Promise<ScrapedBrandCo
     const meta = extractMeta(html);
     const imageUrls = extractImages(html, url);
 
+    // Extract background colors and fonts here too (for fallback)
+    const localBgColors: string[] = [];
+    const bgColorMatches = html.matchAll(/background(?:-color)?\s*:\s*#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/gi);
+    for (const m of bgColorMatches) localBgColors.push(`#${m[1]}`);
+
+    const localFonts: string[] = [];
+    const fontFamilyMatches = html.matchAll(/font-family\s*:\s*["']?([^;"'}\n]+)/gi);
+    for (const m of fontFamilyMatches) {
+      const font = m[1].split(',')[0].trim().replace(/["']/g, '');
+      if (font && !['inherit', 'initial', 'system-ui', '-apple-system', 'sans-serif', 'serif', 'monospace'].includes(font.toLowerCase())) {
+        localFonts.push(font);
+      }
+    }
+
     // Use Claude to analyze
     const analysis = await analyzeBrandContext(html, meta, imageUrls, url, platform);
 
@@ -275,6 +314,8 @@ export async function scrapeBrandContext(rawUrl: string): Promise<ScrapedBrandCo
       products: analysis.products,
       vibe: analysis.vibe,
       brandColors: analysis.brandColors,
+      backgroundColor: (analysis as Record<string, unknown>).backgroundColor as string | undefined || localBgColors[0],
+      fontFamily: (analysis as Record<string, unknown>).fontFamily as string | undefined || localFonts[0],
       imageUrls: imageUrls.slice(0, 5),
       category: analysis.category,
     };

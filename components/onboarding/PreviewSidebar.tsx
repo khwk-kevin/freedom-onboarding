@@ -1,5 +1,24 @@
 'use client';
 
+import {
+  ShoppingCart,
+  Calendar,
+  MapPin,
+  MessageCircle,
+  Star,
+  Trophy,
+  User,
+  Home,
+  Camera,
+  Truck,
+  Gem,
+  Zap,
+  Users,
+  ClipboardList,
+  Target,
+  RefreshCw,
+  Sparkles,
+} from 'lucide-react';
 import type { CommunityData } from '@/types/onboarding';
 
 interface PreviewSidebarProps {
@@ -15,6 +34,9 @@ interface PreviewSidebarProps {
     userFlow?: string;
     differentiator?: string;
     primaryActions?: string[];
+    backgroundColor?: string;
+    fontFamily?: string;
+    brandColors?: string[];
   };
   onUpdate: (data: Partial<CommunityData>) => void;
   onGenerateImage?: (type: 'logo' | 'banner') => Promise<void>;
@@ -26,9 +48,10 @@ interface PreviewSidebarProps {
 
 /**
  * Live Preview Sidebar — shows the app being built in real-time.
- * 
+ *
  * Starts empty. As the user answers questions, sections appear with animations.
  * Every element comes from user data — nothing is shown until the user provides it.
+ * Background color comes from scraped brand data when available.
  */
 export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
   const name = communityData.name;
@@ -45,15 +68,24 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
   const userFlow = communityData.userFlow;
   const differentiator = communityData.differentiator;
   const primaryActions = communityData.primaryActions;
+  // Brand theming from scrape
+  const scrapedBg = communityData.backgroundColor;
+  const scrapedFont = communityData.fontFamily;
 
-  const bg = '#050314';
-  const cardBg = '#0D0B1A';
-  const cardBorder = '#1A1730';
+  // Use scraped background if available, otherwise default dark theme
+  const bg = scrapedBg || '#050314';
+  const cardBg = scrapedBg
+    ? adjustColor(scrapedBg, 15)   // slightly lighter than bg
+    : '#0D0B1A';
+  const cardBorder = scrapedBg
+    ? adjustColor(scrapedBg, 25)
+    : '#1A1730';
   const textMuted = '#8B8A9A';
+  const fontFamilyStyle = scrapedFont
+    ? `"${scrapedFont}", -apple-system, sans-serif`
+    : 'inherit';
+
   const isFood = type === 'restaurant' || type === 'cafe';
-  const foodEmoji = ['🍜', '🍛', '🥗', '☕', '🍰', '🥤', '🍲', '🍱'];
-  const serviceEmoji = ['✨', '💆', '💇', '💅', '🧖', '🏋️', '📸', '🎨'];
-  const emojiSet = isFood ? foodEmoji : serviceEmoji;
 
   // Count filled fields for progress
   const fields = [name, desc, type, color !== '#10F48B' ? color : null, vibe, products?.length ? 'y' : null, audience, heroFeature, userFlow, differentiator];
@@ -61,24 +93,31 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
   const total = 10;
   const hasAnything = filled > 0;
 
-  // Map primary actions to icons
-  const actionIcons: Record<string, { icon: string; label: string }> = {
-    ordering: { icon: '🛒', label: 'Order' },
-    booking: { icon: '📅', label: 'Book' },
-    gallery: { icon: '📸', label: 'Gallery' },
-    loyalty: { icon: '🏆', label: 'Rewards' },
-    community: { icon: '👥', label: 'Community' },
-    contact: { icon: '📍', label: 'Visit' },
-    delivery: { icon: '🚗', label: 'Deliver' },
-    messaging: { icon: '💬', label: 'Chat' },
-    events: { icon: '📅', label: 'Events' },
-    subscriptions: { icon: '💎', label: 'Subscribe' },
+  // Map primary actions to Lucide icon components
+  const actionIconMap: Record<string, { Icon: React.ElementType; label: string }> = {
+    ordering: { Icon: ShoppingCart, label: 'Order' },
+    booking: { Icon: Calendar, label: 'Book' },
+    gallery: { Icon: Camera, label: 'Gallery' },
+    loyalty: { Icon: Trophy, label: 'Rewards' },
+    community: { Icon: Users, label: 'Community' },
+    contact: { Icon: MapPin, label: 'Visit' },
+    delivery: { Icon: Truck, label: 'Deliver' },
+    messaging: { Icon: MessageCircle, label: 'Chat' },
+    events: { Icon: Calendar, label: 'Events' },
+    subscriptions: { Icon: Gem, label: 'Subscribe' },
   };
+
+  const defaultActions = [
+    { Icon: ShoppingCart, label: 'Order' },
+    { Icon: Calendar, label: 'Book' },
+    { Icon: MapPin, label: 'Visit' },
+    { Icon: MessageCircle, label: 'Chat' },
+  ];
 
   return (
     <aside
       className="w-[380px] h-full border-l flex flex-col overflow-hidden"
-      style={{ backgroundColor: bg, borderColor: cardBorder }}
+      style={{ backgroundColor: bg, borderColor: cardBorder, fontFamily: fontFamilyStyle }}
     >
       {/* Header */}
       <div className="px-4 py-3 flex items-center justify-between border-b" style={{ borderColor: cardBorder }}>
@@ -117,8 +156,8 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
           {!hasAnything ? (
             /* Empty state */
             <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mb-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-                📱
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                <Home size={28} style={{ color: textMuted }} />
               </div>
               <p className="text-sm font-medium text-white mb-1">Your app will appear here</p>
               <p className="text-xs leading-relaxed" style={{ color: textMuted }}>
@@ -172,19 +211,20 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {(primaryActions?.length || type) && (
                 <div className="grid grid-cols-4 gap-2 px-3 mb-3 animate-fadeIn">
                   {(primaryActions?.length
-                    ? primaryActions.slice(0, 4).map(a => actionIcons[a] || { icon: '⚡', label: a })
-                    : [
-                        { icon: '🛒', label: 'Order' },
-                        { icon: '📅', label: 'Book' },
-                        { icon: '📍', label: 'Visit' },
-                        { icon: '💬', label: 'Chat' },
-                      ]
-                  ).map((a) => (
-                    <div key={a.label} className="flex flex-col items-center gap-1 py-2 rounded-lg" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-                      <span className="text-base">{a.icon}</span>
-                      <span className="text-[8px] font-medium" style={{ color: textMuted }}>{a.label}</span>
-                    </div>
-                  ))}
+                    ? primaryActions.slice(0, 4).map(a => {
+                        const mapped = actionIconMap[a];
+                        return mapped || { Icon: Zap, label: a };
+                      })
+                    : defaultActions
+                  ).map((a) => {
+                    const { Icon, label } = a as { Icon: React.ElementType; label: string };
+                    return (
+                      <div key={label} className="flex flex-col items-center gap-1 py-2 rounded-lg" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                        <Icon size={16} style={{ color }} />
+                        <span className="text-[8px] font-medium" style={{ color: textMuted }}>{label}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -192,7 +232,12 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {products && products.length > 0 && (
                 <div className="px-3 mb-3 animate-fadeIn">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-bold text-white">{isFood ? '🔥 Menu' : '⭐ Services'}</p>
+                    <p className="text-xs font-bold text-white flex items-center gap-1">
+                      {isFood
+                        ? <><Star size={10} style={{ color }} /> Menu</>
+                        : <><Star size={10} style={{ color }} /> Services</>
+                      }
+                    </p>
                     <span className="text-[9px]" style={{ color }}>{products.length} items</span>
                   </div>
                   <div className="space-y-1.5">
@@ -200,8 +245,8 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
                       const [pName, price] = String(product).split(':');
                       return (
                         <div key={i} className="flex items-center gap-2 p-2 rounded-lg" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-                          <div className="w-9 h-9 rounded-lg flex items-center justify-center text-base shrink-0" style={{ background: `linear-gradient(135deg, ${color}15, ${color}08)` }}>
-                            {emojiSet[i % emojiSet.length]}
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg, ${color}15, ${color}08)` }}>
+                            <Sparkles size={14} style={{ color }} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-[11px] font-medium text-white truncate">{pName?.trim()}</p>
@@ -221,7 +266,9 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {/* Gallery — from scraped images */}
               {images && images.length > 0 && (
                 <div className="px-3 mb-3 animate-fadeIn">
-                  <p className="text-xs font-bold text-white mb-2">📸 Gallery</p>
+                  <p className="text-xs font-bold text-white mb-2 flex items-center gap-1">
+                    <Camera size={10} style={{ color }} /> Gallery
+                  </p>
                   <div className="flex gap-1.5 overflow-hidden">
                     {images.slice(0, 3).map((img, i) => (
                       <img key={i} src={img} alt="" className="w-20 h-20 rounded-lg object-cover" style={{ border: `1px solid ${cardBorder}` }} />
@@ -234,7 +281,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {heroFeature && (
                 <div className="mx-3 mb-3 p-3 rounded-lg animate-fadeIn" style={{ background: `linear-gradient(135deg, ${color}18, ${color}08)`, border: `1px solid ${color}22` }}>
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-sm">🎯</span>
+                    <Target size={12} style={{ color }} />
                     <p className="text-[10px] font-bold text-white">Core Feature</p>
                   </div>
                   <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{heroFeature}</p>
@@ -245,7 +292,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {userFlow && (
                 <div className="mx-3 mb-3 p-3 rounded-lg animate-fadeIn" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-sm">🔄</span>
+                    <RefreshCw size={12} style={{ color }} />
                     <p className="text-[10px] font-bold text-white">User Journey</p>
                   </div>
                   <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{userFlow}</p>
@@ -255,7 +302,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {/* Differentiator — appears when defined */}
               {differentiator && (
                 <div className="mx-3 mb-3 p-3 rounded-lg text-center animate-fadeIn" style={{ background: `linear-gradient(135deg, ${color}12, ${color}06)`, border: `1px solid ${color}18` }}>
-                  <span className="text-lg mb-1 block">✨</span>
+                  <Sparkles size={18} className="mx-auto mb-1" style={{ color }} />
                   <p className="text-[10px] font-bold text-white mb-0.5">What makes us different</p>
                   <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{differentiator}</p>
                 </div>
@@ -273,7 +320,9 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {type && name && (
                 <div className="mx-3 mb-3 p-3 rounded-lg animate-fadeIn" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm" style={{ background: `linear-gradient(135deg, ${color}33, ${color}11)` }}>⭐</div>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${color}33, ${color}11)` }}>
+                      <Star size={14} style={{ color }} />
+                    </div>
                     <div>
                       <p className="text-[10px] font-semibold text-white">0 / 100 pts</p>
                       <p className="text-[8px]" style={{ color: textMuted }}>Earn with every purchase</p>
@@ -289,13 +338,13 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {name && (
                 <div className="fixed-bottom mx-3 mt-2 flex items-center justify-around py-2 rounded-xl animate-fadeIn" style={{ backgroundColor: `${cardBg}ee`, border: `1px solid ${cardBorder}` }}>
                   {[
-                    { icon: '🏠', label: 'Home', active: true },
-                    { icon: '📋', label: isFood ? 'Menu' : 'Browse', active: false },
-                    { icon: '🏆', label: 'Rewards', active: false },
-                    { icon: '👤', label: 'Profile', active: false },
+                    { Icon: Home, label: 'Home', active: true },
+                    { Icon: ClipboardList, label: isFood ? 'Menu' : 'Browse', active: false },
+                    { Icon: Trophy, label: 'Rewards', active: false },
+                    { Icon: User, label: 'Profile', active: false },
                   ].map((tab) => (
                     <div key={tab.label} className="flex flex-col items-center gap-0.5 px-2">
-                      <span className="text-sm">{tab.icon}</span>
+                      <tab.Icon size={14} style={{ color: tab.active ? color : textMuted }} />
                       <span className="text-[7px] font-medium" style={{ color: tab.active ? color : textMuted }}>{tab.label}</span>
                       {tab.active && <div className="w-1 h-1 rounded-full" style={{ backgroundColor: color }} />}
                     </div>
@@ -318,4 +367,18 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
       </div>
     </aside>
   );
+}
+
+// Helper: lighten or darken a hex color by offset (positive = lighter)
+function adjustColor(hex: string, offset: number): string {
+  try {
+    const clean = hex.replace('#', '');
+    const r = parseInt(clean.slice(0, 2), 16);
+    const g = parseInt(clean.slice(2, 4), 16);
+    const b = parseInt(clean.slice(4, 6), 16);
+    const clamp = (v: number) => Math.min(255, Math.max(0, v));
+    return `#${[r, g, b].map(c => clamp(c + offset).toString(16).padStart(2, '0')).join('')}`;
+  } catch {
+    return hex;
+  }
 }

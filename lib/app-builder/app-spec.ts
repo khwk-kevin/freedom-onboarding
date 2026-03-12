@@ -29,6 +29,9 @@ export interface AppSpec {
     logoUrl?: string;                // Logo image URL (from scrape or upload)
     bannerUrl?: string;              // Banner/cover image URL
     fontStyle: FontStyle;            // Typography mood
+    backgroundColor?: string;        // App background color (from scrape)
+    secondaryColor?: string;         // Secondary brand color (from scrape)
+    fontFamily?: string;             // Font family (from scrape, e.g. "Montserrat")
   };
 
   // ── Audience ──────────────────────────────────────────────
