@@ -787,7 +787,53 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         }]);
       }, 2500);
     } else if (action === 'dashboard_go_live') {
-      sendMessage("Let's go live! 🚀");
+      // Trigger the app builder pipeline
+      const merchantId = communityData.name 
+        ? `fw-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+        : `fw-${Date.now().toString(36)}`;
+      
+      // Add the building card to chat
+      setMessages((prev) => [...prev, {
+        role: 'assistant' as const,
+        content: "Now let's turn everything into your custom app! 🚀 Watch it being built live:",
+        timestamp: new Date(),
+        metadata: {
+          cardType: 'app_building' as const,
+          cardData: {
+            merchantId,
+            onboardingData: {
+              businessType: communityData.businessType,
+              vibe: communityData.vibe,
+              name: communityData.name,
+              products: communityData.products,
+              brandStyle: communityData.brandStyle,
+              primaryColor: communityData.primaryColor,
+              logo: communityData.logo,
+              banner: communityData.banner,
+              description: communityData.description,
+              audiencePersona: communityData.audiencePersona,
+              scrapedImages: communityData.scrapedImages,
+              scrapedUrl: communityData.scrapedUrl,
+              location: communityData.location,
+            },
+            primaryColor: communityData.primaryColor || '#10F48B',
+            businessName: communityData.name || 'Your App',
+          },
+        },
+      }]);
+    } else if (action === 'app_build_complete') {
+      const devUrl = cardData?.devUrl as string;
+      setMessages((prev) => [...prev, {
+        role: 'assistant' as const,
+        content: `Your app is live! 🎉\n\n🔗 ${devUrl}\n\nShare this link with your customers. You can always come back to make changes — just tell me what you want to update!`,
+        timestamp: new Date(),
+      }]);
+    } else if (action === 'app_build_error') {
+      setMessages((prev) => [...prev, {
+        role: 'assistant' as const,
+        content: "There was a hiccup building your app, but don't worry — your community is still set up and ready! We'll get the app sorted shortly. 💪",
+        timestamp: new Date(),
+      }]);
     } else if (action === 'dashboard_console') {
       // Open Freedom console in new tab
       if (typeof window !== 'undefined') {

@@ -319,6 +319,35 @@ export function ChatMessageComponent({
     );
   }
 
+  if (cardType === 'app_building' && cardData) {
+    const { AppBuildingCard } = require('./cards/AppBuildingCard');
+    return (
+      <div className="flex items-start space-x-3 max-w-sm sm:max-w-md">
+        <AvaAvatar />
+        <div className="space-y-2 flex-1">
+          {message.content && (
+            <div className="rounded-2xl rounded-tl-none px-4 py-3 text-sm leading-relaxed"
+              style={{ background: 'var(--oc-bubble-bg)', border: '1px solid var(--oc-bubble-border)', color: 'var(--oc-text)' }}>
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            </div>
+          )}
+          <AppBuildingCard
+            merchantId={cardData.merchantId as string}
+            onboardingData={cardData.onboardingData as Record<string, unknown>}
+            primaryColor={cardData.primaryColor as string}
+            businessName={cardData.businessName as string}
+            onComplete={(devUrl: string, projectId: string) => {
+              if (onCardAction) onCardAction('app_build_complete', { devUrl, projectId });
+            }}
+            onError={(error: string) => {
+              if (onCardAction) onCardAction('app_build_error', { error });
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (cardType === 'brand_description' && cardData && onCardAction) {
     return (
       <div className="flex items-start space-x-3 max-w-sm">
