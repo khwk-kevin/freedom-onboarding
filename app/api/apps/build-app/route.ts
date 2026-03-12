@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
 
   // Build simulation with realistic steps and timing
   // TODO: Replace with real Railway/GitHub pipeline when ready
-  const demoUrl = `https://demo-${merchantId.slice(0, 12)}.vercel.app`;
+  // Uses the real deployed template app as the demo preview
+  const demoUrl = 'https://fw-template.vercel.app';
 
   const steps = [
     { event: 'progress', step: 'github', message: 'Creating your app repository...' },
