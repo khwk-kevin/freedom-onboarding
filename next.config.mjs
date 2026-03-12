@@ -4,15 +4,15 @@ const nextConfig = {
     // Build a strict Content-Security-Policy
     const csp = [
       "default-src 'self'",
-      // Next.js inline scripts + GTM + PostHog CDN
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://app.posthog.com https://cdn.jsdelivr.net",
+      // Next.js inline scripts + GTM + PostHog CDN (both US and EU regions)
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://app.posthog.com https://eu-assets.i.posthog.com https://cdn.jsdelivr.net",
       "style-src 'self' 'unsafe-inline'",
       // Images from supabase storage, vercel blob, and generic HTTPS
       "img-src 'self' data: blob: https:",
       "media-src 'self' https://public.freedom.world",
       "font-src 'self' data:",
       // API calls: Supabase, PostHog, Google Analytics, Vercel
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://app.posthog.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://*.vercel-insights.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://app.posthog.com https://*.i.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://*.vercel-insights.com",
       "frame-src 'none'",
       "object-src 'none'",
       "base-uri 'self'",
