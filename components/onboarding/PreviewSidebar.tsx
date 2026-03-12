@@ -238,7 +238,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
 
   return (
     <aside
-      className="w-[380px] h-full border-l flex flex-col overflow-hidden"
+      className="w-full md:w-[380px] h-full border-l flex flex-col overflow-hidden"
       style={{ backgroundColor: bg, borderColor: cardBorder, fontFamily: fontFamilyStyle }}
     >
       {/* Header */}

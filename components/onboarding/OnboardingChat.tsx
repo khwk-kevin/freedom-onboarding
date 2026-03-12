@@ -258,6 +258,91 @@ export function OnboardingChat() {
           </div>
         )}
       </main>
+
+      {/* ── Mobile: backdrop ─────────────────────────────── */}
+      {mobilePreviewOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-[2px]"
+          onClick={() => setMobilePreviewOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* ── Mobile: bottom sheet with PreviewSidebar ─────── */}
+      <div
+        className="md:hidden fixed inset-x-0 bottom-0 z-50 h-[70vh] rounded-t-2xl overflow-hidden
+                   transition-transform duration-300 ease-out"
+        style={{
+          transform: mobilePreviewOpen ? 'translateY(0)' : 'translateY(100%)',
+          background: isDark ? '#0D0B1A' : '#F8F9FA',
+        }}
+        aria-hidden={!mobilePreviewOpen}
+      >
+        {/* Drag handle */}
+        <div className="flex flex-col items-center pt-2 pb-1 shrink-0">
+          <div
+            className="w-10 h-1 rounded-full"
+            style={{ background: isDark ? 'rgba(255,255,255,0.15)' : '#D1D5DB' }}
+          />
+        </div>
+
+        {/* Close button */}
+        <button
+          onClick={() => setMobilePreviewOpen(false)}
+          className="absolute top-3 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center
+                     transition-colors"
+          style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB', color: isDark ? '#fff' : '#111' }}
+          aria-label="Close preview"
+        >
+          <X size={16} />
+        </button>
+
+        {/* PreviewSidebar — stretches to fill sheet */}
+        <div className="h-full overflow-hidden" style={{ paddingTop: '8px' }}>
+          <PreviewSidebar
+            communityData={communityData}
+            onUpdate={updateCommunityData}
+            onGenerateImage={generateImage}
+            isGeneratingLogo={isGeneratingLogo}
+            isGeneratingBanner={isGeneratingBanner}
+            isAnonymous={isAnonymous}
+            isDark={isDark}
+          />
+        </div>
+      </div>
+
+      {/* ── Mobile: floating preview button ──────────────── */}
+      <button
+        className="md:hidden fixed bottom-20 right-4 z-50 w-12 h-12 rounded-full
+                   flex items-center justify-center text-white
+                   transition-all duration-200 active:scale-95 shadow-xl"
+        style={{
+          background: mobilePreviewOpen
+            ? (isDark ? 'rgba(255,255,255,0.15)' : '#374151')
+            : primaryColor,
+          boxShadow: `0 4px 20px ${primaryColor}55`,
+          animation: isGeneratingLogo || isGeneratingBanner ? 'pulse 2s infinite' : 'none',
+        }}
+        onClick={() => setMobilePreviewOpen(v => !v)}
+        aria-label={mobilePreviewOpen ? 'Close preview' : 'Open live preview'}
+      >
+        {mobilePreviewOpen ? (
+          <X size={20} />
+        ) : (
+          <Smartphone size={20} />
+        )}
+
+        {/* Progress badge */}
+        {filledCount > 0 && !mobilePreviewOpen && (
+          <span
+            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full
+                       flex items-center justify-center text-[9px] font-bold px-1"
+            style={{ background: '#1A1A1A', color: primaryColor, border: `1.5px solid ${primaryColor}` }}
+          >
+            {filledCount}/{totalCount}
+          </span>
+        )}
+      </button>
     </div>
   );
 }
