@@ -346,6 +346,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         if (extractions.name || extractions.businessName) {
           tagUpdates.name = extractions.name || extractions.businessName;
         }
+        if (extractions.description) {
+          tagUpdates.description = extractions.description;
+        }
+        if (extractions.primaryColor) {
+          tagUpdates.primaryColor = extractions.primaryColor;
+        }
         if (Object.keys(tagUpdates).length > 0) {
           setCommunityData((prev) => ({ ...prev, ...tagUpdates }));
         }
