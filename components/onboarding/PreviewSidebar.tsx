@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect, useState } from 'react';
 import {
   ShoppingCart,
   Calendar,
@@ -53,6 +54,19 @@ interface PreviewSidebarProps {
  * Every element comes from user data — nothing is shown until the user provides it.
  * Background color comes from scraped brand data when available.
  */
+// Helper: convert hex color to "r, g, b" string for use in rgba()
+function hexToRgbComponents(hex: string): string {
+  try {
+    const clean = hex.replace('#', '');
+    const r = parseInt(clean.slice(0, 2), 16);
+    const g = parseInt(clean.slice(2, 4), 16);
+    const b = parseInt(clean.slice(4, 6), 16);
+    return `${r}, ${g}, ${b}`;
+  } catch {
+    return '16, 244, 139';
+  }
+}
+
 export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
   const name = communityData.name;
   const color = communityData.primaryColor || '#10F48B';
@@ -72,15 +86,122 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
   const scrapedBg = communityData.backgroundColor;
   const scrapedFont = communityData.fontFamily;
 
-  // Use scraped background if available, otherwise default dark theme
+  // ── Highlight tracking ─────────────────────────────────────────────────────
+  // Track which sections are currently highlighted
+  const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
+  const prevDataRef = useRef<typeof communityData>({});
+
+  useEffect(() => {
+    const prev = prevDataRef.current;
+    const changed: string[] = [];
+
+    // Check which fields changed — map field → section key
+    const fieldToSection: Record<string, string> = {
+      name: 'header',
+      primaryColor: 'header',
+      businessType: 'header',
+      logo: 'header',
+      description: 'hero',
+      banner: 'hero',
+      vibe: 'hero',
+      primaryActions: 'actions',
+      products: 'products',
+      scrapedImages: 'gallery',
+      heroFeature: 'heroFeature',
+      userFlow: 'userFlow',
+      differentiator: 'differentiator',
+      audiencePersona: 'audience',
+    };
+
+    for (const [field, section] of Object.entries(fieldToSection)) {
+      const key = field as keyof typeof communityData;
+      const prevVal = prev[key];
+      const currVal = communityData[key];
+
+      // Detect changes (stringify arrays/objects for comparison)
+      const prevStr = JSON.stringify(prevVal ?? null);
+      const currStr = JSON.stringify(currVal ?? null);
+
+      if (prevStr !== currStr && currVal !== undefined && currVal !== null) {
+        if (!changed.includes(section)) changed.push(section);
+      }
+    }
+
+    if (changed.length > 0) {
+      setHighlighted(prev => {
+        const next = new Set(prev);
+        changed.forEach(s => next.add(s));
+        return next;
+      });
+
+      // Remove highlights after 2s
+      const timer = setTimeout(() => {
+        setHighlighted(prev => {
+          const next = new Set(prev);
+          changed.forEach(s => next.delete(s));
+          return next;
+        });
+      }, 2000);
+
+      prevDataRef.current = { ...communityData };
+      return () => clearTimeout(timer);
+    }
+
+    prevDataRef.current = { ...communityData };
+  }, [
+    communityData.name,
+    communityData.primaryColor,
+    communityData.businessType,
+    communityData.logo,
+    communityData.description,
+    communityData.banner,
+    communityData.vibe,
+    communityData.primaryActions,
+    communityData.products,
+    communityData.scrapedImages,
+    communityData.heroFeature,
+    communityData.userFlow,
+    communityData.differentiator,
+    communityData.audiencePersona,
+  ]);
+
+  // Helper: get inline style for a section that may be highlighted
+  const rgb = hexToRgbComponents(color);
+  const getHighlightStyle = (section: string): React.CSSProperties => {
+    if (!highlighted.has(section)) return {};
+    return {
+      animation: 'sectionHighlight 2s ease-out',
+      // Override the CSS variable approach with a real inline keyframe isn't possible,
+      // so we add a data attribute and rely on the CSS animation + a custom prop trick.
+      // Instead, we use a simpler approach: set boxShadow directly and animate via class.
+    };
+  };
+
+  // Since CSS @keyframes can't use inline variables for rgba, we use a JS-driven
+  // approach: apply the class AND set a CSS custom property on the element.
+  const getHighlightProps = (section: string): { className?: string; style?: React.CSSProperties } => {
+    if (!highlighted.has(section)) return {};
+    return {
+      className: 'section-highlight',
+      style: {
+        '--section-highlight-shadow-0': `0 0 0 0 rgba(${rgb}, 0.4)`,
+        '--section-highlight-shadow-50': `0 0 20px 4px rgba(${rgb}, 0.3)`,
+        '--section-highlight-shadow-100': `0 0 0 0 rgba(${rgb}, 0)`,
+      } as React.CSSProperties,
+    };
+  };
+
+  // Use scraped/vibe background if available, otherwise default dark theme
   const bg = scrapedBg || '#050314';
-  const cardBg = scrapedBg
-    ? adjustColor(scrapedBg, 15)   // slightly lighter than bg
-    : '#0D0B1A';
-  const cardBorder = scrapedBg
-    ? adjustColor(scrapedBg, 25)
-    : '#1A1730';
-  const textMuted = '#8B8A9A';
+  const isLight = isLightColor(bg);
+  const textColor = isLight ? '#1A1A1A' : '#FFFFFF';
+  const textMuted = isLight ? '#666666' : '#8B8A9A';
+  const cardBg = isLight
+    ? adjustColor(bg, -12)   // slightly darker for light bg
+    : (scrapedBg ? adjustColor(scrapedBg, 15) : '#0D0B1A');
+  const cardBorder = isLight
+    ? adjustColor(bg, -25)
+    : (scrapedBg ? adjustColor(scrapedBg, 25) : '#1A1730');
   const fontFamilyStyle = scrapedFont
     ? `"${scrapedFont}", -apple-system, sans-serif`
     : 'inherit';
@@ -123,7 +244,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
       <div className="px-4 py-3 flex items-center justify-between border-b" style={{ borderColor: cardBorder }}>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: hasAnything ? color : '#555' }} />
-          <span className="text-xs font-semibold text-white">Live Preview</span>
+          <span className="text-xs font-semibold" style={{ color: textColor }}>Live Preview</span>
           {hasAnything && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${color}22`, color }}>
               {filled}/{total}
@@ -159,7 +280,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
                 <Home size={28} style={{ color: textMuted }} />
               </div>
-              <p className="text-sm font-medium text-white mb-1">Your app will appear here</p>
+              <p className="text-sm font-medium mb-1" style={{ color: textColor }}>Your app will appear here</p>
               <p className="text-xs leading-relaxed" style={{ color: textMuted }}>
                 Answer questions in the chat and watch your app build live
               </p>
@@ -179,7 +300,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-white truncate">{name}</p>
+                    <p className="text-sm font-bold truncate" style={{ color: textColor }}>{name}</p>
                     {type && <p className="text-[10px] capitalize" style={{ color: textMuted }}>{type}</p>}
                   </div>
                 </div>
@@ -201,8 +322,8 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
                         {vibe}
                       </div>
                     )}
-                    {name && <p className="text-base font-bold text-white">{name}</p>}
-                    {desc && <p className="text-[10px] mt-0.5 text-white/70 leading-relaxed line-clamp-2">{desc}</p>}
+                    {name && <p className="text-base font-bold" style={{ color: textColor }}>{name}</p>}
+                    {desc && <p className="text-[10px] mt-0.5 leading-relaxed line-clamp-2" style={{ color: `${textColor}B3` }}>{desc}</p>}
                   </div>
                 </div>
               )}
@@ -232,7 +353,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {products && products.length > 0 && (
                 <div className="px-3 mb-3 animate-fadeIn">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-bold text-white flex items-center gap-1">
+                    <p className="text-xs font-bold flex items-center gap-1" style={{ color: textColor }}>
                       {isFood
                         ? <><Star size={10} style={{ color }} /> Menu</>
                         : <><Star size={10} style={{ color }} /> Services</>
@@ -249,7 +370,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
                             <Sparkles size={14} style={{ color }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[11px] font-medium text-white truncate">{pName?.trim()}</p>
+                            <p className="text-[11px] font-medium truncate" style={{ color: textColor }}>{pName?.trim()}</p>
                           </div>
                           {price && (
                             <span className="text-[10px] font-bold shrink-0" style={{ color }}>
@@ -266,7 +387,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {/* Gallery — from scraped images */}
               {images && images.length > 0 && (
                 <div className="px-3 mb-3 animate-fadeIn">
-                  <p className="text-xs font-bold text-white mb-2 flex items-center gap-1">
+                  <p className="text-xs font-bold mb-2 flex items-center gap-1" style={{ color: textColor }}>
                     <Camera size={10} style={{ color }} /> Gallery
                   </p>
                   <div className="flex gap-1.5 overflow-hidden">
@@ -282,7 +403,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
                 <div className="mx-3 mb-3 p-3 rounded-lg animate-fadeIn" style={{ background: `linear-gradient(135deg, ${color}18, ${color}08)`, border: `1px solid ${color}22` }}>
                   <div className="flex items-center gap-2 mb-1.5">
                     <Target size={12} style={{ color }} />
-                    <p className="text-[10px] font-bold text-white">Core Feature</p>
+                    <p className="text-[10px] font-bold" style={{ color: textColor }}>Core Feature</p>
                   </div>
                   <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{heroFeature}</p>
                 </div>
@@ -293,7 +414,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
                 <div className="mx-3 mb-3 p-3 rounded-lg animate-fadeIn" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
                   <div className="flex items-center gap-2 mb-1.5">
                     <RefreshCw size={12} style={{ color }} />
-                    <p className="text-[10px] font-bold text-white">User Journey</p>
+                    <p className="text-[10px] font-bold" style={{ color: textColor }}>User Journey</p>
                   </div>
                   <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{userFlow}</p>
                 </div>
@@ -303,7 +424,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {differentiator && (
                 <div className="mx-3 mb-3 p-3 rounded-lg text-center animate-fadeIn" style={{ background: `linear-gradient(135deg, ${color}12, ${color}06)`, border: `1px solid ${color}18` }}>
                   <Sparkles size={18} className="mx-auto mb-1" style={{ color }} />
-                  <p className="text-[10px] font-bold text-white mb-0.5">What makes us different</p>
+                  <p className="text-[10px] font-bold mb-0.5" style={{ color: textColor }}>What makes us different</p>
                   <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{differentiator}</p>
                 </div>
               )}
@@ -312,7 +433,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
               {audience && (
                 <div className="mx-3 mb-3 p-3 rounded-lg text-center animate-fadeIn" style={{ background: `linear-gradient(135deg, ${color}12, ${color}06)`, border: `1px solid ${color}18` }}>
                   <p className="text-[10px] font-medium" style={{ color: textMuted }}>Built for</p>
-                  <p className="text-[11px] text-white mt-0.5 leading-relaxed">{audience}</p>
+                  <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: textColor }}>{audience}</p>
                 </div>
               )}
 
@@ -324,7 +445,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
                       <Star size={14} style={{ color }} />
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold text-white">0 / 100 pts</p>
+                      <p className="text-[10px] font-semibold" style={{ color: textColor }}>0 / 100 pts</p>
                       <p className="text-[8px]" style={{ color: textMuted }}>Earn with every purchase</p>
                     </div>
                   </div>
@@ -367,6 +488,19 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
       </div>
     </aside>
   );
+}
+
+// Helper: determine if a hex color is light (luminance > 0.5)
+function isLightColor(hex: string): boolean {
+  try {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5;
+  } catch {
+    return false;
+  }
 }
 
 // Helper: lighten or darken a hex color by offset (positive = lighter)

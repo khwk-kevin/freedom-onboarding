@@ -118,3 +118,12 @@ html {
 .animate-in {
   animation: slide-in-from-bottom 0.3s ease-out both;
 }
+
+@keyframes sectionHighlight {
+  0% { box-shadow: var(--section-highlight-shadow-0, 0 0 0 0 rgba(16, 244, 139, 0.4)); }
+  50% { box-shadow: var(--section-highlight-shadow-50, 0 0 20px 4px rgba(16, 244, 139, 0.3)); }
+  100% { box-shadow: var(--section-highlight-shadow-100, 0 0 0 0 rgba(16, 244, 139, 0)); }
+}
+.section-highlight {
+  animation: sectionHighlight 2s ease-out;
+}

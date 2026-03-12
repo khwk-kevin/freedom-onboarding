@@ -81,6 +81,38 @@ function generateUUID(): string {
   });
 }
 
+// ── Background color helpers ────────────────────────────────────────
+const vibeBackgrounds: Record<string, string> = {
+  'warm': '#FFF8F0',
+  'cozy': '#FBF5EE',
+  'bold': '#0A0A0A',
+  'modern': '#FAFAFA',
+  'minimal': '#FFFFFF',
+  'clean': '#F8F9FA',
+  'playful': '#FFF9F0',
+  'elegant': '#0D0D0D',
+  'vibrant': '#FFFDF7',
+  'classy': '#1A1A2E',
+  'rustic': '#F5F0EB',
+};
+
+function colorLuminance(hex: string): number {
+  try {
+    const clean = hex.replace('#', '');
+    const r = parseInt(clean.slice(0, 2), 16);
+    const g = parseInt(clean.slice(2, 4), 16);
+    const b = parseInt(clean.slice(4, 6), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  } catch { return 0.5; }
+}
+
+function backgroundFromPrimaryColor(hex: string): string {
+  const lum = colorLuminance(hex);
+  if (lum < 0.3) return '#FAFAFA';  // dark color → light bg
+  if (lum > 0.7) return '#0A0A0A';  // light color → dark bg
+  return '#FFFFFF';
+}
+
 const ANON_SESSION_KEY = 'fw_anon_session_id';
 const CACHE_KEY = 'fw_onboarding_state';
 const CACHE_VERSION = 2; // Bumped to invalidate old broken share.google cache
@@ -351,6 +383,11 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         }
         if (extractions.vibe) {
           tagUpdates.vibe = extractions.vibe;
+          // Set backgroundColor from vibe if not already set (no URL was scraped)
+          if (!communityData.backgroundColor && !tagUpdates.backgroundColor) {
+            const vibeBg = vibeBackgrounds[extractions.vibe.toLowerCase()];
+            if (vibeBg) tagUpdates.backgroundColor = vibeBg;
+          }
         }
         if (extractions.name || extractions.businessName) {
           tagUpdates.name = extractions.name || extractions.businessName;
@@ -360,6 +397,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         }
         if (extractions.primaryColor) {
           tagUpdates.primaryColor = extractions.primaryColor;
+          // Set backgroundColor from primary color if not already set
+          if (!communityData.backgroundColor && !tagUpdates.backgroundColor) {
+            tagUpdates.backgroundColor = backgroundFromPrimaryColor(extractions.primaryColor);
+          }
         }
         // Phase 2 extractions
         if (extractions.heroFeature) {
@@ -860,6 +901,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
               products: communityData.products,
               brandStyle: communityData.brandStyle,
               primaryColor: communityData.primaryColor,
+              backgroundColor: communityData.backgroundColor,
+              fontFamily: communityData.fontFamily,
+              brandColors: communityData.brandColors,
               logo: communityData.logo,
               banner: communityData.banner,
               description: communityData.description,
