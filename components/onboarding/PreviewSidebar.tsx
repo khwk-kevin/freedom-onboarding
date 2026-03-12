@@ -1,13 +1,17 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import type { CommunityData } from '@/types/onboarding';
-import { DEFAULT_PRIMARY_COLORS } from '@/types/onboarding';
-import { getTemplateById } from '@/lib/onboarding/templates';
 
 interface PreviewSidebarProps {
-  communityData: Partial<CommunityData> & { businessType?: string; vibe?: string; brandStyle?: string; scrapedImages?: string[] };
+  communityData: Partial<CommunityData> & {
+    businessType?: string;
+    vibe?: string;
+    brandStyle?: string;
+    scrapedImages?: string[];
+    products?: string[];
+    description?: string;
+    audiencePersona?: string;
+  };
   onUpdate: (data: Partial<CommunityData>) => void;
   onGenerateImage?: (type: 'logo' | 'banner') => Promise<void>;
   isGeneratingLogo?: boolean;
@@ -16,444 +20,245 @@ interface PreviewSidebarProps {
   isDark?: boolean;
 }
 
-export function PreviewSidebar({
-  communityData,
-  onUpdate,
-  onGenerateImage,
-  isGeneratingLogo,
-  isGeneratingBanner,
-  isAnonymous = false,
-  isDark = true,
-}: PreviewSidebarProps) {
-  const template = communityData.businessType ? getTemplateById(communityData.businessType) : null;
-  const displayName = communityData.name || template?.sampleName || 'Your Community';
-  const displayDesc = communityData.description || template?.sampleDescription || '';
-  const primaryColor = communityData.primaryColor || template?.primaryColor || '#10F48B';
-  const hasBanner = Boolean(communityData.banner);
-  const hasLogo = Boolean(communityData.logo);
+/**
+ * Live Preview Sidebar — shows the app being built in real-time.
+ * 
+ * Starts empty. As the user answers questions, sections appear with animations.
+ * Every element comes from user data — nothing is shown until the user provides it.
+ */
+export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
+  const name = communityData.name;
+  const color = communityData.primaryColor || '#10F48B';
+  const vibe = communityData.vibe;
+  const desc = communityData.description;
+  const logo = communityData.logo;
+  const banner = communityData.banner;
+  const products = communityData.products;
+  const type = communityData.businessType;
+  const audience = communityData.audiencePersona;
+  const images = communityData.scrapedImages;
 
-  const [bannerModalOpen, setBannerModalOpen] = useState(false);
-  const bannerInputRef = useRef<HTMLInputElement>(null);
-  const logoInputRef = useRef<HTMLInputElement>(null);
-  const colorPickerRef = useRef<HTMLInputElement>(null);
-  const [customColor, setCustomColor] = useState<string | null>(null);
+  const bg = '#050314';
+  const cardBg = '#0D0B1A';
+  const cardBorder = '#1A1730';
+  const textMuted = '#8B8A9A';
+  const isFood = type === 'restaurant' || type === 'cafe';
+  const foodEmoji = ['🍜', '🍛', '🥗', '☕', '🍰', '🥤', '🍲', '🍱'];
+  const serviceEmoji = ['✨', '💆', '💇', '💅', '🧖', '🏋️', '📸', '🎨'];
+  const emojiSet = isFood ? foodEmoji : serviceEmoji;
 
-  const handleFileUpload = (type: 'logo' | 'banner') => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => onUpdate({ [type]: ev.target?.result as string });
-    reader.readAsDataURL(file);
-  };
-
-  // Theme
-  const bg = isDark ? '#0D0B1E' : '#EEF2F6';
-  const border = isDark ? 'rgba(255,255,255,0.08)' : '#D6DCE4';
-  const cardBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.7)';
-  const text = isDark ? '#F4F4FC' : '#111827';
-  const textMuted = isDark ? 'rgba(244,244,252,0.5)' : '#5B6578';
-  const labelColor = isDark ? 'rgba(244,244,252,0.35)' : '#7C879A';
+  // Count filled fields for progress
+  const fields = [name, desc, type, color !== '#10F48B' ? color : null, vibe, products?.length ? 'y' : null, audience];
+  const filled = fields.filter(Boolean).length;
+  const hasAnything = filled > 0;
 
   return (
-    <section
-      className="w-[420px] h-full flex flex-col border-l overflow-hidden"
-      style={{ background: bg, borderColor: border }}
+    <aside
+      className="w-[380px] h-full border-l flex flex-col overflow-hidden"
+      style={{ backgroundColor: bg, borderColor: cardBorder }}
     >
       {/* Header */}
-      <div
-        className="h-16 px-5 border-b flex items-center justify-between shrink-0"
-        style={{ borderColor: border }}
-      >
+      <div className="px-4 py-3 flex items-center justify-between border-b" style={{ borderColor: cardBorder }}>
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: primaryColor }} />
-          <span className="text-sm font-semibold" style={{ color: text }}>Live Preview</span>
+          <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: hasAnything ? color : '#555' }} />
+          <span className="text-xs font-semibold text-white">Live Preview</span>
+          {hasAnything && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${color}22`, color }}>
+              {filled}/7
+            </span>
+          )}
         </div>
-        {isAnonymous && (
-          <span
-            className="px-2 py-0.5 rounded text-[10px] font-semibold tracking-wider"
-            style={{ background: `${primaryColor}18`, color: primaryColor }}
-          >
-            PREVIEW
-          </span>
-        )}
+        <span className="text-[10px] font-medium px-2 py-0.5 rounded" style={{ backgroundColor: cardBg, color: textMuted, border: `1px solid ${cardBorder}` }}>
+          MOBILE
+        </span>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-5">
-
-        {/* ── Cover Page Preview ─────────────────────────────── */}
-        <div>
-          <label className="text-[10px] font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
-            Cover Page
-          </label>
-          <div
-            className="rounded-xl overflow-hidden relative group cursor-pointer"
-            style={{
-              aspectRatio: '1440/690',
-              background: hasBanner ? 'transparent' : `linear-gradient(135deg, ${primaryColor}25, ${primaryColor}08)`,
-              border: `1px solid ${border}`,
-            }}
-            onClick={() => hasBanner ? setBannerModalOpen(true) : bannerInputRef.current?.click()}
-          >
-            {isGeneratingBanner ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                <div
-                  className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-                  style={{ borderColor: `${primaryColor}40`, borderTopColor: 'transparent' }}
-                />
-                <span className="text-[11px] font-medium" style={{ color: primaryColor }}>
-                  Creating cover...
-                </span>
-              </div>
-            ) : hasBanner ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={communityData.banner} alt="Cover" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
-                  <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                    Click to enlarge
-                  </span>
-                </div>
-              </>
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                <span className="text-2xl opacity-30">🎨</span>
-                <span className="text-[11px]" style={{ color: textMuted }}>
-                  Cover will generate automatically
-                </span>
-              </div>
-            )}
-            {/* Upload + Remove buttons */}
-            {!isGeneratingBanner && (
-              <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={(e) => { e.stopPropagation(); bannerInputRef.current?.click(); }}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center"
-                  style={{ background: 'rgba(0,0,0,0.5)', color: '#fff' }}
-                  title="Upload cover"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                </button>
-                {hasBanner && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onUpdate({ banner: undefined }); }}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ background: 'rgba(239,68,68,0.7)', color: '#fff' }}
-                    title="Remove cover"
-                  >
-                    <span className="text-xs font-bold">✕</span>
-                  </button>
-                )}
-              </div>
-            )}
-            <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload('banner')} />
+      {/* Phone frame */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div
+          className="rounded-[2rem] overflow-hidden border-2 mx-auto"
+          style={{
+            maxWidth: '320px',
+            minHeight: '580px',
+            backgroundColor: bg,
+            borderColor: cardBorder,
+            boxShadow: hasAnything ? `0 0 40px ${color}15` : 'none',
+            transition: 'box-shadow 0.5s ease',
+          }}
+        >
+          {/* Status bar */}
+          <div className="h-6 flex items-center justify-center">
+            <div className="w-20 h-1 rounded-full" style={{ backgroundColor: cardBorder }} />
           </div>
-        </div>
 
-        {/* ── Logo / Brand Upload ─────────────────────────────── */}
-        <div>
-          <label className="text-[10px] font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
-            Your Logo
-          </label>
-          <div
-            className="rounded-xl overflow-hidden relative group"
-            style={{ background: cardBg, border: `1px solid ${border}` }}
-          >
-            {hasLogo ? (
-              <div className="flex items-center gap-3 p-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={communityData.logo}
-                  alt="Logo"
-                  className="w-14 h-14 rounded-xl object-cover shrink-0"
-                  style={{ border: `1px solid ${border}` }}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate" style={{ color: text }}>Logo uploaded ✓</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: textMuted }}>Used for cover page generation</p>
-                </div>
-                <div className="flex gap-1.5 shrink-0">
-                  <button
-                    onClick={() => logoInputRef.current?.click()}
-                    className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all hover:scale-105"
-                    style={{ background: `${primaryColor}15`, color: primaryColor, border: `1px solid ${primaryColor}25` }}
-                  >
-                    Replace
-                  </button>
-                  <button
-                    onClick={() => onUpdate({ logo: undefined })}
-                    className="px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all hover:scale-105"
-                    style={{ background: isDark ? 'rgba(239,68,68,0.1)' : 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}
-                    title="Remove logo"
-                  >
-                    ✕
-                  </button>
-                </div>
+          {!hasAnything ? (
+            /* Empty state */
+            <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mb-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                📱
               </div>
-            ) : (
-              <div
-                className="p-5 flex flex-col items-center gap-2 cursor-pointer transition-all hover:opacity-80"
-                onClick={() => logoInputRef.current?.click()}
-              >
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ background: `${primaryColor}10`, border: `2px dashed ${primaryColor}30` }}
-                >
-                  <svg className="w-5 h-5" style={{ color: primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs font-medium" style={{ color: text }}>Upload your logo</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: textMuted }}>
-                    Helps AVA create a better cover page
-                  </p>
-                </div>
-              </div>
-            )}
-            <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload('logo')} />
-          </div>
-        </div>
-
-        {/* ── Brand Identity ─────────────────────────────────── */}
-        <div>
-          <label className="text-[10px] font-semibold uppercase tracking-wider mb-3 block" style={{ color: labelColor }}>
-            Brand Identity
-          </label>
-          <div
-            className="rounded-xl overflow-hidden space-y-0"
-            style={{ background: cardBg, border: `1px solid ${border}` }}
-          >
-            {/* Primary color accent bar */}
-            <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}80)` }} />
-            
-            <div className="p-4 space-y-3">
-            {/* Logo + Name row */}
-            <div className="flex items-center gap-3">
-              {/* Logo */}
-              <div
-                className="w-12 h-12 rounded-xl overflow-hidden shrink-0 flex items-center justify-center cursor-pointer group relative"
-                style={{ background: isDark ? 'rgba(255,255,255,0.06)' : '#F3F4F6', border: `2px solid ${primaryColor}30` }}
-                onClick={() => logoInputRef.current?.click()}
-              >
-                {hasLogo ? (
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={communityData.logo} alt="Logo" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                      <svg className="w-3 h-3 text-white opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    </div>
-                  </>
-                ) : (
-                  <svg className="w-5 h-5" style={{ color: textMuted }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                )}
-                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload('logo')} />
-              </div>
-
-              {/* Name + Category */}
-              <div className="flex-1 min-w-0">
-                <h3 className="text-base font-bold truncate" style={{ color: primaryColor }}>{displayName}</h3>
-                {communityData.businessType && (
-                  <span className="text-[11px] capitalize" style={{ color: textMuted }}>
-                    {template?.name || communityData.businessType}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Description */}
-            {displayDesc && (
-              <p className="text-xs leading-relaxed" style={{ color: textMuted }}>{displayDesc}</p>
-            )}
-
-            {/* Tags row — vibe + style */}
-            {(communityData.vibe || communityData.brandStyle) && (
-              <div className="flex flex-wrap gap-1.5">
-                {communityData.vibe && (
-                  <span
-                    className="px-2 py-0.5 rounded-full text-[10px] font-medium"
-                    style={{ background: `${primaryColor}15`, color: primaryColor, border: `1px solid ${primaryColor}25` }}
-                  >
-                    {communityData.vibe}
-                  </span>
-                )}
-                {communityData.brandStyle && (
-                  <span
-                    className="px-2 py-0.5 rounded-full text-[10px] font-medium"
-                    style={{ background: `${primaryColor}15`, color: primaryColor, border: `1px solid ${primaryColor}25` }}
-                  >
-                    {communityData.brandStyle}
-                  </span>
-                )}
-              </div>
-            )}
-            </div>{/* close p-4 wrapper */}
-          </div>
-        </div>
-
-        {/* ── Business Photos (from Google Maps) ──────────────── */}
-        {communityData.scrapedImages && communityData.scrapedImages.length > 0 && (
-          <div>
-            <label className="text-[10px] font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
-              Business Photos
-            </label>
-            <div
-              className="rounded-xl p-3 space-y-2"
-              style={{ background: cardBg, border: `1px solid ${border}` }}
-            >
-              <div className="grid grid-cols-2 gap-2">
-                {communityData.scrapedImages.slice(0, 4).map((imgUrl, idx) => (
-                  <div
-                    key={idx}
-                    className="relative rounded-lg overflow-hidden cursor-pointer group"
-                    style={{ aspectRatio: '4/3' }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={imgUrl}
-                      alt={`Business photo ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Click to use as logo or cover */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-1.5">
-                      <button
-                        onClick={() => onUpdate({ logo: imgUrl })}
-                        className="px-2 py-1 rounded text-[9px] font-semibold text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                        style={{ background: 'rgba(0,0,0,0.6)' }}
-                        title="Use as logo"
-                      >
-                        Logo
-                      </button>
-                      <button
-                        onClick={() => onUpdate({ banner: imgUrl })}
-                        className="px-2 py-1 rounded text-[9px] font-semibold text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                        style={{ background: 'rgba(0,0,0,0.6)' }}
-                        title="Use as cover"
-                      >
-                        Cover
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[10px] text-center" style={{ color: textMuted }}>
-                📍 From Google Maps · Hover to use as logo or cover
+              <p className="text-sm font-medium text-white mb-1">Your app will appear here</p>
+              <p className="text-xs leading-relaxed" style={{ color: textMuted }}>
+                Answer questions in the chat and watch your app build live
               </p>
             </div>
-          </div>
-        )}
+          ) : (
+            /* Live app preview */
+            <div className="px-0 pb-16">
 
-        {/* ── Primary Color ──────────────────────────────────── */}
-        <div>
-          <label className="text-[10px] font-semibold uppercase tracking-wider mb-2 block" style={{ color: labelColor }}>
-            Primary Color
-          </label>
-          <div
-            className="rounded-xl p-3 flex items-center gap-3"
-            style={{ background: cardBg, border: `1px solid ${border}` }}
-          >
-            {/* Selected color swatch */}
-            <div
-              className="w-8 h-8 rounded-lg shrink-0 shadow-sm"
-              style={{
-                background: primaryColor,
-                border: primaryColor.toLowerCase() === '#ffffff' ? '1px solid #d1d5db' : 'none',
-              }}
-            />
-            <span className="text-xs font-mono" style={{ color: textMuted }}>{primaryColor}</span>
-
-            <div className="flex-1" />
-
-            {/* Color palette */}
-            <div className="flex items-center gap-1.5 flex-wrap justify-end">
-              {customColor && (
-                <button
-                  onClick={() => onUpdate({ primaryColor: customColor })}
-                  className={`w-5 h-5 rounded-md transition-transform hover:scale-110 ${communityData.primaryColor === customColor ? 'ring-2 ring-offset-1 ring-green-400' : ''}`}
-                  style={{ background: customColor }}
-                />
+              {/* App header — appears when name is set */}
+              {name && (
+                <div className="px-4 py-3 flex items-center gap-2.5 animate-fadeIn">
+                  {logo ? (
+                    <img src={logo} alt={name} className="w-8 h-8 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold" style={{ background: `linear-gradient(135deg, ${color}, ${color}88)`, color: bg }}>
+                      {name.charAt(0)}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-white truncate">{name}</p>
+                    {type && <p className="text-[10px] capitalize" style={{ color: textMuted }}>{type}</p>}
+                  </div>
+                </div>
               )}
-              {DEFAULT_PRIMARY_COLORS.slice(0, 6).map((c) => (
-                <button
-                  key={c.hex}
-                  onClick={() => onUpdate({ primaryColor: c.hex })}
-                  className={`w-5 h-5 rounded-md transition-transform hover:scale-110 ${communityData.primaryColor === c.hex ? 'ring-2 ring-offset-1 ring-green-400' : ''}`}
-                  style={{
-                    background: c.hex,
-                    border: c.hex.toLowerCase() === '#ffffff' ? '1px solid #d1d5db' : 'none',
-                  }}
-                  title={c.name}
-                />
-              ))}
-              {/* Custom color picker */}
-              <div className="relative">
-                <input
-                  ref={colorPickerRef}
-                  type="color"
-                  value={primaryColor}
-                  onChange={(e) => { setCustomColor(e.target.value); onUpdate({ primaryColor: e.target.value }); }}
-                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                />
-                <button
-                  onClick={() => colorPickerRef.current?.click()}
-                  className="w-5 h-5 rounded-md flex items-center justify-center"
-                  style={{
-                    background: 'conic-gradient(from 0deg, #ef4444, #eab308, #22c55e, #3b82f6, #a855f7, #ef4444)',
-                  }}
-                  title="Custom"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* ── Status ─────────────────────────────────────────── */}
-        <div
-          className="rounded-xl p-4 text-center"
-          style={{ background: `${primaryColor}08`, border: `1px solid ${primaryColor}20` }}
-        >
-          <p className="text-xs" style={{ color: hasBanner ? primaryColor : textMuted }}>
-            {hasBanner
-              ? '✅ Cover page ready — continue chatting to refine'
-              : isGeneratingBanner
-                ? '✨ Generating your cover page...'
-                : '💬 Continue the conversation to build your community'
-            }
-          </p>
+              {/* Hero — appears when description or banner is set */}
+              {(desc || banner) && (
+                <div className="relative mx-3 rounded-xl overflow-hidden mb-3 animate-fadeIn" style={{ minHeight: '120px' }}>
+                  <div className="absolute inset-0" style={{
+                    background: banner
+                      ? `url(${banner}) center/cover`
+                      : `linear-gradient(135deg, ${color}22 0%, ${bg} 100%)`
+                  }} />
+                  <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${bg} 0%, transparent 60%)` }} />
+                  <div className="relative p-4 flex flex-col justify-end" style={{ minHeight: '120px' }}>
+                    {vibe && (
+                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-medium mb-1.5 self-start" style={{ backgroundColor: `${color}22`, color, border: `1px solid ${color}33` }}>
+                        <span className="w-1 h-1 rounded-full" style={{ backgroundColor: color }} />
+                        {vibe}
+                      </div>
+                    )}
+                    {name && <p className="text-base font-bold text-white">{name}</p>}
+                    {desc && <p className="text-[10px] mt-0.5 text-white/70 leading-relaxed line-clamp-2">{desc}</p>}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick actions — appear when type is set */}
+              {type && (
+                <div className="grid grid-cols-4 gap-2 px-3 mb-3 animate-fadeIn">
+                  {[
+                    { icon: '🛒', label: 'Order' },
+                    { icon: '📅', label: 'Book' },
+                    { icon: '📍', label: 'Visit' },
+                    { icon: '💬', label: 'Chat' },
+                  ].map((a) => (
+                    <div key={a.label} className="flex flex-col items-center gap-1 py-2 rounded-lg" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                      <span className="text-base">{a.icon}</span>
+                      <span className="text-[8px] font-medium" style={{ color: textMuted }}>{a.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Products — appear as user lists them */}
+              {products && products.length > 0 && (
+                <div className="px-3 mb-3 animate-fadeIn">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-bold text-white">{isFood ? '🔥 Menu' : '⭐ Services'}</p>
+                    <span className="text-[9px]" style={{ color }}>{products.length} items</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {products.slice(0, 5).map((product, i) => {
+                      const [pName, price] = String(product).split(':');
+                      return (
+                        <div key={i} className="flex items-center gap-2 p-2 rounded-lg" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center text-base shrink-0" style={{ background: `linear-gradient(135deg, ${color}15, ${color}08)` }}>
+                            {emojiSet[i % emojiSet.length]}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-medium text-white truncate">{pName?.trim()}</p>
+                          </div>
+                          {price && (
+                            <span className="text-[10px] font-bold shrink-0" style={{ color }}>
+                              {/^\d/.test(price.trim()) ? `฿${price.trim()}` : price.trim()}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Gallery — from scraped images */}
+              {images && images.length > 0 && (
+                <div className="px-3 mb-3 animate-fadeIn">
+                  <p className="text-xs font-bold text-white mb-2">📸 Gallery</p>
+                  <div className="flex gap-1.5 overflow-hidden">
+                    {images.slice(0, 3).map((img, i) => (
+                      <img key={i} src={img} alt="" className="w-20 h-20 rounded-lg object-cover" style={{ border: `1px solid ${cardBorder}` }} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Audience — appears when audience is defined */}
+              {audience && (
+                <div className="mx-3 mb-3 p-3 rounded-lg text-center animate-fadeIn" style={{ background: `linear-gradient(135deg, ${color}12, ${color}06)`, border: `1px solid ${color}18` }}>
+                  <p className="text-[10px] font-medium" style={{ color: textMuted }}>Built for</p>
+                  <p className="text-[11px] text-white mt-0.5 leading-relaxed">{audience}</p>
+                </div>
+              )}
+
+              {/* Loyalty placeholder — appears when type is set */}
+              {type && name && (
+                <div className="mx-3 mb-3 p-3 rounded-lg animate-fadeIn" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm" style={{ background: `linear-gradient(135deg, ${color}33, ${color}11)` }}>⭐</div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-white">0 / 100 pts</p>
+                      <p className="text-[8px]" style={{ color: textMuted }}>Earn with every purchase</p>
+                    </div>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: `${color}15` }}>
+                    <div className="h-full rounded-full" style={{ width: '10%', backgroundColor: color }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom nav */}
+              {name && (
+                <div className="fixed-bottom mx-3 mt-2 flex items-center justify-around py-2 rounded-xl animate-fadeIn" style={{ backgroundColor: `${cardBg}ee`, border: `1px solid ${cardBorder}` }}>
+                  {[
+                    { icon: '🏠', label: 'Home', active: true },
+                    { icon: '📋', label: isFood ? 'Menu' : 'Browse', active: false },
+                    { icon: '🏆', label: 'Rewards', active: false },
+                    { icon: '👤', label: 'Profile', active: false },
+                  ].map((tab) => (
+                    <div key={tab.label} className="flex flex-col items-center gap-0.5 px-2">
+                      <span className="text-sm">{tab.icon}</span>
+                      <span className="text-[7px] font-medium" style={{ color: tab.active ? color : textMuted }}>{tab.label}</span>
+                      {tab.active && <div className="w-1 h-1 rounded-full" style={{ backgroundColor: color }} />}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Banner Modal */}
-      {bannerModalOpen && communityData.banner && typeof document !== 'undefined' &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-            onClick={() => setBannerModalOpen(false)}
-          >
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={communityData.banner}
-                alt="Cover enlarged"
-                className="max-w-[90vw] max-h-[80vh] rounded-2xl shadow-2xl object-contain"
-              />
-              <button
-                onClick={() => setBannerModalOpen(false)}
-                className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md text-gray-700 hover:text-gray-900"
-              >
-                ✕
-              </button>
-            </div>
-          </div>,
-          document.body
-        )
-      }
-    </section>
+      {/* Footer status */}
+      <div className="px-4 py-2.5 border-t text-center" style={{ borderColor: cardBorder }}>
+        <p className="text-[10px]" style={{ color: textMuted }}>
+          {!hasAnything && 'Start chatting to build your app'}
+          {hasAnything && filled < 5 && `Building... ${filled}/7 sections`}
+          {filled >= 5 && filled < 7 && `Almost ready — ${filled}/7 sections`}
+          {filled >= 7 && '✨ Spec complete — ready to build!'}
+        </p>
+      </div>
+    </aside>
   );
 }
