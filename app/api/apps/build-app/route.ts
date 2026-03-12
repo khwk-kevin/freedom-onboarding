@@ -22,10 +22,21 @@ export async function POST(req: NextRequest) {
   const { merchantId, onboardingData } = parsed.data;
   const businessName = (onboardingData?.name as string) || 'Your App';
 
-  // Build simulation with realistic steps and timing
-  // TODO: Replace with real Railway/GitHub pipeline when ready
-  // Uses the real deployed template app as the demo preview
-  const demoUrl = 'https://fw-template.vercel.app';
+  // Build the personalized app URL with query params from onboarding data
+  const appParams = new URLSearchParams();
+  if (onboardingData?.name) appParams.set('name', String(onboardingData.name));
+  if (onboardingData?.primaryColor) appParams.set('color', String(onboardingData.primaryColor));
+  if (onboardingData?.vibe) appParams.set('vibe', String(onboardingData.vibe));
+  if (onboardingData?.businessType) appParams.set('type', String(onboardingData.businessType));
+  if (onboardingData?.description) appParams.set('desc', String(onboardingData.description));
+  if (onboardingData?.logo) appParams.set('logo', String(onboardingData.logo));
+  if (onboardingData?.banner) appParams.set('banner', String(onboardingData.banner));
+  // Products: encode as "Name:Price,Name:Price"
+  if (onboardingData?.products && Array.isArray(onboardingData.products)) {
+    const productStr = (onboardingData.products as string[]).join(',');
+    appParams.set('products', productStr);
+  }
+  const demoUrl = `https://fw-template.vercel.app?${appParams.toString()}`;
 
   const steps = [
     { event: 'progress', step: 'github', message: 'Creating your app repository...' },

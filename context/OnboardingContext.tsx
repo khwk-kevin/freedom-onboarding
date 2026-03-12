@@ -513,70 +513,30 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
             }
           }
 
-          // 2. Generate brand content in background, but DON'T show cards yet
-          // Cards will be shown ONE AT A TIME as user accepts each step
-          setTimeout(async () => {
-            try {
-              const res = await fetch('/api/onboarding/generate-brand-content', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+          // 2. After cover is done, go straight to dashboard → Go Live → Build
+          // Skip generic cards (missions, rewards, description) — focus on building the personalized app
+          setTimeout(() => {
+            setMessages((prev) => [...prev, {
+              role: 'assistant' as const,
+              content: `I've got everything I need! Here's your community dashboard — hit "Go Live" to build your personalized app! 🚀`,
+              timestamp: new Date(),
+              metadata: {
+                cardType: 'merchant_dashboard' as const,
+                cardData: {
                   businessName: enrichedData.name || 'Your Business',
-                  businessType: enrichedData.businessType,
-                  vibe: enrichedData.vibe,
-                  products: enrichedData.products,
-                  description: enrichedData.description,
-                  brandStyle: enrichedData.brandStyle,
-                  types: ['description', 'rewards', 'welcomePost', 'audiencePersona'],
-                }),
-              });
-              const content = await res.json();
-              console.log('[onboarding] brand content generated:', content);
-
-              if (content.success) {
-                // Store ALL generated content in community data (for later use)
-                setCommunityData((prev) => ({
-                  ...prev,
-                  ...(content.description ? { description: content.description } : {}),
-                  ...(content.rewards ? { rewards: content.rewards } : {}),
-                  ...(content.welcomePost ? { welcomePost: content.welcomePost } : {}),
-                  ...(content.audiencePersona ? { audiencePersona: content.audiencePersona } : {}),
-                }));
-
-                // Show ONLY the description card first — one step at a time
-                if (content.description) {
-                  setMessages((prev) => [...prev, {
-                    role: 'assistant' as const,
-                    content: 'Here\'s an AI-crafted description for your community page:',
-                    timestamp: new Date(),
-                    metadata: {
-                      cardType: 'brand_description' as const,
-                      cardData: {
-                        description: content.description,
-                        audiencePersona: content.audiencePersona,
-                      },
-                    },
-                  }]);
-                } else if (content.rewards?.length) {
-                  // If no description, show rewards first
-                  setMessages((prev) => [...prev, {
-                    role: 'assistant' as const,
-                    content: `Now let's set up rewards for your loyal customers! 🎁`,
-                    timestamp: new Date(),
-                    metadata: {
-                      cardType: 'rewards' as const,
-                      cardData: {
-                        rewards: content.rewards,
-                        businessName: enrichedData.name || 'Your Business',
-                      },
-                    },
-                  }]);
-                }
-              }
-            } catch (err) {
-              console.error('[onboarding] brand content generation failed:', err);
-            }
-          }, 2000);
+                  primaryColor: enrichedData.primaryColor || '#10F48B',
+                  logoUrl: enrichedData.logo,
+                  bannerUrl: enrichedData.banner,
+                  hasLogo: Boolean(enrichedData.logo),
+                  hasBanner: Boolean(enrichedData.banner),
+                  hasDescription: Boolean(enrichedData.description),
+                  hasLocation: Boolean(enrichedData.location),
+                  hasRewards: false,
+                  hasWelcomePost: false,
+                },
+              },
+            }]);
+          }, 3000);
         }
 
         // Signup wall is triggered via generateImageInternal after logo completes — not here
