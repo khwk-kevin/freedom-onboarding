@@ -263,7 +263,8 @@ async function getServiceInstanceId(
 export async function createMerchantProject(
   merchantId: string
 ): Promise<{ projectId: string; serviceId: string }> {
-  const projectName = `fw-app-${merchantId}`;
+  // Railway project names must be ≤ ~25 chars and globally unique
+  const projectName = `fw-${merchantId.slice(0, 8)}`;
 
   // 1. Create project via Railway GraphQL API (uses RAILWAY_TEAM_TOKEN)
   const createProjectMutation = `
