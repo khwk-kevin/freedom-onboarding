@@ -670,6 +670,16 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   // ── Handle interactive card actions ─────────────────────────────
+  // Helper: add a user message bubble WITHOUT sending to AVA chat API
+  // Used for card acceptance actions to avoid feedback loops
+  const addLocalUserMessage = useCallback((content: string) => {
+    setMessages((prev) => [...prev, {
+      role: 'user' as const,
+      content,
+      timestamp: new Date(),
+    }]);
+  }, []);
+
   // Helper: show welcome post card (called from multiple card actions)
   const showWelcomePostCard = useCallback(() => {
     if (communityData.welcomePost) {
@@ -757,7 +767,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     } else if (action === 'brand_fresh') {
       sendMessage("Not quite — let me fill in the details myself");
     } else if (action === 'rewards_accept') {
-      sendMessage("Love these reward ideas! Let's use them ✨");
+      // Add user bubble locally — do NOT send to chat API (avoids loop)
+      addLocalUserMessage("Love these! ✨");
       
       // NEXT STEP: Show the mission board card
       setTimeout(() => {
@@ -774,16 +785,17 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
             },
           },
         }]);
-      }, 1500);
+      }, 1000);
     } else if (action === 'mission_accept') {
-      sendMessage("The mission board looks amazing! My customers will love this 🎮");
+      addLocalUserMessage("Love it! 🎮");
       
       // NEXT STEP: Show welcome post card
       showWelcomePostCard();
     } else if (action === 'mission_customize') {
+      // This one DOES go to chat — user wants to customize, needs AVA's help
       sendMessage("Let me customize the missions a bit");
     } else if (action === 'description_accept') {
-      sendMessage("That description is perfect!");
+      addLocalUserMessage("Perfect! ✨");
       
       // NEXT STEP: Show rewards card (sequential flow)
       if (communityData.rewards && communityData.rewards.length > 0) {
@@ -800,15 +812,16 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
               },
             },
           }]);
-        }, 1500);
+        }, 1000);
       } else {
         // Skip to welcome post if no rewards
         showWelcomePostCard();
       }
     } else if (action === 'description_edit') {
+      // This one DOES go to chat — user wants edits, needs AVA's help
       sendMessage("Let me tweak the description a bit");
     } else if (action === 'welcome_accept') {
-      sendMessage("Great welcome post! Let's use it 📝");
+      addLocalUserMessage("Let's use it! 📝");
       
       // NEXT STEP: Show the merchant dashboard card — the onboarding outro
       setTimeout(() => {
@@ -832,7 +845,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
             },
           },
         }]);
-      }, 2000);
+      }, 1000);
     } else if (action === 'dashboard_go_live') {
       // Trigger the app builder pipeline
       const merchantId = communityData.name 
