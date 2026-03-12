@@ -399,6 +399,14 @@ export function ChatMessageComponent({
   const options = isLatest && !showBusinessPicker ? extractOptions(message.content) : null;
   const multiSelect = options && isMultiSelect(message.content);
 
+  // Detect final confirmation message — show a Build button
+  const lowerContent = message.content.toLowerCase();
+  const isReadyToBuild = isLatest && (
+    lowerContent.includes('ready to build') ||
+    lowerContent.includes('everything correct') ||
+    lowerContent.includes('ready to go')
+  );
+
   return (
     <div className="flex items-start space-x-3 max-w-sm">
       <AvaAvatar />
@@ -414,11 +422,31 @@ export function ChatMessageComponent({
           <p className="whitespace-pre-wrap">{message.content}</p>
         </div>
 
+        {/* Build button — appears on final confirmation */}
+        {isReadyToBuild && onOptionClick && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => onOptionClick('Yes, build my app!')}
+              className="px-5 py-2.5 text-sm font-bold rounded-full transition-all duration-200 active:scale-95 hover:opacity-90 shadow-lg"
+              style={{ background: 'linear-gradient(135deg, #10F48B, #0BD67A)', color: '#050314', boxShadow: '0 4px 16px rgba(16,244,139,0.3)' }}
+            >
+              🚀 Build My App
+            </button>
+            <button
+              onClick={() => onOptionClick('I want to make some changes')}
+              className="px-4 py-2.5 text-sm font-medium rounded-full border transition-all duration-150 active:scale-95"
+              style={{ borderColor: 'var(--oc-btn-border)', background: 'var(--oc-btn-bg)', color: 'var(--oc-text)' }}
+            >
+              ✏️ Edit
+            </button>
+          </div>
+        )}
+
         {showBusinessPicker && onBusinessTypeSelect && (
           <BusinessTypePicker onSelect={onBusinessTypeSelect} />
         )}
 
-        {options && onOptionClick && (
+        {options && onOptionClick && !isReadyToBuild && (
           multiSelect ? (
             <MultiSelectOptions options={options} onConfirm={(selected) => onOptionClick(selected.join(', '))} />
           ) : (

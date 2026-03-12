@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Smartphone, X } from 'lucide-react';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { ChatMessageComponent, TypingIndicator } from './ChatMessage';
 import { AICreationCard } from './InteractiveCards';
 import { ChatInput } from './ChatInput';
 import { PreviewSidebar } from './PreviewSidebar';
-import { MobilePreviewCard } from './MobilePreviewCard';
 import { SignupWall } from './SignupWall';
 
 function hexToRgb(hex: string): string {
@@ -42,6 +42,26 @@ export function OnboardingChat() {
   const conversationAreaRef = useRef<HTMLDivElement>(null);
   const [isDark, setIsDark] = useState(true);
 
+  // Mobile bottom sheet state for live preview
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+
+  // Count filled preview fields for badge
+  const primaryColor = communityData.primaryColor || '#10F48B';
+  const previewFields = [
+    communityData.name,
+    communityData.description,
+    communityData.businessType,
+    communityData.primaryColor !== undefined && communityData.primaryColor !== '#10F48B' ? communityData.primaryColor : null,
+    communityData.vibe,
+    (communityData.products?.length ?? 0) > 0 ? 'y' : null,
+    communityData.audiencePersona,
+    communityData.heroFeature,
+    communityData.userFlow,
+    communityData.differentiator,
+  ];
+  const filledCount = previewFields.filter(Boolean).length;
+  const totalCount = 10;
+
   // Detect system preference — no manual toggle
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -73,8 +93,6 @@ export function OnboardingChat() {
     textMuted: 'var(--oc-text-muted)',
     inputBg: 'var(--oc-input-bg)',
   };
-
-  const primaryColor = communityData.primaryColor || '#10F48B';
 
   return (
     <div
@@ -153,18 +171,7 @@ export function OnboardingChat() {
             />
           </div>
 
-          {/* Mobile compact preview card — pinned below header, mobile only */}
-          <div className="md:hidden shrink-0">
-            <MobilePreviewCard
-              businessName={communityData.name}
-              logoUrl={communityData.logo}
-              bannerUrl={communityData.banner}
-              primaryColor={communityData.primaryColor}
-              isGeneratingLogo={isGeneratingLogo}
-              isGeneratingBanner={isGeneratingBanner}
-              isDark={isDark}
-            />
-          </div>
+          {/* Mobile compact preview card removed — replaced by floating preview button + bottom sheet */}
 
           {/* Chat Conversation Area */}
           <div
