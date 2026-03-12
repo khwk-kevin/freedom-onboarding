@@ -23,7 +23,12 @@ interface ChatMessageProps {
 
 function isMultiSelect(text: string): boolean {
   const lower = text.toLowerCase();
-  return lower.includes('all that apply') || lower.includes('select multiple') || lower.includes('pick all');
+  return lower.includes('all that apply') || lower.includes('select multiple') || lower.includes('pick all')
+    || /pick\s+\d[\s-]+\d/i.test(lower)      // "Pick 2-3", "Pick 2 3"
+    || /choose\s+\d[\s-]+\d/i.test(lower)    // "Choose 2-3"
+    || /select\s+\d[\s-]+\d/i.test(lower)    // "Select 2-3"
+    || /pick\s+(two|three|a few|multiple)/i.test(lower)
+    || /choose\s+(two|three|a few|multiple)/i.test(lower);
 }
 
 function extractOptions(text: string): string[] | null {
