@@ -19,6 +19,10 @@ import {
   Target,
   RefreshCw,
   Sparkles,
+  ArrowRight,
+  Award,
+  Heart,
+  Rocket,
 } from 'lucide-react';
 import type { CommunityData } from '@/types/onboarding';
 
@@ -45,6 +49,72 @@ interface PreviewSidebarProps {
   isGeneratingBanner?: boolean;
   isAnonymous?: boolean;
   isDark?: boolean;
+}
+
+/** Animated section wrapper — shows skeleton then reveals content */
+function AnimatedSection({ visible, sectionKey, color, children }: {
+  visible: boolean;
+  sectionKey: string;
+  color: string;
+  children: React.ReactNode;
+}) {
+  const [phase, setPhase] = useState<'hidden' | 'skeleton' | 'reveal'>('hidden');
+  const prevVisible = useRef(visible);
+
+  useEffect(() => {
+    if (visible && !prevVisible.current) {
+      // New section appearing — show skeleton first
+      setPhase('skeleton');
+      const timer = setTimeout(() => setPhase('reveal'), 400);
+      prevVisible.current = visible;
+      return () => clearTimeout(timer);
+    } else if (visible && prevVisible.current) {
+      // Already visible
+      if (phase === 'hidden') setPhase('reveal');
+    }
+    prevVisible.current = visible;
+  }, [visible, phase]);
+
+  if (!visible || phase === 'hidden') return null;
+
+  if (phase === 'skeleton') {
+    return (
+      <div className="mx-3 mb-3 p-3 rounded-xl shimmer-overlay" style={{ backgroundColor: `${color}08`, border: `1px solid ${color}15` }}>
+        <div className="skeleton-line h-3 w-2/3 mb-2" />
+        <div className="skeleton-line h-2 w-full mb-1.5" />
+        <div className="skeleton-line h-2 w-4/5" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="slide-up-reveal section-highlight-dramatic" style={{ '--section-glow': `${color}44` } as React.CSSProperties}>
+      {children}
+    </div>
+  );
+}
+
+/** Parse user flow text into discrete steps */
+function parseFlowSteps(flow: string): string[] {
+  // Try splitting on → arrows first
+  if (flow.includes('→') || flow.includes('->')) {
+    return flow.split(/→|->/).map(s => s.trim()).filter(Boolean);
+  }
+  // Try "then" splitting
+  if (flow.toLowerCase().includes(' then ')) {
+    return flow.split(/\bthen\b/i).map(s => s.trim()).filter(Boolean);
+  }
+  // Try numbered items
+  const numbered = flow.match(/\d+[\.\)]\s*([^,\d]+)/g);
+  if (numbered && numbered.length >= 2) {
+    return numbered.map(s => s.replace(/^\d+[\.\)]\s*/, '').trim());
+  }
+  // Try comma-separated
+  if (flow.includes(',')) {
+    return flow.split(',').map(s => s.trim()).filter(Boolean);
+  }
+  // Fallback: return as single step
+  return [flow];
 }
 
 /**
@@ -165,6 +235,8 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
     communityData.audiencePersona,
   ]);
 
+  // ── Entrance + glow tracking (defined early, used below) ─────────────────
+
   // Helper: get inline style for a section that may be highlighted
   const rgb = hexToRgbComponents(color);
   const getHighlightStyle = (section: string): React.CSSProperties => {
@@ -215,6 +287,25 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
   const total = 10;
   const hasAnything = filled > 0;
 
+  // ── Entrance + glow tracking ──────────────────────────────────────────────
+  const [hasEnteredOnce, setHasEnteredOnce] = useState(false);
+  const [phoneGlow, setPhoneGlow] = useState(false);
+  const [liveDotFast, setLiveDotFast] = useState(false);
+
+  useEffect(() => {
+    if (hasAnything && !hasEnteredOnce) setHasEnteredOnce(true);
+  }, [hasAnything, hasEnteredOnce]);
+
+  useEffect(() => {
+    if (highlighted.size > 0) {
+      setPhoneGlow(true);
+      setLiveDotFast(true);
+      const t1 = setTimeout(() => setPhoneGlow(false), 1200);
+      const t2 = setTimeout(() => setLiveDotFast(false), 1500);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [highlighted]);
+
   // Map primary actions to Lucide icon components
   const actionIconMap: Record<string, { Icon: React.ElementType; label: string }> = {
     ordering: { Icon: ShoppingCart, label: 'Order' },
@@ -244,7 +335,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
       {/* Header */}
       <div className="px-4 py-3 flex items-center justify-between border-b" style={{ borderColor: cardBorder }}>
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: hasAnything ? color : '#555' }} />
+          <span className={`w-2 h-2 rounded-full ${liveDotFast ? 'live-dot-fast' : 'animate-pulse'}`} style={{ backgroundColor: hasAnything ? color : '#555' }} />
           <span className="text-xs font-semibold" style={{ color: textColor }}>Live Preview</span>
           {hasAnything && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${color}22`, color }}>
@@ -261,11 +352,11 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
       <div className="flex-1 overflow-y-auto p-4">
         {/* Animated gradient border wrapper */}
         <div
-          className="gradient-border-phone mx-auto"
-          style={{ maxWidth: '324px' }}
+          className={`gradient-border-phone mx-auto ${phoneGlow ? 'glow-pulse' : ''}`}
+          style={{ maxWidth: '324px', '--glow-color': `${color}55` } as React.CSSProperties}
         >
         <div
-          className="rounded-[1.9rem] overflow-hidden"
+          className={`rounded-[1.9rem] overflow-hidden ${hasEnteredOnce ? 'preview-entrance' : ''} ${hasAnything ? 'shimmer-overlay' : ''}`}
           style={{
             minHeight: '580px',
             backgroundColor: bg,
@@ -295,7 +386,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
 
               {/* App header — appears when name is set */}
               {name && (
-                <div className="px-4 py-3 flex items-center gap-2.5 animate-fadeIn">
+                <div className="px-4 py-3 flex items-center gap-2.5 slide-up-reveal">
                   {logo ? (
                     <img src={logo} alt={name} className="w-8 h-8 rounded-lg object-cover" />
                   ) : (
@@ -312,7 +403,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
 
               {/* Hero — appears when description or banner is set */}
               {(desc || banner) && (
-                <div className="relative mx-3 rounded-xl overflow-hidden mb-3 animate-fadeIn" style={{ minHeight: '120px' }}>
+                <div className="relative mx-3 rounded-xl overflow-hidden mb-3 slide-up-reveal" style={{ minHeight: '120px' }}>
                   <div className="absolute inset-0" style={{
                     background: banner
                       ? `url(${banner}) center/cover`
@@ -334,7 +425,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
 
               {/* Quick actions — use user's primary actions if available */}
               {(primaryActions?.length || type) && (
-                <div className="grid grid-cols-4 gap-2 px-3 mb-3 animate-fadeIn">
+                <div className="grid grid-cols-4 gap-2 px-3 mb-3 slide-up-reveal">
                   {(primaryActions?.length
                     ? primaryActions.slice(0, 4).map(a => {
                         const mapped = actionIconMap[a];
@@ -355,7 +446,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
 
               {/* Products — appear as user lists them */}
               {products && products.length > 0 && (
-                <div className="px-3 mb-3 animate-fadeIn">
+                <div className="px-3 mb-3 slide-up-reveal">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-xs font-bold flex items-center gap-1" style={{ color: textColor }}>
                       {isFood
@@ -390,7 +481,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
 
               {/* Gallery — from scraped images */}
               {images && images.length > 0 && (
-                <div className="px-3 mb-3 animate-fadeIn">
+                <div className="px-3 mb-3 slide-up-reveal">
                   <p className="text-xs font-bold mb-2 flex items-center gap-1" style={{ color: textColor }}>
                     <Camera size={10} style={{ color }} /> Gallery
                   </p>
@@ -402,48 +493,103 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
                 </div>
               )}
 
-              {/* Hero Feature — appears when defined */}
-              {heroFeature && (
-                <div className="mx-3 mb-3 p-3 rounded-lg animate-fadeIn" style={{ background: `linear-gradient(135deg, ${color}18, ${color}08)`, border: `1px solid ${color}22` }}>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Target size={12} style={{ color }} />
-                    <p className="text-[10px] font-bold" style={{ color: textColor }}>Core Feature</p>
+              {/* ═══ HERO FEATURE — Prominent CTA card ═══ */}
+              <AnimatedSection visible={!!heroFeature} sectionKey="heroFeature" color={color}>
+                <div className="mx-3 mb-3 rounded-xl overflow-hidden" style={{ border: `1px solid ${color}33` }}>
+                  {/* Gradient hero banner */}
+                  <div className="p-4 pb-3" style={{ background: `linear-gradient(135deg, ${color}25, ${color}08 60%, transparent)` }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${color}, ${color}88)` }}>
+                        <Rocket size={16} style={{ color: bg }} />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-medium uppercase tracking-wider" style={{ color }}>Core Feature</p>
+                        <p className="text-xs font-bold leading-tight" style={{ color: textColor }}>{heroFeature}</p>
+                      </div>
+                    </div>
+                    {/* CTA button mockup */}
+                    <div
+                      className="mt-2 py-2 px-4 rounded-lg text-center text-[11px] font-bold"
+                      style={{ background: `linear-gradient(135deg, ${color}, ${color}CC)`, color: bg }}
+                    >
+                      {heroFeature?.toLowerCase().includes('order') ? '🛒 Order Now' :
+                       heroFeature?.toLowerCase().includes('book') ? '📅 Book Now' :
+                       heroFeature?.toLowerCase().includes('browse') ? '🔍 Browse' :
+                       heroFeature?.toLowerCase().includes('loyalty') ? '⭐ Join Rewards' :
+                       '✨ Try It Now'}
+                    </div>
                   </div>
-                  <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{heroFeature}</p>
                 </div>
-              )}
+              </AnimatedSection>
 
-              {/* User Flow — appears when defined */}
-              {userFlow && (
-                <div className="mx-3 mb-3 p-3 rounded-lg animate-fadeIn" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-                  <div className="flex items-center gap-2 mb-1.5">
+              {/* ═══ USER FLOW — Visual step journey ═══ */}
+              <AnimatedSection visible={!!userFlow} sectionKey="userFlow" color={color}>
+                <div className="mx-3 mb-3 p-3 rounded-xl" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                  <div className="flex items-center gap-2 mb-3">
                     <RefreshCw size={12} style={{ color }} />
-                    <p className="text-[10px] font-bold" style={{ color: textColor }}>User Journey</p>
+                    <p className="text-[10px] font-bold" style={{ color: textColor }}>Customer Journey</p>
                   </div>
-                  <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{userFlow}</p>
+                  {/* Step indicators */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1">
+                    {parseFlowSteps(userFlow || '').map((step, i, arr) => (
+                      <div key={i} className="flex items-center gap-1 shrink-0" style={{ animation: `stepReveal 0.4s ${i * 0.15}s ease-out both` }}>
+                        <div className="flex flex-col items-center gap-1">
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold"
+                            style={{ background: `linear-gradient(135deg, ${color}, ${color}88)`, color: bg }}
+                          >
+                            {i + 1}
+                          </div>
+                          <p className="text-[7px] font-medium text-center max-w-[52px] leading-tight" style={{ color: textMuted }}>{step}</p>
+                        </div>
+                        {i < arr.length - 1 && (
+                          <ArrowRight size={10} className="shrink-0 mt-[-14px]" style={{ color: `${color}66` }} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
+              </AnimatedSection>
 
-              {/* Differentiator — appears when defined */}
-              {differentiator && (
-                <div className="mx-3 mb-3 p-3 rounded-lg text-center animate-fadeIn" style={{ background: `linear-gradient(135deg, ${color}12, ${color}06)`, border: `1px solid ${color}18` }}>
-                  <Sparkles size={18} className="mx-auto mb-1" style={{ color }} />
-                  <p className="text-[10px] font-bold mb-0.5" style={{ color: textColor }}>What makes us different</p>
-                  <p className="text-[10px] leading-relaxed" style={{ color: textMuted }}>{differentiator}</p>
+              {/* ═══ DIFFERENTIATOR — Hero banner ═══ */}
+              <AnimatedSection visible={!!differentiator} sectionKey="differentiator" color={color}>
+                <div className="mx-3 mb-3 rounded-xl overflow-hidden relative" style={{ border: `1px solid ${color}33` }}>
+                  {/* Background gradient */}
+                  <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${color}20, ${color}05 50%, ${color}12)` }} />
+                  {/* Sparkle decorations */}
+                  <div className="absolute top-2 right-2 opacity-30">
+                    <Sparkles size={24} style={{ color }} />
+                  </div>
+                  <div className="absolute bottom-2 left-2 opacity-20">
+                    <Star size={16} style={{ color }} />
+                  </div>
+                  {/* Content */}
+                  <div className="relative p-4 text-center">
+                    <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${color}33, ${color}11)`, border: `2px solid ${color}44` }}>
+                      <Award size={20} style={{ color }} />
+                    </div>
+                    <p className="text-[9px] font-semibold uppercase tracking-wider mb-1" style={{ color }}>What Sets Us Apart</p>
+                    <p className="text-[11px] font-bold leading-snug" style={{ color: textColor }}>{differentiator}</p>
+                  </div>
                 </div>
-              )}
+              </AnimatedSection>
 
-              {/* Audience — appears when audience is defined */}
-              {audience && (
-                <div className="mx-3 mb-3 p-3 rounded-lg text-center animate-fadeIn" style={{ background: `linear-gradient(135deg, ${color}12, ${color}06)`, border: `1px solid ${color}18` }}>
-                  <p className="text-[10px] font-medium" style={{ color: textMuted }}>Built for</p>
-                  <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: textColor }}>{audience}</p>
+              {/* ═══ AUDIENCE — Persona card ═══ */}
+              <AnimatedSection visible={!!audience} sectionKey="audience" color={color}>
+                <div className="mx-3 mb-3 p-3 rounded-xl flex items-center gap-3" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                  <div className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${color}25, ${color}08)`, border: `1px solid ${color}33` }}>
+                    <Heart size={18} style={{ color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] font-semibold uppercase tracking-wider mb-0.5" style={{ color }}>Built For</p>
+                    <p className="text-[10px] leading-relaxed" style={{ color: textColor }}>{audience}</p>
+                  </div>
                 </div>
-              )}
+              </AnimatedSection>
 
               {/* Loyalty placeholder — appears when type is set */}
               {type && name && (
-                <div className="mx-3 mb-3 p-3 rounded-lg animate-fadeIn" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                <div className="mx-3 mb-3 p-3 rounded-lg slide-up-reveal" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${color}33, ${color}11)` }}>
                       <Star size={14} style={{ color }} />
@@ -461,7 +607,7 @@ export function PreviewSidebar({ communityData }: PreviewSidebarProps) {
 
               {/* Bottom nav */}
               {name && (
-                <div className="fixed-bottom mx-3 mt-2 flex items-center justify-around py-2 rounded-xl animate-fadeIn" style={{ backgroundColor: `${cardBg}ee`, border: `1px solid ${cardBorder}` }}>
+                <div className="fixed-bottom mx-3 mt-2 flex items-center justify-around py-2 rounded-xl slide-up-reveal" style={{ backgroundColor: `${cardBg}ee`, border: `1px solid ${cardBorder}` }}>
                   {[
                     { Icon: Home, label: 'Home', active: true },
                     { Icon: ClipboardList, label: isFood ? 'Menu' : 'Browse', active: false },
