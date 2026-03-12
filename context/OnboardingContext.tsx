@@ -513,7 +513,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
             }
           }
 
-          // 2. Simultaneously generate AI brand content (description, rewards, welcome post)
+          // 2. Generate brand content in background, but DON'T show cards yet
+          // Cards will be shown ONE AT A TIME as user accepts each step
           setTimeout(async () => {
             try {
               const res = await fetch('/api/onboarding/generate-brand-content', {
@@ -533,7 +534,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
               console.log('[onboarding] brand content generated:', content);
 
               if (content.success) {
-                // Update community data with ALL AI-generated content
+                // Store ALL generated content in community data (for later use)
                 setCommunityData((prev) => ({
                   ...prev,
                   ...(content.description ? { description: content.description } : {}),
@@ -542,11 +543,25 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                   ...(content.audiencePersona ? { audiencePersona: content.audiencePersona } : {}),
                 }));
 
-                // Add reward suggestions card to chat
-                if (content.rewards?.length) {
+                // Show ONLY the description card first — one step at a time
+                if (content.description) {
                   setMessages((prev) => [...prev, {
                     role: 'assistant' as const,
-                    content: `I created some reward ideas tailored to ${enrichedData.name || 'your business'}! 🎁`,
+                    content: 'Here\'s an AI-crafted description for your community page:',
+                    timestamp: new Date(),
+                    metadata: {
+                      cardType: 'brand_description' as const,
+                      cardData: {
+                        description: content.description,
+                        audiencePersona: content.audiencePersona,
+                      },
+                    },
+                  }]);
+                } else if (content.rewards?.length) {
+                  // If no description, show rewards first
+                  setMessages((prev) => [...prev, {
+                    role: 'assistant' as const,
+                    content: `Now let's set up rewards for your loyal customers! 🎁`,
                     timestamp: new Date(),
                     metadata: {
                       cardType: 'rewards' as const,
@@ -556,43 +571,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
                       },
                     },
                   }]);
-                }
-
-                // Add AI description card
-                if (content.description) {
-                  setTimeout(() => {
-                    setMessages((prev) => [...prev, {
-                      role: 'assistant' as const,
-                      content: 'Here\'s an AI-crafted description for your community page:',
-                      timestamp: new Date(),
-                      metadata: {
-                        cardType: 'brand_description' as const,
-                        cardData: {
-                          description: content.description,
-                          audiencePersona: content.audiencePersona,
-                        },
-                      },
-                    }]);
-                  }, 2000);
-                }
-
-                // Add welcome post card
-                if (content.welcomePost) {
-                  setTimeout(() => {
-                    setMessages((prev) => [...prev, {
-                      role: 'assistant' as const,
-                      content: 'And I drafted your first community post! 📝',
-                      timestamp: new Date(),
-                      metadata: {
-                        cardType: 'welcome_post' as const,
-                        cardData: {
-                          post: content.welcomePost,
-                          businessName: enrichedData.name || 'Your Business',
-                          logoUrl: enrichedData.logo,
-                        },
-                      },
-                    }]);
-                  }, 4000);
                 }
               }
             } catch (err) {
@@ -692,6 +670,51 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   // ── Handle interactive card actions ─────────────────────────────
+  // Helper: show welcome post card (called from multiple card actions)
+  const showWelcomePostCard = useCallback(() => {
+    if (communityData.welcomePost) {
+      setTimeout(() => {
+        setMessages((prev) => [...prev, {
+          role: 'assistant' as const,
+          content: 'I drafted your first community post! 📝',
+          timestamp: new Date(),
+          metadata: {
+            cardType: 'welcome_post' as const,
+            cardData: {
+              post: communityData.welcomePost,
+              businessName: communityData.name || 'Your Business',
+              logoUrl: communityData.logo,
+            },
+          },
+        }]);
+      }, 1500);
+    } else {
+      // No welcome post — skip to dashboard
+      setTimeout(() => {
+        setMessages((prev) => [...prev, {
+          role: 'assistant',
+          content: "Look at everything you've built! 🎉 Here's your community dashboard:",
+          timestamp: new Date(),
+          metadata: {
+            cardType: 'merchant_dashboard',
+            cardData: {
+              businessName: communityData.name || 'Your Business',
+              primaryColor: communityData.primaryColor || '#10F48B',
+              logoUrl: communityData.logo,
+              bannerUrl: communityData.banner,
+              hasLogo: Boolean(communityData.logo),
+              hasBanner: Boolean(communityData.banner),
+              hasDescription: Boolean(communityData.description),
+              hasLocation: Boolean(communityData.location),
+              hasRewards: Boolean(communityData.rewards && communityData.rewards.length > 0),
+              hasWelcomePost: false,
+            },
+          },
+        }]);
+      }, 1500);
+    }
+  }, [communityData]);
+
   const handleCardAction = useCallback((action: string, cardData?: Record<string, unknown>) => {
     const scrapeData = cardData?._scrapeData as Record<string, unknown> | undefined;
 
@@ -736,7 +759,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     } else if (action === 'rewards_accept') {
       sendMessage("Love these reward ideas! Let's use them ✨");
       
-      // Show the mission board card after a delay
+      // NEXT STEP: Show the mission board card
       setTimeout(() => {
         setMessages((prev) => [...prev, {
           role: 'assistant',
@@ -751,19 +774,43 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
             },
           },
         }]);
-      }, 2000);
+      }, 1500);
     } else if (action === 'mission_accept') {
       sendMessage("The mission board looks amazing! My customers will love this 🎮");
+      
+      // NEXT STEP: Show welcome post card
+      showWelcomePostCard();
     } else if (action === 'mission_customize') {
       sendMessage("Let me customize the missions a bit");
     } else if (action === 'description_accept') {
       sendMessage("That description is perfect!");
+      
+      // NEXT STEP: Show rewards card (sequential flow)
+      if (communityData.rewards && communityData.rewards.length > 0) {
+        setTimeout(() => {
+          setMessages((prev) => [...prev, {
+            role: 'assistant' as const,
+            content: `Now let's set up rewards for your loyal customers! 🎁`,
+            timestamp: new Date(),
+            metadata: {
+              cardType: 'rewards' as const,
+              cardData: {
+                rewards: communityData.rewards,
+                businessName: communityData.name || 'Your Business',
+              },
+            },
+          }]);
+        }, 1500);
+      } else {
+        // Skip to welcome post if no rewards
+        showWelcomePostCard();
+      }
     } else if (action === 'description_edit') {
       sendMessage("Let me tweak the description a bit");
     } else if (action === 'welcome_accept') {
       sendMessage("Great welcome post! Let's use it 📝");
       
-      // Show the merchant dashboard card — the onboarding outro
+      // NEXT STEP: Show the merchant dashboard card — the onboarding outro
       setTimeout(() => {
         setMessages((prev) => [...prev, {
           role: 'assistant',
@@ -785,7 +832,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
             },
           },
         }]);
-      }, 2500);
+      }, 2000);
     } else if (action === 'dashboard_go_live') {
       // Trigger the app builder pipeline
       const merchantId = communityData.name 
@@ -842,7 +889,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     } else if (action === 'welcome_edit') {
       sendMessage("Let me edit the welcome post");
     }
-  }, [sendMessage]);
+  }, [sendMessage, showWelcomePostCard]);
 
   // ── Internal image generation helper ───────────────────────────
   const generateImageInternal = async (
