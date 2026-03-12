@@ -89,13 +89,15 @@ export function AppBuildingCard({
                   setDevUrl(data.devUrl);
                 }
 
-                if (data.event === 'complete') {
+                if (data.event === 'complete' || data.step === 'done') {
                   setIsBuilding(false);
                   setShowPreview(true);
-                  onComplete?.(data.devUrl, data.projectId);
+                  if (data.devUrl) {
+                    onComplete?.(data.devUrl, data.projectId || '');
+                  }
                 }
 
-                if (data.event === 'error') {
+                if (data.event === 'error' || data.step === 'error') {
                   setIsBuilding(false);
                   onError?.(data.message);
                 }
