@@ -348,7 +348,7 @@ export function AppBuilderLayout({
       */}
       <button
         className={`
-          md:hidden fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full
+          md:hidden fixed bottom-20 right-5 z-50 w-14 h-14 rounded-full
           bg-violet-600 hover:bg-violet-500 shadow-xl shadow-violet-900/50
           flex items-center justify-center text-white
           transition-all duration-200 active:scale-95
