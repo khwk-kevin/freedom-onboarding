@@ -19,6 +19,8 @@ import { AppBuilderProvider, useAppBuilder } from '@/context/AppBuilderContext';
 import { AppBuilderLayout } from '@/components/onboarding/AppBuilderLayout';
 import type { MerchantAppSpec } from '@/lib/app-builder/types';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
 // ============================================================
 // ROOT — wraps everything in the provider
 // ============================================================
@@ -91,7 +93,7 @@ function IterationInner({ initialSpec, merchantId }: IterationInnerProps) {
     async function boot() {
       setBootStatus('starting');
       try {
-        const res = await fetch('/api/apps/start-iteration', {
+        const res = await fetch(`${API_URL}/apps/start-iteration`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ merchantId }),
@@ -130,7 +132,7 @@ function IterationInner({ initialSpec, merchantId }: IterationInnerProps) {
     if (isEndingSession) return;
     setIsEndingSession(true);
     try {
-      await fetch('/api/apps/stop-vm', {
+      await fetch(`${API_URL}/apps/stop-vm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ merchantId }),
@@ -150,7 +152,7 @@ function IterationInner({ initialSpec, merchantId }: IterationInnerProps) {
     setIsDeploying(true);
     setDeployError(null);
     try {
-      const res = await fetch('/api/apps/deploy', {
+      const res = await fetch(`${API_URL}/apps/deploy`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ merchantId }),

@@ -2,14 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type { VMStatus } from '@/lib/app-builder/types';
-import { LivePreview } from './LivePreview';
+import type { MerchantAppSpec, VMStatus } from '@/lib/app-builder/types';
+import { PhoneFrame } from './preview/PhoneFrame';
+import { AppPreview } from './preview/AppPreview';
 
 /** Bottom sheet state for mobile preview */
 type SheetState = 'closed' | 'peeking' | 'open';
 
 interface AppBuilderLayoutProps {
-  /** Railway dev server URL (or null while provisioning) */
+  /** Railway dev server URL (not used for preview — kept for future Railway phase) */
   devUrl: string | null;
   /** VM lifecycle status */
   vmStatus: VMStatus;
@@ -19,8 +20,10 @@ interface AppBuilderLayoutProps {
   buildTask?: string;
   /** Token balance — shown after signup (omit / undefined = pre-signup, hidden) */
   tokenBalance?: number;
-  /** Retry handler for error state in LivePreview */
+  /** Retry handler */
   onRetry?: () => void;
+  /** Current merchant app spec — drives the client-side preview */
+  merchantAppSpec?: MerchantAppSpec;
   /** Chat / left-panel content */
   children: ReactNode;
 }
@@ -43,6 +46,7 @@ export function AppBuilderLayout({
   buildTask,
   tokenBalance,
   onRetry,
+  merchantAppSpec,
   children,
 }: AppBuilderLayoutProps) {
   // Mobile bottom sheet state
@@ -52,7 +56,42 @@ export function AppBuilderLayout({
   // Track previous isBuilding to detect transition false→true→false
   const prevIsBuildingRef = useRef(false);
 
-  // Auto-peek: after first build completes, open sheet to peeking position briefly
+  // Track spec version for glow animation
+  const [specVersion, setSpecVersion] = useState(0);
+  const prevSpecRef = useRef(merchantAppSpec);
+
+  // Increment specVersion when relevant spec fields change (drives glow pulse in PhoneFrame)
+  useEffect(() => {
+    const prev = prevSpecRef.current;
+    const curr = merchantAppSpec;
+    if (!curr) return;
+    if (
+      prev?.primaryColor !== curr.primaryColor ||
+      prev?.businessType !== curr.businessType ||
+      prev?.businessName !== curr.businessName ||
+      prev?.uiStyle !== curr.uiStyle ||
+      prev?.products?.length !== curr.products?.length ||
+      prev?.mood !== curr.mood
+    ) {
+      setSpecVersion(v => v + 1);
+    }
+    prevSpecRef.current = curr;
+  }, [merchantAppSpec]);
+
+  // Auto-peek on mobile: when spec first gets meaningful data, peek the preview
+  useEffect(() => {
+    if (hasPeekedRef.current) return;
+    if (merchantAppSpec?.businessType || merchantAppSpec?.primaryColor) {
+      hasPeekedRef.current = true;
+      setSheetState('peeking');
+      const timer = setTimeout(() => {
+        setSheetState((s) => (s === 'peeking' ? 'closed' : s));
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [merchantAppSpec?.businessType, merchantAppSpec?.primaryColor]);
+
+  // Legacy: also auto-peek after first build completes (for Railway phase later)
   useEffect(() => {
     const wasBuilding = prevIsBuildingRef.current;
     prevIsBuildingRef.current = isBuilding;
@@ -61,7 +100,6 @@ export function AppBuilderLayout({
       hasPeekedRef.current = true;
       setSheetState('peeking');
       const timer = setTimeout(() => {
-        // Only collapse if user hasn't opened the sheet in the meantime
         setSheetState((s) => (s === 'peeking' ? 'closed' : s));
       }, 3000);
       return () => clearTimeout(timer);
@@ -199,49 +237,39 @@ export function AppBuilderLayout({
           style={{ background: 'linear-gradient(to bottom, transparent, rgba(124,58,237,0.3), rgba(99,102,241,0.2), transparent)' }}
         />
 
-        {/* ── Right panel: Live Preview (desktop only) ─────────── */}
+        {/* ── Right panel: Client-Side App Preview (desktop only) ── */}
         <div className="hidden md:flex flex-col h-full overflow-hidden w-1/2 min-w-[420px] bg-white/[0.01]">
-          {/* Preview header strip — URL bar + VM status */}
+          {/* Preview header strip */}
           <div className="flex items-center justify-between h-9 px-3 border-b border-white/[0.06] bg-white/[0.02] backdrop-blur-md shrink-0">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
-            </div>
-            <div className="flex-1 mx-3 h-5 rounded-md bg-white/[0.05] flex items-center px-2 min-w-0">
-              {devUrl ? (
-                <span className="text-[10px] text-white/30 truncate">{devUrl}</span>
-              ) : (
-                <span className="text-[10px] text-white/20">preview not ready</span>
-              )}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-white/40 font-medium">Live Preview</span>
+              <div className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25">
+                <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wide">Real-time</span>
+              </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  vmStatus === 'ready' || vmStatus === 'building'
-                    ? 'bg-emerald-400 animate-pulse'
-                    : vmStatus === 'error'
-                      ? 'bg-red-400'
-                      : 'bg-white/20 animate-pulse'
-                }`}
-              />
-              <span className="text-[10px] text-white/30 capitalize hidden sm:inline">
-                {vmStatus}
-              </span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] text-white/30">client render</span>
             </div>
           </div>
 
-          {/* Preview iframe area — relative for BuildStatusOverlay */}
-          <div className="relative flex-1 overflow-hidden p-2">
-            <LivePreview
-              devUrl={devUrl}
-              status={vmStatus}
-              isBuilding={isBuilding}
-              onRetry={onRetry}
-              mode="panel"
-            />
+          {/* Phone frame area */}
+          <div className="relative flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-6 px-4">
+            {merchantAppSpec ? (
+              <PhoneFrame
+                primaryColor={merchantAppSpec.primaryColor}
+                glowVersion={specVersion}
+              >
+                <AppPreview spec={merchantAppSpec} />
+              </PhoneFrame>
+            ) : (
+              <div className="flex flex-col items-center gap-3 mt-16 text-white/30">
+                <span className="text-4xl">📱</span>
+                <p className="text-sm">Preview will appear here as you answer questions</p>
+              </div>
+            )}
 
-            {/* Desktop build status overlay (floating pill above iframe) */}
+            {/* Desktop build status overlay */}
             {(isBuilding || vmStatus === 'building') && buildTask && (
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
                 <BuildStatusOverlay
@@ -277,14 +305,38 @@ export function AppBuilderLayout({
         style={{ transform: sheetTransform }}
         aria-hidden={sheetState === 'closed'}
       >
-        <LivePreview
-          devUrl={devUrl}
-          status={vmStatus}
-          isBuilding={isBuilding}
-          onRetry={onRetry}
-          mode="sheet"
-          onClose={closeSheet}
-        />
+        {/* Mobile sheet: phone preview */}
+        <div className="flex flex-col w-full h-full overflow-hidden rounded-t-2xl bg-[#0D0B1E] border-t border-x border-white/10 shadow-2xl">
+          {/* Drag handle + close */}
+          <div className="flex items-center justify-center relative h-11 shrink-0 px-4">
+            <div className="w-10 h-1.5 rounded-full bg-white/25" aria-hidden="true" />
+            <button
+              onClick={closeSheet}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-white/8 text-white/60 hover:bg-white/15 transition-colors"
+              aria-label="Close preview"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          {/* Phone preview in sheet */}
+          <div className="flex-1 overflow-y-auto flex items-start justify-center py-2 px-4">
+            {merchantAppSpec ? (
+              <PhoneFrame
+                primaryColor={merchantAppSpec.primaryColor}
+                glowVersion={specVersion}
+              >
+                <AppPreview spec={merchantAppSpec} />
+              </PhoneFrame>
+            ) : (
+              <div className="flex flex-col items-center gap-3 mt-8 text-white/30">
+                <span className="text-4xl">📱</span>
+                <p className="text-sm">Answer questions to see your preview</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ── Mobile: floating preview (eye) button ───────────────── */}

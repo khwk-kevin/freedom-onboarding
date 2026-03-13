@@ -17,11 +17,13 @@ import React, {
   useRef,
 } from 'react';
 
-import type { MerchantAppSpec, VMStatus, BuildTrigger } from '@/lib/app-builder/types';
+import type { MerchantAppSpec, VMStatus, BuildTrigger, UIStyle } from '@/lib/app-builder/types';
 import { updateSpecFromExtractions } from '@/lib/app-builder/extract-spec';
 import { APP_BUILDER_SYSTEM_PROMPT, getPhase1bPrompt } from '@/lib/app-builder/ava-prompt';
 import { track, identify, setContext } from '@/lib/analytics/posthog';
 import { EVENTS } from '@/lib/analytics/events';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 // ============================================================
 // TYPES
@@ -63,6 +65,7 @@ interface AppBuilderContextType {
   sendMessage: (text: string) => Promise<void>;
   handleSignup: (userId: string) => Promise<void>;
   handleColorPick: (hex: string) => void;
+  handleUiStylePick: (style: UIStyle) => void;
   handleAdHocRequest: (message: string) => Promise<void>;
   finalizeAndDeploy: () => void;
   dismissError: () => void;
@@ -208,7 +211,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
       // Stop the Railway service to avoid cost bleed
       if (spec.railwayProjectId && spec.railwayServiceId) {
         try {
-          await fetch('/api/apps/stop-vm', {
+          await fetch(`${API_URL}/apps/stop-vm`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ merchantId: spec.id }),
@@ -252,7 +255,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
       // 2. Restart the Railway service
       if (spec.railwayProjectId && spec.railwayServiceId) {
         setVmStatus('starting');
-        const startRes = await fetch('/api/apps/start-iteration', {
+        const startRes = await fetch(`${API_URL}/apps/start-iteration`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ merchantId: spec.id }),
@@ -290,7 +293,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
 
       try {
         // Step 1: Create GitHub repo + Railway project
-        const res = await fetch('/api/apps/provision', {
+        const res = await fetch(`${API_URL}/apps/provision`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -399,7 +402,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
       });
 
       try {
-        await fetch('/api/apps/build', {
+        await fetch(`${API_URL}/apps/build`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -462,7 +465,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
       if (scrapeUrl && scrapeUrl !== prevScrapeUrl) {
         console.log('[AppBuilderContext] Scraping URL:', scrapeUrl);
         try {
-          const scrapeRes = await fetch('/api/apps/scrape', {
+          const scrapeRes = await fetch(`${API_URL}/apps/scrape`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: scrapeUrl, merchantId: updatedSpec.id }),
@@ -556,7 +559,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
   const saveSpecToSupabase = useCallback(async (spec: MerchantAppSpec) => {
     if (!spec.id || !spec.businessType) return; // Don't save until we have meaningful data
     try {
-      await fetch('/api/apps/save-spec', {
+      await fetch(`${API_URL}/apps/save-spec`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ merchantId: spec.id, spec }),
@@ -632,7 +635,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
             : APP_BUILDER_SYSTEM_PROMPT;
 
         // Call AVA
-        const res = await fetch('/api/apps/chat', {
+        const res = await fetch(`${API_URL}/apps/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -760,6 +763,23 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
   );
 
   // ============================================================
+  // HANDLE UI STYLE PICK
+  // ============================================================
+
+  const handleUiStylePick = useCallback(
+    (style: UIStyle) => {
+      const spec = specRef.current;
+      const updatedSpec: MerchantAppSpec = {
+        ...spec,
+        uiStyle: style,
+        updatedAt: new Date().toISOString(),
+      };
+      setMerchantAppSpec(updatedSpec);
+    },
+    []
+  );
+
+  // ============================================================
   // HANDLE AD-HOC REQUEST
   // ============================================================
 
@@ -822,6 +842,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
     sendMessage,
     handleSignup,
     handleColorPick,
+    handleUiStylePick,
     handleAdHocRequest,
     finalizeAndDeploy,
     dismissError,

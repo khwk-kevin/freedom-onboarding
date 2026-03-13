@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
 interface BuildProgress {
   step: string;
   message: string;
@@ -58,7 +60,7 @@ export function AppBuildingCard({
 
     const startBuild = async () => {
       try {
-        const res = await fetch('/api/apps/build-app', {
+        const res = await fetch(`${API_URL}/apps/build-app`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ merchantId, onboardingData }),

@@ -13,6 +13,9 @@
 /** How the app was originated */
 export type AppType = 'business' | 'idea';
 
+/** Visual treatment for cards, buttons, sections in the merchant app */
+export type UIStyle = 'glass' | 'bold' | 'outlined' | 'gradient' | 'neumorphic';
+
 /** Lifecycle state of the merchant's app */
 export type AppStatus =
   | 'interviewing' // AVA interview in progress
@@ -140,6 +143,7 @@ export interface MerchantAppSpec {
   moodKeywords?: string[];           // Extracted mood tokens: ['warm', 'inviting', 'earthy']
   primaryColor?: string;             // Hex: '#FF6B35'
   secondaryColor?: string;           // Hex: '#2D3748'
+  uiStyle?: UIStyle;                 // Visual treatment: glass | bold | outlined | gradient | neumorphic
 
   // ── Products & content ───────────────────────────────────
   products?: ProductItem[];          // Q5: products, services, or content items

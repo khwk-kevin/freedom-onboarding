@@ -15,6 +15,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AppBuilderProvider, useAppBuilder } from '@/context/AppBuilderContext';
 import { AppBuilderLayout } from './AppBuilderLayout';
+import { UIStylePicker } from './UIStylePicker';
 
 // ============================================================
 // ROOT — wraps everything in the provider
@@ -49,6 +50,7 @@ function AppBuilderInner() {
     sendMessage,
     handleSignup,
     handleColorPick,
+    handleUiStylePick,
     finalizeAndDeploy,
     dismissError,
   } = useAppBuilder();
@@ -75,6 +77,11 @@ function AppBuilderInner() {
     !!merchantAppSpec.mood &&
     !merchantAppSpec.primaryColor;
 
+  // Show style picker after color is set but uiStyle not yet chosen
+  const showStylePicker =
+    !!merchantAppSpec.primaryColor &&
+    !merchantAppSpec.uiStyle;
+
   return (
     <>
       <AppBuilderLayout
@@ -83,8 +90,8 @@ function AppBuilderInner() {
         isBuilding={buildStatus.isBuilding}
         buildTask={buildStatus.currentTask}
         tokenBalance={!isAnonymous ? (tokenBalance ?? undefined) : undefined}
+        merchantAppSpec={merchantAppSpec}
         onRetry={() => {
-          // TODO: re-provision (Sprint 7.3 error handling)
           console.log('[AppBuilderClientPage] Retry requested');
         }}
       >
@@ -125,6 +132,17 @@ function AppBuilderInner() {
                   Pick a primary color
                 </p>
                 <InlineColorPicker onColorPick={handleColorPick} />
+              </div>
+            )}
+
+            {/* UI Style picker — appears after color is chosen */}
+            {showStylePicker && (
+              <div className="px-1">
+                <UIStylePicker
+                  value={merchantAppSpec.uiStyle}
+                  onSelect={handleUiStylePick}
+                  primaryColor={merchantAppSpec.primaryColor}
+                />
               </div>
             )}
 
