@@ -73,7 +73,7 @@ interface OnboardingContextType {
 // Context
 // ============================================================
 
-const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
+export const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 function generateUUID(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
