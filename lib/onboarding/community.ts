@@ -102,9 +102,80 @@ export async function uploadImage(
       return { success: false, error: 'Image must be 3MB or less' };
     }
 
-    const base64Image = `data:${mimeType};base64,${file.toString('base64')}`;
-    await new Promise((r) => setTimeout(r, 200));
-    return { success: true, imageUrl: base64Image };
+    // Upload to Supabase Storage
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn('[upload] No Supabase credentials, falling back to base64');
+      const base64Image = `data:${mimeType};base64,${file.toString('base64')}`;
+      return { success: true, imageUrl: base64Image };
+    }
+
+    const ext = mimeType === 'image/png' ? 'png' : 'jpg';
+    const filename = `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const storagePath = `merchant-uploads/${filename}`;
+
+    const uploadRes = await fetch(
+      `${supabaseUrl}/storage/v1/object/public/${storagePath}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${supabaseKey}`,
+          'Content-Type': mimeType,
+          'x-upsert': 'true',
+        },
+        body: file,
+      }
+    );
+
+    if (!uploadRes.ok) {
+      // Bucket might not exist — try creating it first
+      if (uploadRes.status === 404 || uploadRes.status === 400) {
+        await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${supabaseKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: 'merchant-uploads',
+            name: 'merchant-uploads',
+            public: true,
+          }),
+        });
+
+        // Retry upload
+        const retryRes = await fetch(
+          `${supabaseUrl}/storage/v1/object/merchant-uploads/${filename}`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${supabaseKey}`,
+              'Content-Type': mimeType,
+              'x-upsert': 'true',
+            },
+            body: file,
+          }
+        );
+
+        if (!retryRes.ok) {
+          const errText = await retryRes.text().catch(() => '');
+          console.error('[upload] Supabase retry failed:', retryRes.status, errText);
+          // Fall back to base64
+          const base64Image = `data:${mimeType};base64,${file.toString('base64')}`;
+          return { success: true, imageUrl: base64Image };
+        }
+      } else {
+        const errText = await uploadRes.text().catch(() => '');
+        console.error('[upload] Supabase upload failed:', uploadRes.status, errText);
+        const base64Image = `data:${mimeType};base64,${file.toString('base64')}`;
+        return { success: true, imageUrl: base64Image };
+      }
+    }
+
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/merchant-uploads/${filename}`;
+    return { success: true, imageUrl: publicUrl };
   } catch (error) {
     console.error('Image upload error:', error);
     return { success: false, error: 'Failed to upload image. Please try again.' };
