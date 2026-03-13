@@ -44,6 +44,22 @@ export async function GET(request: Request) {
     EVENTS.ITERATION_STARTED,
     EVENTS.TOKEN_LIMIT_REACHED,
     EVENTS.SESSION_ABANDONED,
+    // New granular tracking events
+    EVENTS.CHAT_MESSAGE_SENT,
+    EVENTS.CHAT_MESSAGE_RECEIVED,
+    EVENTS.TAG_EXTRACTED,
+    EVENTS.Q5_PRODUCTS_CAPTURED,
+    EVENTS.Q6_PRIORITIES_SET,
+    EVENTS.Q7_ANTI_PREFS_SET,
+    EVENTS.Q8_AUDIENCE_SET,
+    EVENTS.Q9_FEATURES_SELECTED,
+    EVENTS.Q10_REVIEW_COMPLETE,
+    EVENTS.GO_LIVE_CLICKED,
+    EVENTS.BUILD_STEP_REACHED,
+    EVENTS.COLOR_SELECTED,
+    EVENTS.STYLE_SELECTED,
+    EVENTS.IMAGE_UPLOAD_COMPLETED,
+    EVENTS.SPEC_COMPLETENESS,
   ];
 
   let phCounts: Record<string, number> = Object.fromEntries(phEventNames.map(n => [n, 0]));
@@ -234,6 +250,21 @@ export async function GET(request: Request) {
       tokenLimitReached: phCounts[EVENTS.TOKEN_LIMIT_REACHED] || 0,
       sessionAbandoned:  phCounts[EVENTS.SESSION_ABANDONED]   || 0,
       communityCreated:  phCounts[EVENTS.COMMUNITY_CREATED]   || 0,
+    },
+    interviewMetrics: {
+      totalMessages:     phCounts[EVENTS.CHAT_MESSAGE_SENT] || 0,
+      totalResponses:    phCounts[EVENTS.CHAT_MESSAGE_RECEIVED] || 0,
+      tagsExtracted:     phCounts[EVENTS.TAG_EXTRACTED] || 0,
+      q5Products:        phCounts[EVENTS.Q5_PRODUCTS_CAPTURED] || 0,
+      q6Priorities:      phCounts[EVENTS.Q6_PRIORITIES_SET] || 0,
+      q7AntiPrefs:       phCounts[EVENTS.Q7_ANTI_PREFS_SET] || 0,
+      q8Audience:        phCounts[EVENTS.Q8_AUDIENCE_SET] || 0,
+      q9Features:        phCounts[EVENTS.Q9_FEATURES_SELECTED] || 0,
+      q10ReviewComplete: phCounts[EVENTS.Q10_REVIEW_COMPLETE] || 0,
+      goLiveClicked:     phCounts[EVENTS.GO_LIVE_CLICKED] || 0,
+      colorSelected:     phCounts[EVENTS.COLOR_SELECTED] || 0,
+      styleSelected:     phCounts[EVENTS.STYLE_SELECTED] || 0,
+      imageUploads:      phCounts[EVENTS.IMAGE_UPLOAD_COMPLETED] || 0,
     },
   });
 }
