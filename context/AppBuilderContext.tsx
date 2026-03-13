@@ -629,10 +629,33 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
       try {
         // Determine system prompt based on phase
         const currentSpec = specRef.current;
+
+        // Build a spec summary so AVA knows what's already captured
+        const capturedFields: string[] = [];
+        if (currentSpec.businessName) capturedFields.push(`Name: ${currentSpec.businessName}`);
+        if (currentSpec.businessType) capturedFields.push(`Type: ${currentSpec.businessType}`);
+        if (currentSpec.appType) capturedFields.push(`App type: ${currentSpec.appType}`);
+        if (currentSpec.primaryLanguage && currentSpec.primaryLanguage !== 'en') capturedFields.push(`Language: ${currentSpec.primaryLanguage}`);
+        if (currentSpec.scrapedData?.website) capturedFields.push(`URL scraped: ${currentSpec.scrapedData.website}`);
+        if (currentSpec.ideaDescription) capturedFields.push(`Idea: ${currentSpec.ideaDescription}`);
+        if (currentSpec.mood) capturedFields.push(`Mood: ${currentSpec.mood}`);
+        if (currentSpec.moodKeywords?.length) capturedFields.push(`Mood keywords: ${currentSpec.moodKeywords.join(', ')}`);
+        if (currentSpec.primaryColor) capturedFields.push(`Color: ${currentSpec.primaryColor}`);
+        if (currentSpec.uiStyle) capturedFields.push(`UI style: ${currentSpec.uiStyle}`);
+        if (currentSpec.products?.length) capturedFields.push(`Products: ${currentSpec.products.length} items captured`);
+        if (currentSpec.appPriorities?.length) capturedFields.push(`Priorities: ${currentSpec.appPriorities.join(', ')}`);
+        if (currentSpec.antiPreferences?.length) capturedFields.push(`Anti-prefs: ${currentSpec.antiPreferences.join(', ')}`);
+        if (currentSpec.audienceDescription) capturedFields.push(`Audience: ${currentSpec.audienceDescription}`);
+        if (currentSpec.features?.length) capturedFields.push(`Features: ${currentSpec.features.join(', ')}`);
+
+        const specContext = capturedFields.length > 0
+          ? `\n\n═══ ALREADY CAPTURED (do NOT re-ask these) ═══\n${capturedFields.join('\n')}\n═══════════════════════════════════════════════\nOnly ask about fields NOT listed above. Skip questions you already have answers to.\n`
+          : '';
+
         const systemPrompt =
           interviewPhase === 'phase1b'
-            ? getPhase1bPrompt(currentSpec) + '\n\n---\n\n' + APP_BUILDER_SYSTEM_PROMPT
-            : APP_BUILDER_SYSTEM_PROMPT;
+            ? getPhase1bPrompt(currentSpec) + '\n\n---\n\n' + APP_BUILDER_SYSTEM_PROMPT + specContext
+            : APP_BUILDER_SYSTEM_PROMPT + specContext;
 
         // Call AVA
         const res = await fetch(`${API_URL}/apps/chat`, {
