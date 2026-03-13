@@ -439,6 +439,44 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
       // Persist updated spec to state
       setMerchantAppSpec(updatedSpec);
 
+      // Track field-level changes (compare currentSpec vs updatedSpec)
+      const changedFields = (['businessName','businessType','mood','primaryColor','uiStyle',
+        'products','appPriorities','antiPreferences','audienceDescription','selectedFeatures',
+        'moodKeywords','ideaDescription','category'] as const).filter(
+        f => {
+          const prev = (currentSpec as any)[f];
+          const next = (updatedSpec as any)[f];
+          if (Array.isArray(next)) return next.length > 0 && !(prev?.length > 0);
+          return next && !prev;
+        }
+      );
+      for (const tagName of changedFields) {
+        track(EVENTS.TAG_EXTRACTED, { merchantId: updatedSpec.id, sessionId, tagName });
+      }
+      // Track Q5-Q9 specific events
+      if (updatedSpec.products?.length && !currentSpec.products?.length) {
+        track(EVENTS.Q5_PRODUCTS_CAPTURED, { merchantId: updatedSpec.id, sessionId, count: updatedSpec.products.length });
+      }
+      if (updatedSpec.appPriorities?.length && !currentSpec.appPriorities?.length) {
+        track(EVENTS.Q6_PRIORITIES_SET, { merchantId: updatedSpec.id, sessionId, priorities: updatedSpec.appPriorities });
+      }
+      if (updatedSpec.antiPreferences?.length && !currentSpec.antiPreferences?.length) {
+        track(EVENTS.Q7_ANTI_PREFS_SET, { merchantId: updatedSpec.id, sessionId });
+      }
+      if (updatedSpec.audienceDescription && !currentSpec.audienceDescription) {
+        track(EVENTS.Q8_AUDIENCE_SET, { merchantId: updatedSpec.id, sessionId });
+      }
+      if (updatedSpec.selectedFeatures?.length && !currentSpec.selectedFeatures?.length) {
+        track(EVENTS.Q9_FEATURES_SELECTED, { merchantId: updatedSpec.id, sessionId, features: updatedSpec.selectedFeatures });
+      }
+      // Spec completeness
+      const specFields = ['businessName','businessType','mood','primaryColor','uiStyle','products','appPriorities','audienceDescription','selectedFeatures'];
+      const filled = specFields.filter(f => {
+        const val = (updatedSpec as any)[f];
+        return val && (Array.isArray(val) ? val.length > 0 : true);
+      }).length;
+      track(EVENTS.SPEC_COMPLETENESS, { merchantId: updatedSpec.id, sessionId, completeness: Math.round((filled / specFields.length) * 100) });
+
       // 2. Check if businessType newly detected → start provisioning
       if (updatedSpec.businessType && !currentSpec.businessType) {
         setContext({
@@ -626,6 +664,13 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
       const updatedMessages = [...messages, userMsg];
       setMessages(updatedMessages);
 
+      track(EVENTS.CHAT_MESSAGE_SENT, {
+        merchantId: specRef.current.id,
+        sessionId,
+        messageLength: text.trim().length,
+        messageCount: updatedMessages.filter(m => m.role === 'user').length,
+      });
+
       try {
         // Determine system prompt based on phase
         const currentSpec = specRef.current;
@@ -686,6 +731,15 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, assistantMsg]);
+
+        // Count tags in response
+        const tagCount = (avaResponse.match(/\[\[[A-Z_]+:/g) || []).length;
+        track(EVENTS.CHAT_MESSAGE_RECEIVED, {
+          merchantId: currentSpec.id,
+          sessionId,
+          responseLength: avaResponse.length,
+          tagsExtracted: tagCount,
+        });
 
         // Extract tags + update spec + trigger builds (non-fatal)
         try {
@@ -833,6 +887,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
     setInterviewPhase('complete');
 
     const spec = specRef.current;
+    track(EVENTS.GO_LIVE_CLICKED, { merchantId: spec.id, sessionId });
     track(EVENTS.APP_DEPLOYED, {
       merchantId: spec.id,
       sessionId,
