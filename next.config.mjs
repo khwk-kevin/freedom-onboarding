@@ -12,7 +12,7 @@ const nextConfig = {
       "media-src 'self' https://public.freedom.world",
       "font-src 'self' data:",
       // API calls: Supabase, PostHog, Google Analytics, Vercel
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://app.posthog.com https://*.i.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://*.vercel-insights.com",
+      "connect-src 'self' https://build.freedom.world https://*.supabase.co wss://*.supabase.co https://app.posthog.com https://*.i.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://*.vercel-insights.com",
       "frame-src 'none'",
       "object-src 'none'",
       "base-uri 'self'",
