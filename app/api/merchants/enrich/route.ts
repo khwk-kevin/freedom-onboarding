@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
   // 2. Use Claude to research and analyze the business
   let aiResearch: Partial<EnrichmentResult> = {};
 
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const anthropicKey = process.env.ANTHROPIC_OAUTH_TOKEN || process.env.ANTHROPIC_API_KEY;
   if (anthropicKey) {
     try {
       const anthropic = new Anthropic({ apiKey: anthropicKey });
