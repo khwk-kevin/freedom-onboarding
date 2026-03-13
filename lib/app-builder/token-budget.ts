@@ -49,6 +49,7 @@ const TOKEN_ESTIMATES: Record<BuildTrigger, number> = {
   anti_prefs_set: 500,
   features_selected: 500,
   color_changed: 200,
+  style_changed: 200,
   ad_hoc_request: 800,
 };
 

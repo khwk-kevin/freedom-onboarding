@@ -52,6 +52,8 @@ export async function POST(req: NextRequest) {
         secondaryColor: Array.isArray(data.brandColors) && (data.brandColors as string[])[1]
           ? String((data.brandColors as string[])[1])
           : undefined,
+        // uiStyle from MerchantAppSpec (glass | bold | outlined | gradient | neumorphic)
+        uiStyle: data.uiStyle ? String(data.uiStyle) : undefined,
       },
       audience: {
         description: String(data.audiencePersona || ''),
@@ -116,7 +118,7 @@ export async function POST(req: NextRequest) {
     { event: 'progress', step: 'vault_done', message: 'App spec saved ✓' },
     { event: 'progress', step: 'building', message: 'Generating your personalized app...' },
     { event: 'progress', step: 'building', message: 'Building pages from your spec...' },
-    { event: 'progress', step: 'building', message: `Applying ${appSpec.brand.vibe} design theme...` },
+    { event: 'progress', step: 'building', message: `Applying ${appSpec.brand.uiStyle ?? appSpec.brand.vibe} design theme...` },
     { event: 'progress', step: 'build_done', message: 'Build complete ✓' },
     { event: 'progress', step: 'starting', message: 'Deploying to your custom domain...' },
     { event: 'complete', step: 'done', message: `${businessName} is live! 🎉`, devUrl: demoUrl, appSpec, projectId: merchantId, completeness },

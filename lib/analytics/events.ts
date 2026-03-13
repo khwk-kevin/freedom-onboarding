@@ -11,6 +11,7 @@ export const EVENTS = {
   Q2_SCRAPE_FAILED: 'q2_scrape_failed',
   Q3_MOOD_SELECTED: 'q3_mood_selected',
   Q4_COLOR_SELECTED: 'q4_color_selected',
+  Q4B_UI_STYLE_SELECTED: 'q4b_ui_style_selected',
   FIRST_PREVIEW_SHOWN: 'first_preview_shown',
   SIGNUP_WALL_SHOWN: 'signup_wall_shown',
   SIGNUP_COMPLETED: 'signup_completed',

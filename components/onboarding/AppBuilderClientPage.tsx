@@ -16,6 +16,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AppBuilderProvider, useAppBuilder } from '@/context/AppBuilderContext';
 import { AppBuilderLayout } from './AppBuilderLayout';
 import { UIStylePicker } from './UIStylePicker';
+import { AppBuildingCard } from './cards/AppBuildingCard';
 
 // ============================================================
 // ROOT — wraps everything in the provider
@@ -54,6 +55,10 @@ function AppBuilderInner() {
     finalizeAndDeploy,
     dismissError,
   } = useAppBuilder();
+
+  // ── Local state for SSE build progress ───────────────────
+  const [isBuildingApp, setIsBuildingApp] = useState(false);
+  const [buildDevUrl, setBuildDevUrl] = useState<string | null>(null);
 
   // Start session on first mount
   const sessionStarted = useRef(false);
@@ -146,11 +151,17 @@ function AppBuilderInner() {
               </div>
             )}
 
-            {/* Finalize button — appears in review phase */}
-            {interviewPhase === 'review' && (
-              <div className="flex justify-center pt-2">
+            {/* Finalize button — appears in review phase (before build starts) */}
+            {interviewPhase === 'review' && !isBuildingApp && !buildDevUrl && (
+              <div className="flex flex-col items-center gap-3 pt-2">
+                <p className="text-xs text-white/50 text-center px-4">
+                  Your app spec is complete. Ready to build?
+                </p>
                 <button
-                  onClick={finalizeAndDeploy}
+                  onClick={() => {
+                    setIsBuildingApp(true);
+                    finalizeAndDeploy();
+                  }}
                   className="px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500
                              text-white font-semibold text-sm transition-colors
                              shadow-lg shadow-violet-900/40"
@@ -160,8 +171,42 @@ function AppBuilderInner() {
               </div>
             )}
 
-            {/* Complete state */}
-            {interviewPhase === 'complete' && (
+            {/* SSE build progress — shown after Go Live is clicked */}
+            {(isBuildingApp || buildDevUrl) && (
+              <div className="px-1">
+                <AppBuildingCard
+                  merchantId={merchantAppSpec.id}
+                  onboardingData={{
+                    name: merchantAppSpec.businessName,
+                    description: merchantAppSpec.ideaDescription ?? merchantAppSpec.scrapedData?.description,
+                    businessType: merchantAppSpec.businessType ?? merchantAppSpec.category,
+                    primaryColor: merchantAppSpec.primaryColor,
+                    vibe: merchantAppSpec.mood,
+                    uiStyle: merchantAppSpec.uiStyle,
+                    audiencePersona: merchantAppSpec.audienceDescription,
+                    heroFeature: merchantAppSpec.appPriorities?.[0],
+                    products: merchantAppSpec.products?.map(p =>
+                      p.price !== undefined ? `${p.name}:${p.currency ?? '$'}${p.price}` : p.name
+                    ),
+                    logo: merchantAppSpec.scrapedData?.photos?.[0],
+                    scrapedUrl: merchantAppSpec.scrapedData?.website,
+                    scrapedImages: merchantAppSpec.scrapedData?.photos,
+                  }}
+                  primaryColor={merchantAppSpec.primaryColor}
+                  businessName={merchantAppSpec.businessName}
+                  onComplete={(devUrl) => {
+                    setIsBuildingApp(false);
+                    setBuildDevUrl(devUrl);
+                  }}
+                  onError={() => {
+                    setIsBuildingApp(false);
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Complete state — after SSE build finishes (non-SSE path) */}
+            {interviewPhase === 'complete' && !isBuildingApp && !buildDevUrl && (
               <div className="flex flex-col items-center gap-2 py-4 text-center">
                 <span className="text-3xl">🎉</span>
                 <p className="text-sm font-semibold text-white/80">

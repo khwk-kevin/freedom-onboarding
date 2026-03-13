@@ -775,8 +775,17 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
         updatedAt: new Date().toISOString(),
       };
       setMerchantAppSpec(updatedSpec);
+
+      track(EVENTS.Q4B_UI_STYLE_SELECTED, {
+        merchantId: spec.id,
+        sessionId,
+        uiStyle: style,
+      });
+
+      // Dispatch style_changed build so the Railway app reflects the chosen treatment
+      dispatchBuild('style_changed', updatedSpec);
     },
-    []
+    [sessionId, dispatchBuild]
   );
 
   // ============================================================

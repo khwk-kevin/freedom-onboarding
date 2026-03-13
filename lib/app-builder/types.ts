@@ -30,6 +30,7 @@ export type BuildTrigger =
   | 'idea_described'     // Q2: idea path — description captured
   | 'mood_selected'      // Q3: mood/vibe chosen
   | 'color_changed'      // Q4: primary color set via picker
+  | 'style_changed'      // Q4b: UI style treatment selected via UIStylePicker
   | 'products_added'     // Q5: products/services captured
   | 'priorities_set'     // Q6: app priority order defined
   | 'anti_prefs_set'     // Q7: anti-preferences captured

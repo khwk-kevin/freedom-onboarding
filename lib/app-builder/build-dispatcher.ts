@@ -33,6 +33,8 @@ const TASK_TEMPLATES: Record<BuildTrigger, string> = {
     'Mood and theme updated in design/theme.json and context/brand.md. Re-read them. Update all component variants and visual styles to match the new mood.',
   color_changed:
     'Primary color changed in design/theme.json. Update the CSS theme variables and ensure all pages reflect the new color scheme.',
+  style_changed:
+    'UI style treatment updated in design/theme.json (see uiStyle field). Re-read CLAUDE.md and update all component styles to match the selected treatment (glass/bold/outlined/gradient/neumorphic).',
   products_added:
     'Products/services added to context/business.md. Build a products/services section using ProductCard components.',
   priorities_set:
