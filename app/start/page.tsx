@@ -1,10 +1,15 @@
-import { redirect } from 'next/navigation';
+import { OnboardingProvider } from '@/context/OnboardingContext';
+import { OnboardingChat } from '@/components/onboarding/OnboardingChat';
 
 export const metadata = {
-  title: 'Create Your App | Freedom World',
-  description: 'Build your custom app with AVA, your AI app builder.',
+  title: 'Create Your Community | Freedom World',
+  description: 'Set up your Freedom World community with AVA, your AI onboarding assistant.',
 };
 
-export default function StartPage() {
-  redirect('/build');
+export default function OnboardingPage() {
+  return (
+    <OnboardingProvider>
+      <OnboardingChat />
+    </OnboardingProvider>
+  );
 }
