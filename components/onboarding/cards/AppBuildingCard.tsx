@@ -20,10 +20,30 @@ interface AppBuildingCardProps {
 }
 
 const STEP_ICONS: Record<string, string> = {
+  // New pipeline step names (deploy.ts v2)
+  provision_start: '📦',
+  provision_github: '✅',
+  build_prepare: '🔧',
+  build_ready: '✅',
+  vault_start: '📝',
+  vault_done: '✅',
+  build_start: '🏗️',
+  build_failed: '🔄',
+  build_done: '✅',
+  export_start: '📦',
+  export_done: '✅',
+  deploy_start: '🚀',
+  upload_start: '☁️',
+  upload_done: '✅',
+  deploy_done: '✅',
+  deploy_failed: '❌',
+  done: '🎉',
+  error: '❌',
+  // Legacy step names (kept for backward compat)
   github: '📦',
   github_done: '✅',
   github_skip: '📦',
-  railway: '🚂',
+  railway: '🔧',
   railway_done: '✅',
   env: '⚙️',
   env_done: '✅',
@@ -31,14 +51,10 @@ const STEP_ICONS: Record<string, string> = {
   ready: '✅',
   ready_timeout: '⏳',
   vault: '📝',
-  vault_done: '✅',
   assets: '🖼️',
   building: '🏗️',
-  build_done: '✅',
   build_partial: '⚠️',
   build_fallback: '📋',
-  done: '🎉',
-  error: '❌',
 };
 
 export function AppBuildingCard({
