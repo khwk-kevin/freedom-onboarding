@@ -359,7 +359,7 @@ export function OnboardingChat() {
 
       {/* ── Mobile: floating preview button ──────────────── */}
       <button
-        className="md:hidden fixed bottom-20 left-4 z-50 w-12 h-12 rounded-full
+        className="md:hidden fixed bottom-28 left-4 z-50 w-12 h-12 rounded-full
                    flex items-center justify-center text-white
                    transition-all duration-200 active:scale-95 shadow-xl"
         style={{
