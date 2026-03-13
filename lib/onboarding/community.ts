@@ -125,7 +125,7 @@ export async function uploadImage(
           'Content-Type': mimeType,
           'x-upsert': 'true',
         },
-        body: file,
+        body: new Uint8Array(file),
       }
     );
 
@@ -155,7 +155,7 @@ export async function uploadImage(
               'Content-Type': mimeType,
               'x-upsert': 'true',
             },
-            body: file,
+            body: new Uint8Array(file),
           }
         );
 

@@ -691,7 +691,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
         if (currentSpec.appPriorities?.length) capturedFields.push(`Priorities: ${currentSpec.appPriorities.join(', ')}`);
         if (currentSpec.antiPreferences?.length) capturedFields.push(`Anti-prefs: ${currentSpec.antiPreferences.join(', ')}`);
         if (currentSpec.audienceDescription) capturedFields.push(`Audience: ${currentSpec.audienceDescription}`);
-        if (currentSpec.features?.length) capturedFields.push(`Features: ${currentSpec.features.join(', ')}`);
+        if (currentSpec.selectedFeatures?.length) capturedFields.push(`Features: ${currentSpec.selectedFeatures.join(', ')}`);
 
         const specContext = capturedFields.length > 0
           ? `\n\n═══ ALREADY CAPTURED (do NOT re-ask these) ═══\n${capturedFields.join('\n')}\n═══════════════════════════════════════════════\nOnly ask about fields NOT listed above. Skip questions you already have answers to.\n`
