@@ -52,6 +52,12 @@ export const EVENTS = {
   SPEC_COMPLETENESS: 'spec_completeness',
   AB_TEST_ASSIGNED: 'ab_test_assigned',
   AB_TEST_CONVERSION: 'ab_test_conversion',
+  // VM / infrastructure lifecycle
+  VM_PROVISIONING_STARTED: 'vm_provisioning_started',
+  VM_PROVISIONING_COMPLETE: 'vm_provisioning_complete',
+  VM_PROVISIONING_FAILED: 'vm_provisioning_failed',
+  // Phase transitions
+  PHASE_TRANSITION: 'phase_transition',
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];

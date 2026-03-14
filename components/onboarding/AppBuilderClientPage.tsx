@@ -17,7 +17,8 @@ import { AppBuilderProvider, useAppBuilder } from '@/context/AppBuilderContext';
 import { AppBuilderLayout } from './AppBuilderLayout';
 import { UIStylePicker } from './UIStylePicker';
 import { AppBuildingCard } from './cards/AppBuildingCard';
-import posthog from 'posthog-js';
+import { track } from '@/lib/analytics/posthog';
+import { EVENTS } from '@/lib/analytics/events';
 
 // ============================================================
 // ROOT — wraps everything in the provider
@@ -243,8 +244,9 @@ function AppBuilderInner() {
         <SignupWallModal
           onSignup={handleSignup}
           onDismiss={() => {
-            posthog.capture('signup_abandoned', {
+            track(EVENTS.SIGNUP_ABANDONED, {
               page: window.location.pathname,
+              via: 'dismiss_button',
             });
           }}
         />

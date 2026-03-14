@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import posthog from 'posthog-js';
+import { track } from '@/lib/analytics/posthog';
+import { EVENTS } from '@/lib/analytics/events';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -182,7 +183,7 @@ export function AppBuildingCard({
             rel="noopener noreferrer"
             className="flex-1 text-center py-2 px-4 rounded-xl text-white text-sm font-semibold transition-all hover:opacity-90"
             style={{ backgroundColor: primaryColor }}
-            onClick={() => posthog.capture('app_url_clicked', { url: devUrl, button: 'view_app' })}
+            onClick={() => track(EVENTS.APP_URL_CLICKED, { url: devUrl, button: 'view_app' })}
           >
             View Your App 🚀
           </a>
@@ -191,7 +192,7 @@ export function AppBuildingCard({
             target="_blank"
             rel="noopener noreferrer"
             className="py-2 px-4 rounded-xl text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all"
-            onClick={() => posthog.capture('app_url_clicked', { url: devUrl, button: 'go_live' })}
+            onClick={() => track(EVENTS.APP_URL_CLICKED, { url: devUrl, button: 'go_live' })}
           >
             Go Live ↗
           </a>

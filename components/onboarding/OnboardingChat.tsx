@@ -80,7 +80,8 @@ export function OnboardingChat() {
     }
   }, [messages, isLoading]);
 
-  const progress = Math.min(Math.round((exchangeCount / 6) * 100), 100);
+  // Progress is driven by Blueprint field count (same source of truth as the sidebar)
+  const progress = Math.round((filledCount / totalCount) * 100);
 
   // Theme uses CSS variables from globals.css (auto light/dark via prefers-color-scheme)
   const theme = {

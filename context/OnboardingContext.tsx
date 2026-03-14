@@ -38,6 +38,35 @@ interface MerchantOnboardingData extends Partial<CommunityData> {
   backgroundColor?: string;
   fontFamily?: string;
   brandColors?: string[];
+  // ── Blueprint functional fields (populated by AppBuilderAdapter) ──────
+  antiPreferences?: string[];
+  coreActions?: string[];
+  keyScreens?: string[];
+  monetizationModel?: string;
+  mvpScope?: string;
+  dataModel?: string;
+  userJourney?: string;
+  conversionGoal?: string;
+  firstImpression?: string;
+  appFormat?: string;
+}
+
+// ── Build progress types ──────────────────────────────────────────────
+
+export interface BuildProgressStep {
+  step: string;
+  message: string;
+  devUrl?: string;
+}
+
+export type BuildPhase = 'spec' | 'building' | 'complete' | 'error';
+
+export interface BuildProgressState {
+  steps: BuildProgressStep[];
+  devUrl?: string;
+  isBuilding: boolean;
+  buildPhase: BuildPhase;
+  error?: string;
 }
 
 interface OnboardingContextType {
@@ -56,6 +85,9 @@ interface OnboardingContextType {
   anonymousSessionId: string;
   showSignupWall: boolean;
   exchangeCount: number;
+
+  // Build progress (populated by AppBuilderAdapter — undefined in OnboardingProvider)
+  buildProgress?: BuildProgressState;
 
   // Actions
   sendMessage: (content: string) => Promise<void>;

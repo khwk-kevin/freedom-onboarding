@@ -2,7 +2,7 @@
 
 /**
  * AppBuilderAdapter
- * 
+ *
  * Wraps AppBuilderContext and exposes it through the OnboardingContext interface.
  * This lets OnboardingChat (the good UI) use AppBuilderContext (the real builder).
  */
@@ -10,16 +10,27 @@
 import React from 'react';
 import { AppBuilderProvider, useAppBuilder } from './AppBuilderContext';
 import { OnboardingContext } from './OnboardingContext';
+import type { BuildProgressState, BuildProgressStep } from './OnboardingContext';
 import { getTemplateById } from '@/lib/onboarding/templates';
 import type { ChatMessage } from '@/types/onboarding';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 function AdapterInner({ children }: { children: React.ReactNode }) {
   const builder = useAppBuilder();
   const hasStarted = React.useRef(false);
+  // 'idle' | 'dashboard' | 'building' | 'done' | 'error'
   const buildState = React.useRef<'idle' | 'dashboard' | 'building' | 'done' | 'error'>('idle');
 
-  // Extra messages injected by the adapter (e.g. build card)
+  // Extra messages injected by the adapter (e.g. build progress text)
   const [extraMessages, setExtraMessages] = React.useState<ChatMessage[]>([]);
+
+  // Build progress state — drives the Blueprint sidebar's build phase view
+  const [buildProgress, setBuildProgress] = React.useState<BuildProgressState>({
+    steps: [],
+    isBuilding: false,
+    buildPhase: 'spec',
+  });
 
   // Auto-start session on mount
   React.useEffect(() => {
@@ -29,46 +40,149 @@ function AdapterInner({ children }: { children: React.ReactNode }) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── triggerBuild: inject the AppBuildingCard into chat (ONCE) ──
+  // ── triggerBuild: switch Blueprint to build mode, stream SSE (ONCE) ──
   const triggerBuild = React.useCallback(() => {
     if (buildState.current === 'building' || buildState.current === 'done') return;
     buildState.current = 'building';
 
     const s = builder.merchantAppSpec;
-    // Use the UUID from AppBuilderContext (startSession generates it via crypto.randomUUID)
     const merchantId = s.id;
 
+    const onboardingData = {
+      businessType: s.businessType || '',
+      vibe: s.mood || '',
+      name: s.businessName || '',
+      products: s.products?.map(p => p.price ? `${p.name}:${p.price}` : p.name) || [],
+      brandStyle: s.uiStyle || '',
+      primaryColor: s.primaryColor || '#10F48B',
+      logo: s.scrapedData?.photos?.[0] || '',
+      banner: s.scrapedData?.photos?.[1] || '',
+      description: s.ideaDescription || '',
+      audiencePersona: s.audienceDescription || '',
+      scrapedImages: s.scrapedData?.photos || [],
+      heroFeature: s.appPriorities?.[0] || '',
+      userFlow: '',
+      differentiator: '',
+      uiStyle: s.uiStyle || 'bold',
+    };
+
+    // Inject a chat message directing user to the sidebar
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     setExtraMessages(prev => [...prev, {
       role: 'assistant' as const,
-      content: "Now let's turn everything into your custom app! 🚀 Watch it being built live:",
+      content: isMobile
+        ? "Building your app now! Tap the 📋 button to watch live progress"
+        : "Building your app now! Watch the live progress on the right →",
       timestamp: new Date(),
-      metadata: {
-        cardType: 'app_building' as const,
-        cardData: {
-          merchantId,
-          onboardingData: {
-            businessType: s.businessType || '',
-            vibe: s.mood || '',
-            name: s.businessName || '',
-            products: s.products?.map(p => p.price ? `${p.name}:${p.price}` : p.name) || [],
-            brandStyle: s.uiStyle || '',
-            primaryColor: s.primaryColor || '#10F48B',
-            logo: s.scrapedData?.photos?.[0] || '',
-            banner: s.scrapedData?.photos?.[1] || '',
-            description: s.ideaDescription || '',
-            audiencePersona: s.audienceDescription || '',
-            scrapedImages: s.scrapedData?.photos || [],
-            heroFeature: s.appPriorities?.[0] || '',
-            userFlow: '',
-            differentiator: '',
-            uiStyle: s.uiStyle || 'bold',
-          },
-          primaryColor: s.primaryColor || '#10F48B',
-          businessName: s.businessName || 'Your App',
-        },
-      },
     }]);
-  }, [builder.merchantAppSpec]);
+
+    // Switch Blueprint sidebar to building phase
+    setBuildProgress({ steps: [], isBuilding: true, buildPhase: 'building' });
+
+    // Stream SSE build progress
+    const startBuildSSE = async () => {
+      try {
+        const res = await fetch(`${API_URL}/apps/build-app`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ merchantId, onboardingData }),
+        });
+
+        if (!res.ok || !res.body) {
+          throw new Error('Failed to start build');
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulatedDevUrl: string | undefined;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              const data = JSON.parse(line.slice(6)) as {
+                step?: string;
+                message?: string;
+                devUrl?: string;
+                event?: string;
+                projectId?: string;
+              };
+
+              const newStep: BuildProgressStep = {
+                step: data.step || '',
+                message: data.message || '',
+                devUrl: data.devUrl,
+              };
+
+              setBuildProgress(prev => ({
+                ...prev,
+                steps: [...prev.steps, newStep],
+                devUrl: data.devUrl || prev.devUrl,
+              }));
+
+              if (data.devUrl) accumulatedDevUrl = data.devUrl;
+
+              if (data.event === 'complete' || data.step === 'done') {
+                buildState.current = 'done';
+                setBuildProgress(prev => ({
+                  ...prev,
+                  isBuilding: false,
+                  buildPhase: 'complete',
+                  devUrl: accumulatedDevUrl || prev.devUrl,
+                }));
+                if (accumulatedDevUrl) {
+                  setExtraMessages(prev => [...prev, {
+                    role: 'assistant' as const,
+                    content: `Your app is live! 🎉 View it in the panel on the right.`,
+                    timestamp: new Date(),
+                  }]);
+                }
+              }
+
+              if (data.event === 'error' || data.step === 'error') {
+                buildState.current = 'error';
+                setBuildProgress(prev => ({
+                  ...prev,
+                  isBuilding: false,
+                  buildPhase: 'error',
+                  error: data.message || 'Build failed',
+                }));
+                setExtraMessages(prev => [...prev, {
+                  role: 'assistant' as const,
+                  content: "There was a hiccup building your app. Try again or tell me what to change. 💪",
+                  timestamp: new Date(),
+                }]);
+              }
+            } catch {
+              // ignore parse errors
+            }
+          }
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Build failed';
+        buildState.current = 'error';
+        setBuildProgress({
+          steps: [{ step: 'error', message }],
+          isBuilding: false,
+          buildPhase: 'error',
+          error: message,
+        });
+        setExtraMessages(prev => [...prev, {
+          role: 'assistant' as const,
+          content: "There was a hiccup building your app. Try again or tell me what to change. 💪",
+          timestamp: new Date(),
+        }]);
+      }
+    };
+
+    startBuildSSE();
+  }, [builder.merchantAppSpec]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When interview reaches 'review' or 'complete', auto-trigger build
   React.useEffect(() => {
@@ -115,7 +229,7 @@ function AdapterInner({ children }: { children: React.ReactNode }) {
     }
   }, [filledCount, userMsgCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Map merchantAppSpec → communityData shape
+  // ── Map merchantAppSpec → communityData shape ──────────────────────────────
   const spec = builder.merchantAppSpec;
   const communityData = {
     name: spec.businessName || '',
@@ -140,14 +254,17 @@ function AdapterInner({ children }: { children: React.ReactNode }) {
     fontFamily: undefined as string | undefined,
     primaryActions: spec.appPriorities || [],
     uiStyle: spec.uiStyle || 'bold',
-    // ── Blueprint-specific fields ──────────────────────────────────────────
-    // These are exposed for the AppBlueprint sidebar component
+    // ── Blueprint functional fields ─────────────────────────────────────────
     antiPreferences: spec.antiPreferences || [],
-    appFormat: spec.appType || spec.businessType || '',
-    // keyScreens: derived from appPriorities in AppBlueprint component
-    // coreActions: uses primaryActions (appPriorities) in AppBlueprint
-    // monetizationModel, mvpScope, dataModel, userJourney, keyScreens:
-    //   not yet in MerchantAppSpec — AppBlueprint falls back to related fields
+    appFormat: spec.appFormat || spec.appType || spec.businessType || '',
+    coreActions: spec.coreActions || [],
+    keyScreens: spec.keyScreens || [],
+    monetizationModel: spec.monetizationModel || '',
+    mvpScope: spec.mvpScope || '',
+    dataModel: spec.dataModel || '',
+    userJourney: spec.userJourney || '',
+    conversionGoal: spec.conversionGoal || '',
+    firstImpression: spec.firstImpression || '',
   };
 
   // Map messages — preserve metadata, append extras
@@ -170,7 +287,7 @@ function AdapterInner({ children }: { children: React.ReactNode }) {
       builder.handleColorPick(data.primaryColor);
     }
     if (data.uiStyle && typeof data.uiStyle === 'string') {
-      builder.handleUiStylePick(data.uiStyle as any);
+      builder.handleUiStylePick(data.uiStyle as Parameters<typeof builder.handleUiStylePick>[0]);
     }
   };
 
@@ -181,6 +298,7 @@ function AdapterInner({ children }: { children: React.ReactNode }) {
   const value = {
     messages,
     communityData,
+    buildProgress,
     isPreviewVisible: true,
     isLoading: builder.isLoading,
     isGeneratingLogo: false,
@@ -204,18 +322,33 @@ function AdapterInner({ children }: { children: React.ReactNode }) {
         triggerBuild();
         builder.finalizeAndDeploy();
       } else if (action === 'app_build_complete') {
+        // Legacy: handle completion from a still-rendered AppBuildingCard
         if (buildState.current !== 'done') {
           buildState.current = 'done';
           const devUrl = cardData?.devUrl as string;
-          setExtraMessages(prev => [...prev, {
-            role: 'assistant' as const,
-            content: `Your app is live! 🎉\n\n🔗 ${devUrl}\n\nShare this link with your customers!`,
-            timestamp: new Date(),
-          }]);
+          setBuildProgress(prev => ({
+            ...prev,
+            isBuilding: false,
+            buildPhase: 'complete',
+            devUrl: devUrl || prev.devUrl,
+          }));
+          if (devUrl) {
+            setExtraMessages(prev => [...prev, {
+              role: 'assistant' as const,
+              content: `Your app is live! 🎉 View it in the panel on the right.`,
+              timestamp: new Date(),
+            }]);
+          }
         }
       } else if (action === 'app_build_error') {
         if (buildState.current !== 'error') {
           buildState.current = 'error';
+          setBuildProgress(prev => ({
+            ...prev,
+            isBuilding: false,
+            buildPhase: 'error',
+            error: (cardData?.error as string) || 'Build failed',
+          }));
           setExtraMessages(prev => [...prev, {
             role: 'assistant' as const,
             content: "There was a hiccup building your app. Try again or tell me what to change. 💪",
@@ -226,6 +359,7 @@ function AdapterInner({ children }: { children: React.ReactNode }) {
     },
     resetSession: () => {
       buildState.current = 'idle';
+      setBuildProgress({ steps: [], isBuilding: false, buildPhase: 'spec' });
       builder.startSession();
     },
     merchantId: spec.id,

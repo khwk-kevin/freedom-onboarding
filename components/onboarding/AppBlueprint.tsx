@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useOnboarding } from '@/context/OnboardingContext';
+import type { BuildProgressStep } from '@/context/OnboardingContext';
 
 // ── App type icon mapping ─────────────────────────────────────────────────────
 function getAppTypeIcon(businessType?: string, appFormat?: string): string {
@@ -210,6 +211,142 @@ function ProgressBar({ filled, total, accent }: { filled: number; total: number;
   );
 }
 
+// ── Build step icon map (mirrors AppBuildingCard) ────────────────────────────
+const STEP_ICONS: Record<string, string> = {
+  provision_start: '📦',
+  provision_github: '✅',
+  build_prepare: '🔧',
+  build_ready: '✅',
+  vault_start: '📝',
+  vault_done: '✅',
+  build_start: '🏗️',
+  build_failed: '🔄',
+  build_done: '✅',
+  export_start: '📦',
+  export_done: '✅',
+  deploy_start: '🚀',
+  upload_start: '☁️',
+  upload_done: '✅',
+  deploy_done: '✅',
+  deploy_failed: '❌',
+  done: '🎉',
+  error: '❌',
+  // Legacy
+  github: '📦',
+  github_done: '✅',
+  github_skip: '📦',
+  railway: '🔧',
+  railway_done: '✅',
+  env: '⚙️',
+  env_done: '✅',
+  starting: '🔄',
+  ready: '✅',
+  ready_timeout: '⏳',
+  vault: '📝',
+  assets: '🖼️',
+  building: '🏗️',
+  build_partial: '⚠️',
+  build_fallback: '📋',
+};
+
+// ── Build progress panel ──────────────────────────────────────────────────────
+function BuildProgressPanel({
+  steps,
+  isBuilding,
+  devUrl,
+  error,
+  accent,
+}: {
+  steps: BuildProgressStep[];
+  isBuilding: boolean;
+  devUrl?: string;
+  error?: string;
+  accent: string;
+}) {
+  const stepsEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    stepsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [steps.length]);
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div
+        className="px-5 pt-5 pb-4 flex items-center justify-between shrink-0"
+        style={{ borderBottom: `1px solid ${accent}18` }}
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-base animate-pulse">{error ? '❌' : isBuilding ? '🏗️' : '🎉'}</span>
+          <h2 className="text-sm font-bold text-white tracking-tight">
+            {error ? 'Build Error' : isBuilding ? 'Building Your App…' : 'App is Live!'}
+          </h2>
+        </div>
+        {isBuilding && (
+          <span
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-full animate-pulse"
+            style={{ background: `${accent}20`, color: accent, border: `1px solid ${accent}35` }}
+          >
+            Live
+          </span>
+        )}
+      </div>
+
+      {/* Steps */}
+      <div className="flex-1 overflow-y-auto px-5 pt-4 pb-4 space-y-1.5">
+        {steps.map((s, i) => {
+          const isDone = s.step.includes('done') || s.step === 'done';
+          const isErr = s.step === 'error' || s.step.includes('failed');
+          return (
+            <div key={i} className="flex items-start gap-2 py-0.5">
+              <span className="text-sm shrink-0 mt-0.5">
+                {STEP_ICONS[s.step] || '⏳'}
+              </span>
+              <span
+                className="text-sm leading-snug"
+                style={{ color: isErr ? '#F87171' : isDone ? '#C8C8DC' : `${accent}CC` }}
+              >
+                {s.message}
+              </span>
+            </div>
+          );
+        })}
+        {isBuilding && (
+          <div className="flex items-center gap-2 py-0.5">
+            <span className="text-sm animate-pulse">⏳</span>
+            <span className="text-sm" style={{ color: '#7B7B9A' }}>Working…</span>
+          </div>
+        )}
+        {error && (
+          <div className="mt-3 px-3 py-2 rounded-xl text-sm" style={{ background: '#F8717120', color: '#F87171' }}>
+            {error}
+          </div>
+        )}
+        <div ref={stepsEndRef} />
+      </div>
+
+      {/* Complete state — action button */}
+      {!isBuilding && devUrl && !error && (
+        <div className="px-5 py-4 shrink-0" style={{ borderTop: `1px solid ${accent}18` }}>
+          <a
+            href={devUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+            style={{
+              background: `linear-gradient(135deg, ${accent}, ${accent}BB)`,
+              color: '#0A0A12',
+              boxShadow: `0 4px 20px ${accent}40`,
+            }}
+          >
+            View Your App →
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main AppBlueprint component ───────────────────────────────────────────────
 
 interface AppBlueprintProps {
@@ -222,19 +359,8 @@ export function AppBlueprint({ className = '' }: AppBlueprintProps) {
     communityData,
     handleCardAction,
     isLoading,
+    buildProgress,
   } = useOnboarding();
-
-  // Cast to extended type to access extra fields the adapter may inject
-  const data = communityData as typeof communityData & {
-    antiPreferences?: string[];
-    userJourney?: string;
-    dataModel?: string;
-    monetizationModel?: string;
-    mvpScope?: string;
-    keyScreens?: string[];
-    coreActions?: string[];
-    appFormat?: string;
-  };
 
   // ── Field values ──────────────────────────────────────────────────────────
   const accent = communityData.primaryColor || '#10F48B';
@@ -247,14 +373,17 @@ export function AppBlueprint({ className = '' }: AppBlueprintProps) {
   const differentiator = communityData.differentiator || '';
   const primaryActions = (communityData.primaryActions || []).filter(Boolean);
   const rawProducts = communityData.products || [];
-  const coreActions = data.coreActions?.length ? data.coreActions : primaryActions;
-  const keyScreens = data.keyScreens?.length
-    ? data.keyScreens
+
+  // Functional spec fields — now properly typed on communityData
+  const coreActions = (communityData.coreActions?.length ? communityData.coreActions : primaryActions);
+  const keyScreens = communityData.keyScreens?.length
+    ? communityData.keyScreens
     : primaryActions.map(a => screenForAction(a));
-  const monetizationModel = data.monetizationModel || '';
-  const mvpScope = data.mvpScope || heroFeature || '';
-  const userJourney = data.userJourney || userFlow || '';
-  const antiPreferences = data.antiPreferences || [];
+  const monetizationModel = communityData.monetizationModel || '';
+  const mvpScope = communityData.mvpScope || heroFeature || '';
+  const userJourney = communityData.userJourney || userFlow || '';
+  const antiPreferences = communityData.antiPreferences || [];
+  const appFormat = communityData.appFormat || '';
 
   // ── Progress counting ─────────────────────────────────────────────────────
   // 11 tracked fields
@@ -265,7 +394,7 @@ export function AppBlueprint({ className = '' }: AppBlueprintProps) {
     keyScreens.length > 0,
     Boolean(monetizationModel),
     Boolean(userJourney),
-    Boolean(data.dataModel),
+    Boolean(communityData.dataModel),
     Boolean(mvpScope),
     Boolean(audiencePersona),
     rawProducts.length > 0,
@@ -277,7 +406,7 @@ export function AppBlueprint({ className = '' }: AppBlueprintProps) {
   const canBuild = filledCount >= 7; // 60%+
 
   // ── App type icon ─────────────────────────────────────────────────────────
-  const appIcon = getAppTypeIcon(businessType, data.appFormat);
+  const appIcon = getAppTypeIcon(businessType, appFormat);
 
   // ── Products display helpers ──────────────────────────────────────────────
   const productNames = rawProducts.slice(0, 4).map(p => {
@@ -288,6 +417,10 @@ export function AppBlueprint({ className = '' }: AppBlueprintProps) {
 
   const hasAnything = filledCount > 0;
 
+  // ── Build phase — switch sidebar to progress view ─────────────────────────
+  const buildPhase = buildProgress?.buildPhase ?? 'spec';
+  const isInBuildMode = buildPhase === 'building' || buildPhase === 'complete' || buildPhase === 'error';
+
   return (
     <div className={`flex flex-col ${className}`}>
       {/* ── Card ──────────────────────────────────────────────────────────── */}
@@ -296,183 +429,198 @@ export function AppBlueprint({ className = '' }: AppBlueprintProps) {
         style={{
           background: '#0F0F1A',
           border: `1px solid ${accent}22`,
-          boxShadow: hasAnything ? `0 0 40px ${accent}10` : 'none',
+          boxShadow: (hasAnything || isInBuildMode) ? `0 0 40px ${accent}10` : 'none',
+          transition: 'box-shadow 0.4s ease',
         }}
       >
-        {/* Header */}
-        <div
-          className="px-5 pt-5 pb-4 flex items-center justify-between"
-          style={{ borderBottom: `1px solid ${accent}18` }}
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-base">📋</span>
-            <h2 className="text-sm font-bold text-white tracking-tight">Your App Blueprint</h2>
-          </div>
-          {hasAnything && (
-            <span
-              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-              style={{ background: `${accent}20`, color: accent, border: `1px solid ${accent}35` }}
+        {/* ── Build mode view ─────────────────────────────────────────────── */}
+        {isInBuildMode && buildProgress ? (
+          <BuildProgressPanel
+            steps={buildProgress.steps}
+            isBuilding={buildProgress.isBuilding}
+            devUrl={buildProgress.devUrl}
+            error={buildProgress.error}
+            accent={accent}
+          />
+        ) : (
+          /* ── Spec view ──────────────────────────────────────────────────── */
+          <>
+            {/* Header */}
+            <div
+              className="px-5 pt-5 pb-4 flex items-center justify-between shrink-0"
+              style={{ borderBottom: `1px solid ${accent}18` }}
             >
-              {progressPct}%
-            </span>
-          )}
-        </div>
-
-        {/* Body — scrollable */}
-        <div className="flex-1 overflow-y-auto px-5 pt-4 pb-5 space-y-5">
-          {!hasAnything ? (
-            /* Empty state */
-            <div className="py-10 flex flex-col items-center text-center gap-3">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
-                style={{ background: `${accent}12`, border: `1px solid ${accent}22` }}
-              >
-                ✨
+              <div className="flex items-center gap-2">
+                <span className="text-base">📋</span>
+                <h2 className="text-sm font-bold text-white tracking-tight">Your App Blueprint</h2>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-white mb-1">Blueprint will appear here</p>
-                <p className="text-xs leading-relaxed" style={{ color: '#7B7B9A' }}>
-                  As you chat with AVA, your app spec fills up live
-                </p>
-              </div>
+              {hasAnything && (
+                <span
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: `${accent}20`, color: accent, border: `1px solid ${accent}35` }}
+                >
+                  {progressPct}%
+                </span>
+              )}
             </div>
-          ) : (
-            <>
-              {/* App name + icon */}
-              <BlueprintSection visible={Boolean(businessName)}>
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{appIcon}</span>
-                  <h3 className="text-xl font-bold text-white leading-tight">{businessName}</h3>
-                </div>
-              </BlueprintSection>
 
-              {/* What it does */}
-              <BlueprintSection visible={Boolean(description)}>
-                <div>
-                  <SectionLabel label="What it does" />
-                  <BarText text={description} accent={accent} />
-                </div>
-              </BlueprintSection>
-
-              {/* Core actions */}
-              <BlueprintSection visible={coreActions.length > 0}>
-                <div>
-                  <SectionLabel label="Core actions" />
-                  <div className="space-y-1">
-                    {coreActions.slice(0, 6).map((action, i) => (
-                      <BarItem key={i} icon="✓" text={labelForAction(action)} accent={accent} />
-                    ))}
+            {/* Body — scrollable */}
+            <div className="flex-1 overflow-y-auto px-5 pt-4 pb-5 space-y-5">
+              {!hasAnything ? (
+                /* Empty state */
+                <div className="py-10 flex flex-col items-center text-center gap-3">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
+                    style={{ background: `${accent}12`, border: `1px solid ${accent}22` }}
+                  >
+                    ✨
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white mb-1">Blueprint will appear here</p>
+                    <p className="text-xs leading-relaxed" style={{ color: '#7B7B9A' }}>
+                      As you chat with AVA, your app spec fills up live
+                    </p>
                   </div>
                 </div>
-              </BlueprintSection>
+              ) : (
+                <>
+                  {/* App name + icon */}
+                  <BlueprintSection visible={Boolean(businessName)}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{appIcon}</span>
+                      <h3 className="text-xl font-bold text-white leading-tight">{businessName}</h3>
+                    </div>
+                  </BlueprintSection>
 
-              {/* Key screens */}
-              <BlueprintSection visible={keyScreens.length > 0}>
-                <div>
-                  <SectionLabel label="Key screens" />
-                  <div className="space-y-1">
-                    {keyScreens.slice(0, 5).map((screen, i) => (
-                      <BarItem key={i} icon="◉" text={screen} accent={accent} />
-                    ))}
-                  </div>
-                </div>
-              </BlueprintSection>
+                  {/* What it does */}
+                  <BlueprintSection visible={Boolean(description)}>
+                    <div>
+                      <SectionLabel label="What it does" />
+                      <BarText text={description} accent={accent} />
+                    </div>
+                  </BlueprintSection>
 
-              {/* Monetization */}
-              <BlueprintSection visible={Boolean(monetizationModel)}>
-                <div>
-                  <SectionLabel icon="💰" label="Monetization" />
-                  <BarText text={monetizationModel} accent={accent} />
-                </div>
-              </BlueprintSection>
-
-              {/* MVP */}
-              <BlueprintSection visible={Boolean(mvpScope)}>
-                <div>
-                  <SectionLabel icon="🎯" label="MVP (build first)" />
-                  <BarText text={mvpScope} accent={accent} />
-                </div>
-              </BlueprintSection>
-
-              {/* User journey */}
-              <BlueprintSection visible={Boolean(userJourney)}>
-                <div>
-                  <SectionLabel label="User journey" />
-                  <BarText text={userJourney} accent={accent} />
-                </div>
-              </BlueprintSection>
-
-              {/* Audience */}
-              <BlueprintSection visible={Boolean(audiencePersona)}>
-                <div>
-                  <SectionLabel icon="👥" label="Audience" />
-                  <BarText text={audiencePersona} accent={accent} />
-                </div>
-              </BlueprintSection>
-
-              {/* Products */}
-              <BlueprintSection visible={rawProducts.length > 0}>
-                <div>
-                  <SectionLabel icon="🛒" label="Products" />
-                  <div className="space-y-1">
-                    {productNames.map((name, i) => (
-                      <BarItem key={i} icon="·" text={name} accent={accent} />
-                    ))}
-                    {extraProducts > 0 && (
-                      <div className="pl-3 text-xs" style={{ color: `${accent}88`, borderLeft: `2px solid ${accent}33` }}>
-                        + {extraProducts} more
+                  {/* Core actions */}
+                  <BlueprintSection visible={coreActions.length > 0}>
+                    <div>
+                      <SectionLabel label="Core actions" />
+                      <div className="space-y-1">
+                        {coreActions.slice(0, 6).map((action, i) => (
+                          <BarItem key={i} icon="✓" text={labelForAction(action)} accent={accent} />
+                        ))}
                       </div>
-                    )}
-                  </div>
-                </div>
-              </BlueprintSection>
+                    </div>
+                  </BlueprintSection>
 
-              {/* Anti-preferences */}
-              <BlueprintSection visible={antiPreferences.length > 0}>
-                <div>
-                  <SectionLabel label="Avoid" />
-                  <div className="space-y-1">
-                    {antiPreferences.slice(0, 4).map((pref, i) => (
-                      <BarItem key={i} icon="✕" text={pref} accent="#F87171" />
-                    ))}
-                  </div>
-                </div>
-              </BlueprintSection>
+                  {/* Key screens */}
+                  <BlueprintSection visible={keyScreens.length > 0}>
+                    <div>
+                      <SectionLabel label="Key screens" />
+                      <div className="space-y-1">
+                        {keyScreens.slice(0, 5).map((screen, i) => (
+                          <BarItem key={i} icon="◉" text={screen} accent={accent} />
+                        ))}
+                      </div>
+                    </div>
+                  </BlueprintSection>
 
-              {/* Differentiator */}
-              <BlueprintSection visible={Boolean(differentiator)}>
-                <div>
-                  <SectionLabel label="What sets it apart" />
-                  <BarText text={differentiator} accent={accent} />
-                </div>
-              </BlueprintSection>
-            </>
-          )}
-        </div>
+                  {/* Monetization */}
+                  <BlueprintSection visible={Boolean(monetizationModel)}>
+                    <div>
+                      <SectionLabel icon="💰" label="Monetization" />
+                      <BarText text={monetizationModel} accent={accent} />
+                    </div>
+                  </BlueprintSection>
 
-        {/* Footer — progress bar + build button */}
-        {hasAnything && (
-          <div
-            className="px-5 py-4 space-y-4"
-            style={{ borderTop: `1px solid ${accent}18` }}
-          >
-            <ProgressBar filled={filledCount} total={totalCount} accent={accent} />
+                  {/* MVP */}
+                  <BlueprintSection visible={Boolean(mvpScope)}>
+                    <div>
+                      <SectionLabel icon="🎯" label="MVP (build first)" />
+                      <BarText text={mvpScope} accent={accent} />
+                    </div>
+                  </BlueprintSection>
 
-            {canBuild && (
-              <button
-                onClick={() => handleCardAction('dashboard_go_live')}
-                disabled={isLoading}
-                className="w-full py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
-                style={{
-                  background: `linear-gradient(135deg, ${accent}, ${accent}BB)`,
-                  color: '#0A0A12',
-                  boxShadow: `0 4px 20px ${accent}40`,
-                }}
+                  {/* User journey */}
+                  <BlueprintSection visible={Boolean(userJourney)}>
+                    <div>
+                      <SectionLabel label="User journey" />
+                      <BarText text={userJourney} accent={accent} />
+                    </div>
+                  </BlueprintSection>
+
+                  {/* Audience */}
+                  <BlueprintSection visible={Boolean(audiencePersona)}>
+                    <div>
+                      <SectionLabel icon="👥" label="Audience" />
+                      <BarText text={audiencePersona} accent={accent} />
+                    </div>
+                  </BlueprintSection>
+
+                  {/* Products */}
+                  <BlueprintSection visible={rawProducts.length > 0}>
+                    <div>
+                      <SectionLabel icon="🛒" label="Products" />
+                      <div className="space-y-1">
+                        {productNames.map((name, i) => (
+                          <BarItem key={i} icon="·" text={name} accent={accent} />
+                        ))}
+                        {extraProducts > 0 && (
+                          <div className="pl-3 text-xs" style={{ color: `${accent}88`, borderLeft: `2px solid ${accent}33` }}>
+                            + {extraProducts} more
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </BlueprintSection>
+
+                  {/* Anti-preferences */}
+                  <BlueprintSection visible={antiPreferences.length > 0}>
+                    <div>
+                      <SectionLabel label="Avoid" />
+                      <div className="space-y-1">
+                        {antiPreferences.slice(0, 4).map((pref, i) => (
+                          <BarItem key={i} icon="✕" text={pref} accent="#F87171" />
+                        ))}
+                      </div>
+                    </div>
+                  </BlueprintSection>
+
+                  {/* Differentiator */}
+                  <BlueprintSection visible={Boolean(differentiator)}>
+                    <div>
+                      <SectionLabel label="What sets it apart" />
+                      <BarText text={differentiator} accent={accent} />
+                    </div>
+                  </BlueprintSection>
+                </>
+              )}
+            </div>
+
+            {/* Footer — progress bar + build button */}
+            {hasAnything && (
+              <div
+                className="px-5 py-4 space-y-4 shrink-0"
+                style={{ borderTop: `1px solid ${accent}18` }}
               >
-                ✨ Build My App
-              </button>
+                <ProgressBar filled={filledCount} total={totalCount} accent={accent} />
+
+                {canBuild && (
+                  <button
+                    onClick={() => handleCardAction('dashboard_go_live')}
+                    disabled={isLoading}
+                    className="w-full py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
+                    style={{
+                      background: `linear-gradient(135deg, ${accent}, ${accent}BB)`,
+                      color: '#0A0A12',
+                      boxShadow: `0 4px 20px ${accent}40`,
+                    }}
+                  >
+                    ✨ Build My App
+                  </button>
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

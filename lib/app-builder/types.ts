@@ -170,6 +170,17 @@ export interface MerchantAppSpec {
   railwayServiceId?: string;         // The service running the merchant app
   githubRepoUrl?: string;            // One repo per merchant
 
+  // ── App design spec (populated by AVA interview phase 1b) ────────────
+  coreActions?: string[];            // Core user actions the app must support
+  keyScreens?: string[];             // Primary screens / views in the app
+  monetizationModel?: string;        // How the app earns (subscriptions, one-off, free, etc.)
+  mvpScope?: string;                 // What to build in the first cut
+  dataModel?: string;                // Key data entities (products, bookings, users…)
+  userJourney?: string;              // Primary user flow narrative
+  conversionGoal?: string;           // The one conversion the app optimises for
+  firstImpression?: string;          // What users should feel / see when they open it
+  appFormat?: string;                // Canonical app format descriptor
+
   // ── Freedom World identity ───────────────────────────────
   freedomUserId?: string;            // Freedom platform user ID (post-signup)
   freedomOrgId?: string;             // Freedom org (community) ID

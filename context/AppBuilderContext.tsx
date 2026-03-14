@@ -192,7 +192,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
   const prevPhaseRef = useRef<string | null>(null);
   useEffect(() => {
     if (prevPhaseRef.current && prevPhaseRef.current !== interviewPhase && merchantId) {
-      track('phase_transition', {
+      track(EVENTS.PHASE_TRANSITION, {
         merchantId,
         sessionId,
         from_phase: prevPhaseRef.current,
@@ -375,7 +375,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
 
       console.log('[AppBuilderContext] Starting provisioning for merchant:', spec.id);
       const provisionStart = Date.now();
-      track('vm_provisioning_started', { merchantId: spec.id, sessionId });
+      track(EVENTS.VM_PROVISIONING_STARTED, { merchantId: spec.id, sessionId });
 
       try {
         // Step 1: Create GitHub repo + Railway project
@@ -442,7 +442,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
             setVmStatus('ready');
             if (statusData.devUrl) setVmDevUrl(statusData.devUrl);
             provisionedRef.current = true;
-            track('vm_provisioning_complete', {
+            track(EVENTS.VM_PROVISIONING_COMPLETE, {
               merchantId: spec.id,
               sessionId,
               duration_ms: Date.now() - provisionStart,
@@ -450,7 +450,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
             });
           } else if (statusData.status === 'error') {
             setVmStatus('error');
-            track('vm_provisioning_failed', {
+            track(EVENTS.VM_PROVISIONING_FAILED, {
               merchantId: spec.id,
               sessionId,
               attempts,
@@ -467,7 +467,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
       } catch (err) {
         console.error('[AppBuilderContext] Provisioning error:', err);
         setVmStatus('error');
-        track('vm_provisioning_failed', {
+        track(EVENTS.VM_PROVISIONING_FAILED, {
           merchantId: spec.id,
           sessionId,
           reason: String(err),
@@ -634,14 +634,18 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
               hasProducts: (scrapeData.spec.scrapedData?.categories?.length ?? 0) > 0,
             });
           } else {
-            track(EVENTS.Q2_SCRAPE_SKIP, {
+            track(EVENTS.Q2_SCRAPE_FAILED, {
               merchantId: updatedSpec.id,
               sessionId,
-              reason: 'scrape_failed',
             });
           }
         } catch (err) {
           console.error('[AppBuilderContext] Scrape error:', err);
+          track(EVENTS.Q2_SCRAPE_FAILED, {
+            merchantId: updatedSpec.id,
+            sessionId,
+            error: String(err),
+          });
         }
       }
 
@@ -751,13 +755,12 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
         typeof window !== 'undefined' ? document.referrer || 'direct' : 'direct',
     });
 
-    // Add AVA's opening greeting with business type picker buttons
+    // Add AVA's opening greeting — free-form, no category picker
     const greeting: Message = {
       role: 'assistant',
       content:
-        "Hey! 👋 I'm AVA — your AI app builder. Tap your business type below to get started — I'll build your app live as we chat! ✨",
+        "Hey! I'm AVA — I'll build your app with you. What kind of app do you want to build?",
       timestamp: new Date(),
-      metadata: { showBusinessTypePicker: true },
     };
     setMessages([greeting]);
   }, []);
