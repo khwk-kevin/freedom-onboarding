@@ -5,7 +5,7 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import { ChatMessageComponent, TypingIndicator } from './ChatMessage';
 import { AICreationCard } from './InteractiveCards';
 import { ChatInput } from './ChatInput';
-import { AppBlueprint, AppBlueprintSheet, AppBlueprintButton } from './AppBlueprint';
+import { AppBlueprint, AppBlueprintSheet } from './AppBlueprint';
 import { SignupWall } from './SignupWall';
 
 function hexToRgb(hex: string): string {
@@ -254,6 +254,8 @@ export function OnboardingChat() {
             onSendMessage={sendMessage}
             onUploadImage={(url, type) => updateCommunityData({ [type]: url })}
             disabled={isLoading}
+            blueprintPct={Math.round((filledCount / totalCount) * 100)}
+            onBlueprintClick={() => setMobileBlueprintOpen(v => !v)}
           />
         </section>
 
@@ -273,15 +275,7 @@ export function OnboardingChat() {
         progressPct={Math.round((filledCount / totalCount) * 100)}
       />
 
-      {/* ── Mobile: floating preview button ──────────────── */}
-      {/* ── Mobile: floating blueprint button ──────────────── */}
-      <AppBlueprintButton
-        onClick={() => setMobileBlueprintOpen(v => !v)}
-        isOpen={mobileBlueprintOpen}
-        filledCount={filledCount}
-        totalCount={totalCount}
-        accent={primaryColor}
-      />
+      {/* Blueprint button is now inside ChatInput bar on mobile */}
     </div>
   );
 }

@@ -8,9 +8,12 @@ interface ChatInputProps {
   onUploadImage?: (imageUrl: string, type: 'logo' | 'banner') => void;
   disabled?: boolean;
   placeholder?: string;
+  /** Blueprint button — mobile only */
+  blueprintPct?: number;
+  onBlueprintClick?: () => void;
 }
 
-export function ChatInput({ onSendMessage, onUploadImage, disabled, placeholder }: ChatInputProps) {
+export function ChatInput({ onSendMessage, onUploadImage, disabled, placeholder, blueprintPct, onBlueprintClick }: ChatInputProps) {
   const [input, setInput] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -93,6 +96,34 @@ export function ChatInput({ onSendMessage, onUploadImage, disabled, placeholder 
             aria-label="Upload logo or banner image"
             className="hidden"
           />
+
+          {/* Blueprint button — mobile only, sits in the input bar like Telegram's Menu button */}
+          {onBlueprintClick && (
+            <button
+              type="button"
+              onClick={onBlueprintClick}
+              aria-label="View app blueprint"
+              className="md:hidden relative p-3 pl-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#10F48B] rounded-lg"
+              title="View Blueprint"
+            >
+              <div className="relative w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ background: 'var(--oc-border)' }}>
+                <span className="text-sm">📋</span>
+                {blueprintPct != null && blueprintPct > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-[#10F48B] text-[10px] font-bold text-black flex items-center justify-center px-1">
+                    {blueprintPct}%
+                  </span>
+                )}
+              </div>
+              {/* Circular progress ring */}
+              <svg className="absolute inset-0 w-8 h-8 m-3 ml-4 -rotate-90" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="14" fill="none" stroke="var(--oc-border)" strokeWidth="2" opacity="0.3" />
+                <circle cx="16" cy="16" r="14" fill="none" stroke="#10F48B" strokeWidth="2"
+                  strokeDasharray={`${(blueprintPct || 0) * 0.88} 88`}
+                  strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
 
           <button
             type="button"
