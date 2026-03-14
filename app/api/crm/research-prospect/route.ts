@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     findSocialLinks(businessName),
     (async () => {
       try {
-        const anthropic = new Anthropic({ authToken });
+        const anthropic = new Anthropic({ authToken, defaultHeaders: { 'anthropic-beta': 'oauth-2025-04-20' } });
         const prompt = `You are a business intelligence researcher for Freedom World, a loyalty & rewards platform in Thailand.
 
 Research this prospect business and provide actionable BD intelligence:

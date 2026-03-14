@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
   const authToken = process.env.ANTHROPIC_AUTH_TOKEN;
   if (anthropicKey) {
     try {
-      const anthropic = new Anthropic({ authToken });
+      const anthropic = new Anthropic({ authToken, defaultHeaders: { 'anthropic-beta': 'oauth-2025-04-20' } });
 
       const prompt = `You are a business intelligence researcher for a BD (Business Development) team at Freedom World, a loyalty and rewards platform in Thailand.
 

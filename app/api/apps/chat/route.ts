@@ -23,7 +23,8 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_AUTH_TOKEN,
+  authToken: process.env.ANTHROPIC_AUTH_TOKEN,
+  defaultHeaders: { 'anthropic-beta': 'oauth-2025-04-20' },
 });
 
 interface ChatMessage {

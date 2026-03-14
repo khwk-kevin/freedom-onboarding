@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { generateImage } from './image-gen';
 import type { CommunityData } from '@/types/onboarding';
 
-const anthropic = new Anthropic({ authToken: process.env.ANTHROPIC_AUTH_TOKEN });
+const anthropic = new Anthropic({ authToken: process.env.ANTHROPIC_AUTH_TOKEN, defaultHeaders: { 'anthropic-beta': 'oauth-2025-04-20' } });
 
 export interface LandingPageContent {
   heroHeadline: string;
