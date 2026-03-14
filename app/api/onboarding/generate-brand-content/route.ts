@@ -4,7 +4,7 @@ import Anthropic from '@anthropic-ai/sdk';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_OAUTH_TOKEN || process.env.ANTHROPIC_API_KEY });
+const anthropic = new Anthropic({ authToken: process.env.ANTHROPIC_AUTH_TOKEN });
 
 interface BrandContentRequest {
   businessName: string;

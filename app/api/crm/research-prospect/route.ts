@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'businessName is required' }, { status: 400 });
   }
 
-  const anthropicKey = process.env.ANTHROPIC_OAUTH_TOKEN || process.env.ANTHROPIC_API_KEY;
+  const authToken = process.env.ANTHROPIC_AUTH_TOKEN;
   if (!anthropicKey) {
     return NextResponse.json({ error: 'AI research not configured' }, { status: 500 });
   }
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     findSocialLinks(businessName),
     (async () => {
       try {
-        const anthropic = new Anthropic({ apiKey: anthropicKey });
+        const anthropic = new Anthropic({ authToken });
         const prompt = `You are a business intelligence researcher for Freedom World, a loyalty & rewards platform in Thailand.
 
 Research this prospect business and provide actionable BD intelligence:

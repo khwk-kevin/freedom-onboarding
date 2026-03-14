@@ -102,10 +102,10 @@ export async function POST(req: NextRequest) {
   // 2. Use Claude to research and analyze the business
   let aiResearch: Partial<EnrichmentResult> = {};
 
-  const anthropicKey = process.env.ANTHROPIC_OAUTH_TOKEN || process.env.ANTHROPIC_API_KEY;
+  const authToken = process.env.ANTHROPIC_AUTH_TOKEN;
   if (anthropicKey) {
     try {
-      const anthropic = new Anthropic({ apiKey: anthropicKey });
+      const anthropic = new Anthropic({ authToken });
 
       const prompt = `You are a business intelligence researcher for a BD (Business Development) team at Freedom World, a loyalty and rewards platform in Thailand.
 

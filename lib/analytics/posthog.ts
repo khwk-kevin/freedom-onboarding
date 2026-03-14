@@ -27,6 +27,38 @@ interface AnalyticsContext {
 let _ctx: AnalyticsContext = {};
 let _initialized = false;
 
+// ─── Pre-init event queue ────────────────────────────────────────────────────
+// posthog.capture() silently drops events when posthog.__loaded is false.
+// React runs children's effects before parents', so AppBuilderContext effects
+// fire BEFORE PostHogPageviewInner's effect. At that point, posthog.__loaded
+// may still be false (the async /flags/ call hasn't returned yet).
+// We buffer events here and flush them as soon as posthog reports loaded.
+
+interface QueuedEvent {
+  event: string;
+  properties: Record<string, unknown>;
+}
+const _preInitQueue: QueuedEvent[] = [];
+let _flushScheduled = false;
+
+function scheduleFlush(): void {
+  if (_flushScheduled || typeof window === 'undefined') return;
+  _flushScheduled = true;
+  const attempt = () => {
+    if ((posthog as unknown as { __loaded?: boolean }).__loaded) {
+      _flushScheduled = false;
+      while (_preInitQueue.length) {
+        const item = _preInitQueue.shift()!;
+        posthog.capture(item.event, item.properties);
+      }
+    } else {
+      // Retry every 50 ms until posthog is ready (max ~3 s)
+      setTimeout(attempt, 50);
+    }
+  };
+  setTimeout(attempt, 50);
+}
+
 // ─── Init ────────────────────────────────────────────────────────────────────
 
 /**
@@ -85,15 +117,16 @@ export function setContext(ctx: Partial<AnalyticsContext>): void {
 // ─── Core functions ───────────────────────────────────────────────────────────
 
 function isEnabled(): boolean {
+  // Do NOT gate on posthog.__loaded — that flag is set by posthog-js after init,
+  // but React effects fire bottom-up (children before parents). AppBuilderContext
+  // effects run BEFORE PostHogPageviewInner's effect, so __loaded may still be
+  // false at that point even though posthog.init() ran at module scope.
+  //
+  // posthog-js internally queues capture() calls made before full init and
+  // flushes them once ready — so we just need to guard on the key being set
+  // and window being available.
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-  // posthog.__loaded is set by posthog.init() — we no longer require our own
-  // _initialized flag since posthog is initialised at module scope in provider.tsx
-  return (
-    typeof window !== 'undefined' &&
-    !!key &&
-    key !== 'phc_xxxxx' &&
-    (posthog.__loaded || _initialized)
-  );
+  return typeof window !== 'undefined' && !!key && key !== 'phc_xxxxx';
 }
 
 function buildDefaults(): Record<string, unknown> {
@@ -111,6 +144,9 @@ function buildDefaults(): Record<string, unknown> {
 /**
  * Track an event. Merges in default context properties automatically.
  * Callers may still pass merchantId / sessionId explicitly — they'll override defaults.
+ *
+ * If PostHog hasn't finished its async init yet (posthog.__loaded is false),
+ * the event is buffered and flushed automatically once init completes (~50–500 ms).
  */
 export function track(
   event: string,
@@ -121,6 +157,14 @@ export function track(
   if (!isEnabled()) {
     // Dev fallback — keep console visibility during local dev
     console.log(`[posthog] ${event}`, merged);
+    return;
+  }
+
+  // posthog.capture() silently drops events when __loaded is false.
+  // Buffer and retry rather than losing the event.
+  if (!(posthog as unknown as { __loaded?: boolean }).__loaded) {
+    _preInitQueue.push({ event, properties: merged });
+    scheduleFlush();
     return;
   }
 

@@ -3,7 +3,7 @@ import type { CommunityData, ChatMessage } from '@/types/onboarding';
 import { getExistingCommunityNames, isDuplicateName } from './community';
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_OAUTH_TOKEN || process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.ANTHROPIC_AUTH_TOKEN,
 });
 
 // ============================================================
