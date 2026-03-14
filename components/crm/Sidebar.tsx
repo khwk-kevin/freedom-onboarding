@@ -12,6 +12,7 @@ import {
   Compass,
   TrendingUp,
   KeyRound,
+  Activity,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
@@ -25,6 +26,7 @@ const navItems = [
   { href: '/crm/analytics', label: 'Analytics', icon: BarChart3, exact: false },
   { href: '/crm/community-tracker', label: 'Community Tracker', icon: Compass, exact: false },
   { href: '/crm/acquisition-funnel', label: 'Acquisition Funnel', icon: TrendingUp, exact: false },
+  { href: '/crm/merchant-analytics', label: 'Merchant Analytics', icon: Activity, exact: false },
 ];
 
 export function Sidebar() {
@@ -71,10 +73,10 @@ export function Sidebar() {
 
       {/* Quick actions — Pipedrive-style */}
       <div className="px-3 py-3 border-b border-white/5">
-        <button className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-[#00ff88] hover:bg-[#00e87a] text-[#1a1a2e] text-xs font-semibold transition-colors">
+        <Link href="/crm/merchants/new" className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-[#00ff88] hover:bg-[#00e87a] text-[#1a1a2e] text-xs font-semibold transition-colors">
           <Plus size={14} />
           Add Merchant
-        </button>
+        </Link>
       </div>
 
       {/* Nav — Pipedrive sidebar style */}

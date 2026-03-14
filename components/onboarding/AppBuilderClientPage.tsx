@@ -17,6 +17,7 @@ import { AppBuilderProvider, useAppBuilder } from '@/context/AppBuilderContext';
 import { AppBuilderLayout } from './AppBuilderLayout';
 import { UIStylePicker } from './UIStylePicker';
 import { AppBuildingCard } from './cards/AppBuildingCard';
+import posthog from 'posthog-js';
 
 // ============================================================
 // ROOT — wraps everything in the provider
@@ -239,7 +240,14 @@ function AppBuilderInner() {
 
       {/* ── Signup wall modal ───────────────────────────────── */}
       {showSignupWall && (
-        <SignupWallModal onSignup={handleSignup} />
+        <SignupWallModal
+          onSignup={handleSignup}
+          onDismiss={() => {
+            posthog.capture('signup_abandoned', {
+              page: window.location.pathname,
+            });
+          }}
+        />
       )}
     </>
   );
@@ -479,9 +487,10 @@ function InlineColorPicker({ onColorPick }: InlineColorPickerProps) {
 
 interface SignupWallModalProps {
   onSignup: (userId: string) => Promise<void>;
+  onDismiss?: () => void;
 }
 
-function SignupWallModal({ onSignup }: SignupWallModalProps) {
+function SignupWallModal({ onSignup, onDismiss }: SignupWallModalProps) {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [email, setEmail] = useState('');
   const [signupError, setSignupError] = useState<string | null>(null);
@@ -530,6 +539,16 @@ function SignupWallModal({ onSignup }: SignupWallModalProps) {
       <div className="w-full max-w-sm mx-4 rounded-2xl bg-[#0D0B1E] border border-white/10 shadow-2xl overflow-hidden">
         {/* Gradient top accent */}
         <div className="h-1 bg-gradient-to-r from-violet-600 via-purple-500 to-pink-500" />
+        {/* Dismiss button */}
+        {onDismiss && (
+          <button
+            onClick={onDismiss}
+            className="absolute top-3 right-3 text-white/30 hover:text-white/60 text-xl leading-none"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        )}
 
         <div className="px-6 py-8 space-y-6">
           {/* Headline */}

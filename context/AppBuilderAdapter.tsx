@@ -140,6 +140,14 @@ function AdapterInner({ children }: { children: React.ReactNode }) {
     fontFamily: undefined as string | undefined,
     primaryActions: spec.appPriorities || [],
     uiStyle: spec.uiStyle || 'bold',
+    // ── Blueprint-specific fields ──────────────────────────────────────────
+    // These are exposed for the AppBlueprint sidebar component
+    antiPreferences: spec.antiPreferences || [],
+    appFormat: spec.appType || spec.businessType || '',
+    // keyScreens: derived from appPriorities in AppBlueprint component
+    // coreActions: uses primaryActions (appPriorities) in AppBlueprint
+    // monetizationModel, mvpScope, dataModel, userJourney, keyScreens:
+    //   not yet in MerchantAppSpec — AppBlueprint falls back to related fields
   };
 
   // Map messages — preserve metadata, append extras

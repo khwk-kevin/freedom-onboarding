@@ -18,6 +18,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AppBuilderProvider, useAppBuilder } from '@/context/AppBuilderContext';
 import { AppBuilderLayout } from '@/components/onboarding/AppBuilderLayout';
 import type { MerchantAppSpec } from '@/lib/app-builder/types';
+import { track } from '@/lib/tracking/unified';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -89,6 +90,9 @@ function IterationInner({ initialSpec, merchantId }: IterationInnerProps) {
   useEffect(() => {
     if (booted.current) return;
     booted.current = true;
+
+    // Track session start
+    track.onboardResume(merchantId, 'iteration');
 
     async function boot() {
       setBootStatus('starting');

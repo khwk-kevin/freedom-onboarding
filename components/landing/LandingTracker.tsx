@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react'
 import { track } from '@/lib/tracking/unified'
+import posthog from 'posthog-js'
+import { gtmPageView } from '@/lib/gtm/events'
 
 /**
  * Tracks all landing page engagement:
@@ -14,6 +16,16 @@ export function LandingTracker() {
   const scrollMilestones = useRef(new Set<number>())
   const startTime = useRef(Date.now())
   const sectionsViewed = useRef(new Set<string>())
+
+  // Fire landing page_view immediately on mount
+  useEffect(() => {
+    posthog.capture('landing_page_view', {
+      $current_url: window.location.href,
+      referrer: document.referrer || '$direct',
+      page_title: document.title,
+    })
+    gtmPageView(window.location.pathname, document.title)
+  }, [])
 
   useEffect(() => {
     // --- Scroll Depth Tracking ---

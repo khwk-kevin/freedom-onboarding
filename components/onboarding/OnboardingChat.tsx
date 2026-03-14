@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Smartphone, X } from 'lucide-react';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { ChatMessageComponent, TypingIndicator } from './ChatMessage';
 import { AICreationCard } from './InteractiveCards';
 import { ChatInput } from './ChatInput';
-import { PreviewSidebar } from './PreviewSidebar';
+import { AppBlueprint, AppBlueprintSheet, AppBlueprintButton } from './AppBlueprint';
 import { SignupWall } from './SignupWall';
 
 function hexToRgb(hex: string): string {
@@ -42,8 +41,8 @@ export function OnboardingChat() {
   const conversationAreaRef = useRef<HTMLDivElement>(null);
   const [isDark, setIsDark] = useState(true);
 
-  // Mobile bottom sheet state for live preview
-  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+  // Mobile bottom sheet state for blueprint
+  const [mobileBlueprintOpen, setMobileBlueprintOpen] = useState(false);
 
   // Count filled preview fields for badge
   const primaryColor = communityData.primaryColor || '#10F48B';
@@ -61,20 +60,6 @@ export function OnboardingChat() {
   ];
   const filledCount = previewFields.filter(Boolean).length;
   const totalCount = 11;
-
-  // ── Auto-peek preview on mobile when data changes ──────────────────────────
-  const [mobilePeek, setMobilePeek] = useState(false);
-  const prevFilledRef = useRef(filledCount);
-  useEffect(() => {
-    // Only auto-peek on mobile (md:hidden), when NOT already open, and when a new field was filled
-    if (filledCount > prevFilledRef.current && !mobilePreviewOpen && filledCount > 0) {
-      setMobilePeek(true);
-      const timer = setTimeout(() => setMobilePeek(false), 3500);
-      prevFilledRef.current = filledCount;
-      return () => clearTimeout(timer);
-    }
-    prevFilledRef.current = filledCount;
-  }, [filledCount, mobilePreviewOpen]);
 
   // Detect system preference — no manual toggle
   useEffect(() => {
@@ -272,126 +257,31 @@ export function OnboardingChat() {
           />
         </section>
 
-        {/* Desktop Preview Sidebar */}
+        {/* Desktop Blueprint Sidebar */}
         {isPreviewVisible && (
-          <div className="hidden md:block">
-            <PreviewSidebar
-              communityData={communityData}
-              onUpdate={updateCommunityData}
-              onGenerateImage={generateImage}
-              isGeneratingLogo={isGeneratingLogo}
-              isGeneratingBanner={isGeneratingBanner}
-              isAnonymous={isAnonymous}
-              isDark={isDark}
-            />
-          </div>
+          <aside className="hidden md:flex w-[400px] h-full border-l flex-col overflow-hidden p-4"
+            style={{ borderColor: 'var(--oc-border)', background: '#08080F' }}>
+            <AppBlueprint className="flex-1 min-h-0" />
+          </aside>
         )}
       </main>
 
-      {/* ── Mobile: backdrop (only for full open, not peek) ── */}
-      {mobilePreviewOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-[2px]"
-          onClick={() => setMobilePreviewOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* ── Mobile: peek backdrop (tap to dismiss or expand) ── */}
-      {mobilePeek && !mobilePreviewOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40"
-          onClick={() => { setMobilePeek(false); setMobilePreviewOpen(true); }}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* ── Mobile: bottom sheet with PreviewSidebar ─────── */}
-      <div
-        className="md:hidden fixed inset-x-0 bottom-0 z-50 rounded-t-2xl overflow-hidden
-                   transition-all duration-300 ease-out"
-        style={{
-          height: mobilePreviewOpen ? '70vh' : (mobilePeek ? '40vh' : '0'),
-          transform: (mobilePreviewOpen || mobilePeek) ? 'translateY(0)' : 'translateY(100%)',
-          background: isDark ? '#0D0B1A' : '#F8F9FA',
-          boxShadow: (mobilePreviewOpen || mobilePeek) ? `0 -4px 30px ${primaryColor}25` : 'none',
-        }}
-        aria-hidden={!mobilePreviewOpen && !mobilePeek}
-        onClick={() => { if (mobilePeek && !mobilePreviewOpen) { setMobilePeek(false); setMobilePreviewOpen(true); } }}
-      >
-        {/* Drag handle */}
-        <div className="flex flex-col items-center pt-2 pb-1 shrink-0">
-          <div
-            className="w-10 h-1 rounded-full"
-            style={{ background: isDark ? 'rgba(255,255,255,0.15)' : '#D1D5DB' }}
-          />
-          {mobilePeek && !mobilePreviewOpen && (
-            <p className="text-[10px] font-medium mt-1 animate-pulse" style={{ color: primaryColor }}>
-              ✨ Preview updated — tap to expand
-            </p>
-          )}
-        </div>
-
-        {/* Close button */}
-        <button
-          onClick={() => setMobilePreviewOpen(false)}
-          className="absolute top-3 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center
-                     transition-colors"
-          style={{ background: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB', color: isDark ? '#fff' : '#111' }}
-          aria-label="Close preview"
-        >
-          <X size={16} />
-        </button>
-
-        {/* PreviewSidebar — stretches to fill sheet */}
-        <div className="h-full overflow-hidden" style={{ paddingTop: '8px' }}>
-          <PreviewSidebar
-            communityData={communityData}
-            onUpdate={updateCommunityData}
-            onGenerateImage={generateImage}
-            isGeneratingLogo={isGeneratingLogo}
-            isGeneratingBanner={isGeneratingBanner}
-            isAnonymous={isAnonymous}
-            isDark={isDark}
-          />
-        </div>
-      </div>
+      {/* ── Mobile: Blueprint bottom sheet ────────────────── */}
+      <AppBlueprintSheet
+        isOpen={mobileBlueprintOpen}
+        onClose={() => setMobileBlueprintOpen(false)}
+        progressPct={Math.round((filledCount / totalCount) * 100)}
+      />
 
       {/* ── Mobile: floating preview button ──────────────── */}
-      <button
-        className="md:hidden fixed bottom-28 left-4 z-50 w-12 h-12 rounded-full
-                   flex items-center justify-center text-white
-                   transition-all duration-200 active:scale-95 shadow-xl"
-        style={{
-          background: mobilePreviewOpen
-            ? (isDark ? 'rgba(255,255,255,0.15)' : '#374151')
-            : primaryColor,
-          boxShadow: `0 4px 20px ${primaryColor}55`,
-          animation: isGeneratingLogo || isGeneratingBanner ? 'pulse 2s infinite' : 'none',
-        }}
-        onClick={() => {
-          if (mobilePeek) { setMobilePeek(false); setMobilePreviewOpen(true); }
-          else { setMobilePreviewOpen(v => !v); }
-        }}
-        aria-label={mobilePreviewOpen ? 'Close preview' : 'Open live preview'}
-      >
-        {mobilePreviewOpen ? (
-          <X size={20} />
-        ) : (
-          <Smartphone size={20} />
-        )}
-
-        {/* Progress badge */}
-        {filledCount > 0 && !mobilePreviewOpen && (
-          <span
-            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full
-                       flex items-center justify-center text-[9px] font-bold px-1"
-            style={{ background: '#1A1A1A', color: primaryColor, border: `1.5px solid ${primaryColor}` }}
-          >
-            {filledCount}/{totalCount}
-          </span>
-        )}
-      </button>
+      {/* ── Mobile: floating blueprint button ──────────────── */}
+      <AppBlueprintButton
+        onClick={() => setMobileBlueprintOpen(v => !v)}
+        isOpen={mobileBlueprintOpen}
+        filledCount={filledCount}
+        totalCount={totalCount}
+        accent={primaryColor}
+      />
     </div>
   );
 }

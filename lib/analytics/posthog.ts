@@ -86,11 +86,13 @@ export function setContext(ctx: Partial<AnalyticsContext>): void {
 
 function isEnabled(): boolean {
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+  // posthog.__loaded is set by posthog.init() — we no longer require our own
+  // _initialized flag since posthog is initialised at module scope in provider.tsx
   return (
     typeof window !== 'undefined' &&
     !!key &&
     key !== 'phc_xxxxx' &&
-    _initialized
+    (posthog.__loaded || _initialized)
   );
 }
 

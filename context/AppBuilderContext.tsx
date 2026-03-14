@@ -160,7 +160,53 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
   // Track whether the session has been abandoned (so we can resume on return)
   const [isAbandoned, setIsAbandoned] = useState(false);
 
+  // ── Track first preview shown ──────────────────────────────
+  const firstPreviewTrackedRef = useRef(false);
+  useEffect(() => {
+    if (vmDevUrl && !firstPreviewTrackedRef.current && merchantId) {
+      firstPreviewTrackedRef.current = true;
+      track(EVENTS.FIRST_PREVIEW_SHOWN, {
+        merchantId,
+        sessionId,
+        dev_url: vmDevUrl,
+        time_since_start_ms: Date.now(),
+      });
+    }
+  }, [vmDevUrl, merchantId, sessionId]);
+
+  // ── Track token limit reached ──────────────────────────────
+  const tokenLimitTrackedRef = useRef(false);
+  useEffect(() => {
+    if (tokenBalance !== null && tokenBalance <= 0 && !tokenLimitTrackedRef.current && merchantId) {
+      tokenLimitTrackedRef.current = true;
+      track(EVENTS.TOKEN_LIMIT_REACHED, {
+        merchantId,
+        sessionId,
+        token_used: tokenUsed,
+        phase: interviewPhase,
+      });
+    }
+  }, [tokenBalance, merchantId, sessionId, tokenUsed, interviewPhase]);
+
+  // ── Track interview phase transitions ─────────────────────
+  const prevPhaseRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevPhaseRef.current && prevPhaseRef.current !== interviewPhase && merchantId) {
+      track('phase_transition', {
+        merchantId,
+        sessionId,
+        from_phase: prevPhaseRef.current,
+        to_phase: interviewPhase,
+      });
+    }
+    prevPhaseRef.current = interviewPhase;
+  }, [interviewPhase, merchantId, sessionId]);
+
   // ── Poll build status while building ─────────────────────
+  const prevBuildingRef = useRef(false);
+  const prevBuildTaskRef = useRef<string | undefined>(undefined);
+  const buildStartTimeRef = useRef<number | null>(null);
+
   useEffect(() => {
     if (!buildStatus.isBuilding || !merchantId) return;
 
@@ -172,7 +218,44 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
           isBuilding: boolean;
           queueDepth: number;
           currentTask?: string;
+          lastError?: string;
         };
+
+        // ── Track build step transitions ──────────────────────
+        if (data.currentTask && data.currentTask !== prevBuildTaskRef.current) {
+          prevBuildTaskRef.current = data.currentTask;
+          track(EVENTS.BUILD_STEP_REACHED, {
+            merchantId,
+            sessionId,
+            step: data.currentTask,
+          });
+        }
+
+        // ── Track build completion / failure ──────────────────
+        if (prevBuildingRef.current && !data.isBuilding) {
+          const durationMs = buildStartTimeRef.current
+            ? Date.now() - buildStartTimeRef.current
+            : null;
+
+          if (data.lastError) {
+            track(EVENTS.APP_BUILD_FAILED, {
+              merchantId,
+              sessionId,
+              error: data.lastError,
+              duration_ms: durationMs,
+            });
+          } else {
+            track(EVENTS.APP_BUILD_COMPLETED, {
+              merchantId,
+              sessionId,
+              duration_ms: durationMs,
+              trigger: buildStatus.currentTask,
+            });
+          }
+          buildStartTimeRef.current = null;
+        }
+
+        prevBuildingRef.current = data.isBuilding;
         setBuildStatus({
           isBuilding: data.isBuilding,
           queueDepth: data.queueDepth,
@@ -184,7 +267,7 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [buildStatus.isBuilding, merchantId]);
+  }, [buildStatus.isBuilding, merchantId, sessionId]);
 
   // ============================================================
   // SESSION ABANDONMENT DETECTION
@@ -291,6 +374,8 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
       setVmStatus('provisioning');
 
       console.log('[AppBuilderContext] Starting provisioning for merchant:', spec.id);
+      const provisionStart = Date.now();
+      track('vm_provisioning_started', { merchantId: spec.id, sessionId });
 
       try {
         // Step 1: Create GitHub repo + Railway project
@@ -357,8 +442,20 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
             setVmStatus('ready');
             if (statusData.devUrl) setVmDevUrl(statusData.devUrl);
             provisionedRef.current = true;
+            track('vm_provisioning_complete', {
+              merchantId: spec.id,
+              sessionId,
+              duration_ms: Date.now() - provisionStart,
+              attempts,
+            });
           } else if (statusData.status === 'error') {
             setVmStatus('error');
+            track('vm_provisioning_failed', {
+              merchantId: spec.id,
+              sessionId,
+              attempts,
+              reason: 'status_error',
+            });
           } else {
             // Still starting — poll again
             await new Promise((r) => setTimeout(r, 3000));
@@ -370,6 +467,11 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
       } catch (err) {
         console.error('[AppBuilderContext] Provisioning error:', err);
         setVmStatus('error');
+        track('vm_provisioning_failed', {
+          merchantId: spec.id,
+          sessionId,
+          reason: String(err),
+        });
       } finally {
         isProvisioningRef.current = false;
       }
@@ -395,6 +497,9 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
         isBuilding: true,
         currentTask: trigger,
       }));
+
+      buildStartTimeRef.current = Date.now();
+      prevBuildingRef.current = true;
 
       track(EVENTS.APP_BUILD_STARTED, {
         merchantId: spec.id,
@@ -625,6 +730,20 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
     setMerchantAppSpec(spec);
 
     setContext({ sessionId: newSessionId });
+
+    // Identify returning authenticated users (SSO flow sets httpOnly cookie)
+    fetch('/api/auth/me')
+      .then((r) => r.json())
+      .then((data: { authenticated?: boolean; merchantId?: string; email?: string; name?: string; cognitoSub?: string }) => {
+        if (data.authenticated && data.merchantId) {
+          identify(data.merchantId, {
+            email: data.email,
+            name: data.name,
+            cognito_sub: data.cognitoSub,
+          });
+        }
+      })
+      .catch(() => {/* non-fatal */});
 
     track(EVENTS.ONBOARDING_STARTED, {
       sessionId: newSessionId,

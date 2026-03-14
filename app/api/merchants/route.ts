@@ -138,3 +138,47 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ merchant: data });
 }
+
+export async function POST(req: NextRequest) {
+  const supabase = createServiceClient();
+  const body = await req.json();
+
+  // Required
+  if (!body.email) {
+    return NextResponse.json({ error: 'email is required' }, { status: 400 });
+  }
+
+  const insert: Record<string, unknown> = {
+    email: body.email,
+    status: body.status ?? 'lead',
+    onboarding_status: 'signup',
+  };
+
+  const optionalFields = [
+    'phone', 'line_id', 'business_name', 'business_type', 'business_size',
+    'business_description', 'location', 'website_url', 'social_urls',
+    'assigned_to', 'tags', 'notes', 'next_follow_up_at',
+    'utm_source', 'utm_medium', 'utm_campaign', 'utm_vertical', 'referrer_url',
+  ] as const;
+
+  for (const f of optionalFields) {
+    if (f in body && body[f] !== '' && body[f] !== null && body[f] !== undefined) {
+      insert[f] = body[f];
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('merchants')
+    .insert(insert)
+    .select('*')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') {
+      return NextResponse.json({ error: 'A merchant with this email already exists.' }, { status: 409 });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ merchant: data }, { status: 201 });
+}

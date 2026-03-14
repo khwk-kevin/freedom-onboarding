@@ -6,7 +6,7 @@ import {
   KanbanSquare,
   Users,
   AlertCircle,
-  BarChart3,
+  Activity,
 } from 'lucide-react';
 
 const navItems = [
@@ -14,7 +14,7 @@ const navItems = [
   { href: '/crm/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { href: '/crm/merchants', label: 'Merchants', icon: Users },
   { href: '/crm/handoffs', label: 'Handoffs', icon: AlertCircle },
-  { href: '/crm/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/crm/merchant-analytics', label: 'Merchant Analytics', icon: Activity },
 ];
 
 /**
