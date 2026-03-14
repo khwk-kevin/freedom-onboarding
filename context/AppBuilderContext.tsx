@@ -33,6 +33,7 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  metadata?: Record<string, unknown>;
 }
 
 export type InterviewPhase = 'phase1a' | 'phase1b' | 'review' | 'complete';
@@ -631,12 +632,13 @@ export function AppBuilderProvider({ children }: { children: React.ReactNode }) 
         typeof window !== 'undefined' ? document.referrer || 'direct' : 'direct',
     });
 
-    // Add AVA's opening greeting as the first assistant message
+    // Add AVA's opening greeting with business type picker buttons
     const greeting: Message = {
       role: 'assistant',
       content:
-        "Hey! I'm AVA — I'll help you build your app. What are we making today?",
+        "Hey! 👋 I'm AVA — your AI app builder. Tap your business type below to get started — I'll build your app live as we chat! ✨",
       timestamp: new Date(),
+      metadata: { showBusinessTypePicker: true },
     };
     setMessages([greeting]);
   }, []);
